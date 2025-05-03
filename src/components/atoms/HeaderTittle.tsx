@@ -2,7 +2,7 @@ import upLogo from '../../assets/upLogo.png';
 
 const HeaderTittle: React.FC = () => {
     return (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', paddingLeft:"10px" }}>
             <img 
                 src={upLogo}
                 alt="Logo de UP" 

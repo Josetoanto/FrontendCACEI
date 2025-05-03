@@ -5,9 +5,9 @@ import ProfilePicture from "../atoms/ProfilePicture";
 const Header: React.FC = () => {
   return (
     <>
-      <header style={{ height: "50px" ,display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", backgroundColor: "#ffffff" }}>
+      <header style={{  height: "50px" ,display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", backgroundColor: "#ffffff" }}>
         <HeaderTittle />
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingRight:"10px" }}>
           <Notifications />
           <ProfilePicture src= '' />
         </div>
