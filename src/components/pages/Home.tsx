@@ -2,7 +2,6 @@ import React from 'react';
 import Header from '../organisms/Header';
 import HomeMenu from '../molecule/homeMenu';
 import EncuestaList from '../organisms/EncuestaList';
-import Search from '../molecule/Search';
 
 const encuestas = [
     {
@@ -26,7 +25,6 @@ const Home: React.FC = () => {
             <div style={{ width: '75%', margin: '0 auto'}}>
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
             <HomeMenu></HomeMenu>
-            <Search></Search>
             <EncuestaList title={'Encuestas'} encuestas={encuestas}></EncuestaList>
             </div>
         </div>

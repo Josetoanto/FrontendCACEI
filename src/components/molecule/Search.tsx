@@ -1,8 +1,18 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useState } from "react";
 
-const Search: React.FC = () => {
+interface SearchProps {
+  onSearch: (query: string) => void;
+}
+
+const Search: React.FC<SearchProps> = ({ onSearch }) => {
   const [query, setQuery] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    onSearch(value);
+  };
 
   return (
     <div style={{
@@ -23,7 +33,7 @@ const Search: React.FC = () => {
         type="text" 
         placeholder="Buscar..." 
         value={query} 
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={handleChange}
         style={{
           border: "none",
           outline: "none",
