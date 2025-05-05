@@ -3,6 +3,13 @@ import Header from '../organisms/Header';
 import HomeMenu from '../molecule/homeMenu';
 import EncuestaList from '../organisms/EncuestaList';
 import Proyectos from '../organisms/Proyectos';
+import ListaDeProyectos from '../organisms/ListaDeProyectos';
+
+const proyectosEjemplo = [
+    { nombre: "Inclusión y diversidad en la empresa", fecha: "23 de jun. 2023" },
+    { nombre: "Guía de orientación profesional", fecha: "02 de jun. 2023" },
+    { nombre: "Tendencias en el mercado laboral", fecha: "29 de may. 2023" }
+  ];
 
 const encuestas = [
     {
@@ -19,7 +26,7 @@ const encuestas = [
     }
   ];
 
-const Home: React.FC = () => {
+const HomeEgresado: React.FC = () => {
     const [activeOption, setActiveOption] = useState("Encuestas");
 
     return (
@@ -27,15 +34,13 @@ const Home: React.FC = () => {
             <Header></Header>
             <div style={{ width: '75%', margin: '0 auto'}}>
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
-            <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Calendario", "Cerradas", "Proyectos"]} />
+            <HomeMenu  activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas","Proyectos"]} />
             {activeOption === "Encuestas" && <EncuestaList title={'Encuestas'} encuestas={encuestas}></EncuestaList>}
-            {activeOption === "Activas" && <div>Contenido para Activas</div>}
-            {activeOption === "Cerradas" && <div>Contenido para Cerradas</div>}
-            {activeOption === "Calendario" && <div>Contenido para Calendario</div>}
-            {activeOption === "Proyectos" && <Proyectos></Proyectos>}
+            {activeOption === "Proyectos" && <ListaDeProyectos titulo="Mis proyectos" proyectos={proyectosEjemplo} />
+        }
             </div>
         </div>
     );
 };
 
-export default Home;
+export default HomeEgresado;
