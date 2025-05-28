@@ -2,13 +2,9 @@ import React, { useState } from 'react';
 import Header from '../organisms/Header';
 import HomeMenu from '../molecule/homeMenu';
 import EncuestaList from '../organisms/EncuestaList';
-import ListaDeProyectos from '../organisms/ListaDeProyectos';
+import ListaDeProyectosAEvaluar from '../organisms/ListaDeProyectosAEvaluar';
 
-const proyectosEjemplo = [
-    { nombre: "Inclusión y diversidad en la empresa", fecha: "23 de jun. 2023" },
-    { nombre: "Guía de orientación profesional", fecha: "02 de jun. 2023" },
-    { nombre: "Tendencias en el mercado laboral", fecha: "29 de may. 2023" }
-  ];
+
 
 const encuestas = [
     {
@@ -25,7 +21,7 @@ const encuestas = [
     }
   ];
 
-const HomeEgresado: React.FC = () => {
+const HomeEvaluador: React.FC = () => {
     const [activeOption, setActiveOption] = useState("Encuestas");
 
     return (
@@ -35,11 +31,11 @@ const HomeEgresado: React.FC = () => {
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
             <HomeMenu  activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas","Proyectos"]} />
             {activeOption === "Encuestas" && <EncuestaList title={'Encuestas'} encuestas={encuestas}></EncuestaList>}
-            {activeOption === "Proyectos" && <ListaDeProyectos titulo="Mis proyectos" proyectos={proyectosEjemplo} />
+            {activeOption === "Proyectos" && <ListaDeProyectosAEvaluar></ListaDeProyectosAEvaluar>
         }
             </div>
         </div>
     );
 };
 
-export default HomeEgresado;
+export default HomeEvaluador;
