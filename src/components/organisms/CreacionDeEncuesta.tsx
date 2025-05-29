@@ -38,7 +38,7 @@ const CreacionDeEncuesta: React.FC = () => {
                 alignItems: "stretch"
               }}
             >
-              <Pregunta onEliminarPregunta={() => eliminarPregunta(pregunta.id)} />
+              <Pregunta onEliminarPregunta={() => eliminarPregunta(pregunta.id)} id={pregunta.id} />
             </div>
           ))}
         </div>

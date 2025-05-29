@@ -1,6 +1,10 @@
 import { useState } from "react";
 
-const InfoEncuesta: React.FC = () => {
+interface InfoEncuestaProps {
+  editable?: boolean;
+}
+
+const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true }) => {
   const [titulo, setTitulo] = useState("Encuesta sin título");
   const [descripcion, setDescripcion] = useState("Descripción de la encuesta...");
 
@@ -24,11 +28,11 @@ const InfoEncuesta: React.FC = () => {
         borderTopRightRadius:"10px"
       }}></div>
 
-      {/* Título (Editable) */}
+      {/* Título (Editable o solo lectura) */}
       <input 
         type="text"
         value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
+        onChange={(e) => editable && setTitulo(e.target.value)}
         style={{
           width: "100%",
           fontSize: "28px",
@@ -40,13 +44,14 @@ const InfoEncuesta: React.FC = () => {
           paddingBottom:"15px",
           paddingTop:"5px",
         }}
+        readOnly={!editable}
       />
 
-      {/* Descripción (Editable) */}
+      {/* Descripción (Editable o solo lectura) */}
       <input 
         type="text"
         value={descripcion}
-        onChange={(e) => setDescripcion(e.target.value)}
+        onChange={(e) => editable && setDescripcion(e.target.value)}
         style={{
           width: "100%",
           fontSize: "16px",
@@ -58,6 +63,7 @@ const InfoEncuesta: React.FC = () => {
           backgroundColor: "transparent",
           marginTop: "5px",
         }}
+        readOnly={!editable}
       />
     </div>
   );

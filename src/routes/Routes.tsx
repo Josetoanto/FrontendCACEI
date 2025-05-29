@@ -9,12 +9,15 @@ import EvaluacionProyecto from '../components/pages/EvaluacionProyecto';
 import PerfilDeUsuario from '../components/pages/PerfilDeUsuario';
 import PerfilDeEvaluador from '../components/pages/PerfilDeEvaluador';
 import CrearEncuesta from '../components/pages/CrearEncuesta';
+import ResponderEncuesta from '../components/pages/ResponderEncuesta';
+import Login from '../components/pages/Login';
 
 const AppRoutes: React.FC = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/egresado" element={<HomeEgresado />} />
                 <Route path="/revision" element={<RevisionPage />} />
@@ -24,8 +27,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/perfil" element={<PerfilDeUsuario></PerfilDeUsuario>} />
                 <Route path="/perfilEvaluador" element={<PerfilDeEvaluador />} />
                 <Route path="/crearEncuesta" element={<CrearEncuesta />} />
-                
-
+                <Route path="/responderEncuesta" element={<ResponderEncuesta />} />
             </Routes>
         </Router>
     );
