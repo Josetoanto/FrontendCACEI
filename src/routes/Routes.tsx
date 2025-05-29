@@ -6,6 +6,9 @@ import HomeEgresado from '../components/pages/HomeEgresado';
 import AgregarProyecto from '../components/pages/AgregarProyecto';
 import HomeEvaluador from '../components/pages/HomeEvaluador';
 import EvaluacionProyecto from '../components/pages/EvaluacionProyecto';
+import PerfilDeUsuario from '../components/pages/PerfilDeUsuario';
+import PerfilDeEvaluador from '../components/pages/PerfilDeEvaluador';
+import CrearEncuesta from '../components/pages/CrearEncuesta';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -18,7 +21,10 @@ const AppRoutes: React.FC = () => {
                 <Route path="/agregarProyecto" element={<AgregarProyecto></AgregarProyecto>} />
                 <Route path="/evaluador" element={<HomeEvaluador></HomeEvaluador>} />
                 <Route path="/evaluar" element={<EvaluacionProyecto></EvaluacionProyecto>} />
-
+                <Route path="/perfil" element={<PerfilDeUsuario></PerfilDeUsuario>} />
+                <Route path="/perfilEvaluador" element={<PerfilDeEvaluador />} />
+                <Route path="/crearEncuesta" element={<CrearEncuesta />} />
+                
 
             </Routes>
         </Router>

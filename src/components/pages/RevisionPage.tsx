@@ -8,7 +8,7 @@ const Revision: React.FC = () => {
     return (
         <div>
         <Header></Header>
-      <div style={{ display: "flex", width: "100%", height: "100vh", padding: "18px", boxSizing: "border-box" }}>
+      <div style={{ display: "flex", width: "100%", height: "100vh", boxSizing: "border-box" }}>
         {/* Columna izquierda (70%) */}
         <div style={{ flex: "70%", padding: "20px", backgroundColor: "transparent", borderRadius: "8px" }}>
           <h2 style={{fontSize:"24px"}}>Revisión de la presentación de proyectos</h2>

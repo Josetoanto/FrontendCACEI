@@ -19,11 +19,10 @@ interface ProyectoDetallesProps {
         {/* Sección de atributos */}
         <div style={{ display: "grid", gridTemplateColumns: "30% 70%", rowGap: "8x" }}>
                      
-        <hr style={{ border: "1px solid #ccc", gridColumn: "span 2", margin: "10px 0" }} />
-          <span style={{color:"#61788A", fontSize: "16px" }}>Título:</span>
+          <hr style={{ border: "1px solid #ccc", gridColumn: "span 2", margin: "10px 0" }} />
+          <span style={{color:"#61788A", fontSize: "16px"}}>Título:</span>
           <span style={{fontSize: "16px"}}>{titulo}</span>
           <hr style={{ border: "1px solid #ccc", gridColumn: "span 2", margin: "10px 0" }} />
-
           <span style={{color:"#61788A",fontSize: "16px"}}>Descripción:</span>
           <span style={{ fontSize: "16px" }}>{descripcion}</span>
           <hr style={{ border: "1px solid #ccc", gridColumn: "span 2", margin: "10px 0" }} />
