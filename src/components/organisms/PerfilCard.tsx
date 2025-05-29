@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import UserInfo from "../molecule/UserInfo";
 import EditarPerfil from "../atoms/EditarPerfil";
+import EditarInfoBasica from "../molecule/EditarInfoBasica";
 
 interface PerfilCardProps {
   userData: {
@@ -8,12 +9,20 @@ interface PerfilCardProps {
     fotoPerfil: string;
     profesion: string;
     ubicacion: string;
+    descripcion: string;
   };
+  isEditing?: boolean;
+  toggleEditing?: () => void;
+  onSave?: (newData: {
+    nombre: string;
+    profesion: string;
+    ubicacion: string;
+    descripcion: string;
+  }) => void;
+  onCancel?: () => void;
 }
 
-const PerfilCard: React.FC<PerfilCardProps> = ({ userData }) => {
-  const [mostrarEditar] = useState(true);
-
+const PerfilCard: React.FC<PerfilCardProps> = ({ userData, isEditing, toggleEditing, onSave, onCancel }) => {
   return (
     <div style={{
       maxWidth: "1000px",
@@ -24,10 +33,20 @@ const PerfilCard: React.FC<PerfilCardProps> = ({ userData }) => {
       paddingBottom: "0px",
        borderBottom: "2px solid #ddd"
     }}>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-      <UserInfo nombre={userData.nombre} fotoPerfil={userData.fotoPerfil} profesion={userData.profesion} ubicacion={userData.ubicacion} />
-      {mostrarEditar && <EditarPerfil />}
-    </div>
+        {
+            isEditing ? (
+                <EditarInfoBasica 
+                    initialData={userData} 
+                    onSave={onSave!}
+                    onCancel={onCancel!}
+                />
+            ) : (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <UserInfo nombre={userData.nombre} fotoPerfil={userData.fotoPerfil} profesion={userData.profesion} ubicacion={userData.ubicacion} />
+                    <EditarPerfil onClick={toggleEditing} />
+                </div>
+            )
+        }
       {/* Espacio para más contenido de perfil */}
      
     </div>

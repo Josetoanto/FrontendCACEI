@@ -1,11 +1,21 @@
 import Curso from "../atoms/Curso";
+import React from 'react';
 
-const cursos = [
-  { nombre: "Animación UI Básica", fecha: "2020", url: "https://coursera.org/curso-animacion-ui" },
-  { nombre: "Diseño con extracción de datos", fecha: "2019", url: "https://udemy.com/curso-diseno-datos" }
-];
+interface CursoData {
+  nombre: string;
+  fecha: string;
+  url: string;
+}
 
-const ListaDeCursos: React.FC = () => {
+interface ListaDeCursosProps {
+  cursos: CursoData[];
+  isEditing: boolean;
+  setCursos: React.Dispatch<React.SetStateAction<CursoData[]>>;
+}
+
+// const cursos = [...]; // Remove hardcoded data
+
+const ListaDeCursos: React.FC<ListaDeCursosProps> = ({ cursos, isEditing }) => {
   return (
     <div style={{
       margin: "auto",
@@ -16,14 +26,19 @@ const ListaDeCursos: React.FC = () => {
     }}>
         <h2 style={{ textAlign: "left", marginBottom: "15px", fontSize: "18px", paddingLeft: "15px" }}>Cursos</h2>
 
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-      }}>
-        {cursos.map((item, index) => (
-          <Curso key={index} nombre={item.nombre} fecha={item.fecha} url={item.url} />
-        ))}
-      </div>
+      {isEditing ? (
+        // Placeholder for editing component
+        <div style={{ paddingLeft: "15px" }}>Modo edición de Cursos...</div>
+      ) : (
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+        }}>
+          {cursos.map((item, index) => (
+            <Curso key={index} nombre={item.nombre} fecha={item.fecha} url={item.url} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

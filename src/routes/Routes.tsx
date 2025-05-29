@@ -11,6 +11,7 @@ import PerfilDeEvaluador from '../components/pages/PerfilDeEvaluador';
 import CrearEncuesta from '../components/pages/CrearEncuesta';
 import ResponderEncuesta from '../components/pages/ResponderEncuesta';
 import Login from '../components/pages/Login';
+import IngresarCodigo from '../components/pages/IngresarCodigo';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -28,6 +29,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/perfilEvaluador" element={<PerfilDeEvaluador />} />
                 <Route path="/crearEncuesta" element={<CrearEncuesta />} />
                 <Route path="/responderEncuesta" element={<ResponderEncuesta />} />
+                <Route path="/ingresar-codigo" element={<IngresarCodigo />} />
             </Routes>
         </Router>
     );

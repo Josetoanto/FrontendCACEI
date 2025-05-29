@@ -1,4 +1,10 @@
-const EditarPerfil: React.FC = () => {
+import React from 'react';
+
+interface EditarPerfilProps {
+  onClick?: () => void;
+}
+
+const EditarPerfil: React.FC<EditarPerfilProps> = ({ onClick }) => {
     return (
       <button 
         style={{
@@ -14,6 +20,7 @@ const EditarPerfil: React.FC = () => {
           margin:"auto",
           marginRight:"0px"
         }}
+        onClick={onClick}
       >
         Editar perfil
       </button>

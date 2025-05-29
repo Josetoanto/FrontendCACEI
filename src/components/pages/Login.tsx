@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Login: React.FC = () => {
   return (
@@ -7,7 +8,7 @@ const Login: React.FC = () => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      backgroundColor: '#f0f2f5',
+      backgroundColor: '#f0ebf8',
     }}>
       <div style={{
         backgroundColor: '#fff',
@@ -81,6 +82,11 @@ const Login: React.FC = () => {
           marginBottom: '20px',
         }}>Siguiente</button>
         
+        <p style={{ fontSize: '0.9em' }}>
+          <Link to="/ingresar-codigo" style={{ color: '#007bff', textDecoration: 'none' }}>
+            Ingresar con código de encuesta
+          </Link>
+        </p>
       </div>
     </div>
   );
