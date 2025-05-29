@@ -12,6 +12,7 @@ import CrearEncuesta from '../components/pages/CrearEncuesta';
 import ResponderEncuesta from '../components/pages/ResponderEncuesta';
 import Login from '../components/pages/Login';
 import IngresarCodigo from '../components/pages/IngresarCodigo';
+import ModificarRubrica from '../components/pages/ModificarRubrica';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -30,6 +31,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/crearEncuesta" element={<CrearEncuesta />} />
                 <Route path="/responderEncuesta" element={<ResponderEncuesta />} />
                 <Route path="/ingresar-codigo" element={<IngresarCodigo />} />
+                <Route path="/modificar-rubrica" element={<ModificarRubrica />} />
             </Routes>
         </Router>
     );

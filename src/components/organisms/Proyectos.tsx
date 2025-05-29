@@ -2,6 +2,7 @@ import InformationCard from "../molecule/InformationCard";
 import TrendChart from "../molecule/TrendChart";
 import EvaluacionProyectosTabla from "./EvaluacionProyectosTabla";
 import DescargarCSV from "../atoms/DescargarCSV";
+import { useNavigate } from 'react-router-dom';
 
 const Proyectos: React.FC = () => {
   const data = [
@@ -9,6 +10,12 @@ const Proyectos: React.FC = () => {
     { title: "Puntuación promedio", value: "82" + "/100" },
     { title: "Proyectos evaluados", value: "50" }
   ];
+
+  const navigate = useNavigate();
+
+  const handleModifyRubricaClick = () => {
+    navigate('/modificar-rubrica');
+  };
 
   return (
     <div style={{ width: "100%", margin: "auto", textAlign: "center" }}>
@@ -31,6 +38,23 @@ const Proyectos: React.FC = () => {
       </div>
       <EvaluacionProyectosTabla></EvaluacionProyectosTabla>
       <DescargarCSV></DescargarCSV>
+      {/* Nuevo botón para modificar rúbrica */}
+      <button
+        style={{
+          backgroundColor: "#f0f2f5", 
+          color: "#000", 
+          border: "none",
+          padding: "10px 20px",
+          fontSize: "16px",
+          cursor: "pointer",
+          borderRadius: "12px", 
+          width:"100%",
+          marginTop: "10px" 
+        }}
+        onClick={handleModifyRubricaClick}
+      >
+        Modificar Rúbrica
+      </button>
     </div>
   );
 };
