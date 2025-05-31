@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import InformationCard from "../molecule/InformationCard";
 import TrendChart from "../molecule/TrendChart";
 import EvaluacionProyectosTabla from "./EvaluacionProyectosTabla";
@@ -5,17 +6,215 @@ import DescargarCSV from "../atoms/DescargarCSV";
 import { useNavigate } from 'react-router-dom';
 
 const Proyectos: React.FC = () => {
-  const data = [
-    { title: "Evaluaciones totales", value: "245" },
-    { title: "Puntuación promedio", value: "82" + "/100" },
-    { title: "Proyectos evaluados", value: "50" }
-  ];
+  const [totalEvaluations, setTotalEvaluations] = useState<number | string>('--');
+  const [averageScore, setAverageScore] = useState<string>('--/100');
+  const [evaluatedProjectsCount, setEvaluatedProjectsCount] = useState<number | string>('--');
+  const [enrichedEvaluations, setEnrichedEvaluations] = useState<any[]>([]);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchEvaluationData = async () => {
+      const userToken = localStorage.getItem('userToken');
+
+      if (!userToken) {
+        console.log('No user token found, cannot fetch data.');
+        // navigate('/login'); // Uncomment if you want to redirect
+        return;
+      }
+
+      const apiUrlEvaluations = 'https://gcl58kpp-8000.use2.devtunnels.ms/evaluations';
+      const apiUrlProjectsBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects/';
+      const apiUrlUsersBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/'; // API de usuarios
+
+      try {
+        // 1. Fetch evaluations
+        const evaluationsResponse = await fetch(apiUrlEvaluations, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${userToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!evaluationsResponse.ok) {
+          console.error('Error fetching evaluations:', evaluationsResponse.status);
+          setTotalEvaluations('Error');
+          setAverageScore('Error/100');
+          setEvaluatedProjectsCount('Error');
+          setEnrichedEvaluations([]);
+          return;
+        }
+
+        const evaluationsData = await evaluationsResponse.json();
+
+        // Calculate statistics (using evaluationsData)
+        const total = evaluationsData.length;
+        setTotalEvaluations(total);
+
+        const uniqueProjectIds = Array.from(new Set<number>(evaluationsData.map((evaluation: any) => evaluation.proyecto_id)));
+        setEvaluatedProjectsCount(uniqueProjectIds.length);
+
+        let totalCriterionScoreSum = 0;
+        let totalCriterionCount = 0;
+        evaluationsData.forEach((evaluation: any) => {
+          if (evaluation.criterios && Array.isArray(evaluation.criterios)) {
+            evaluation.criterios.forEach((criterio: any) => {
+              if (typeof criterio.puntuacion === 'number') {
+                totalCriterionScoreSum += criterio.puntuacion;
+                totalCriterionCount++;
+              }
+            });
+          }
+        });
+
+        const avg = totalCriterionCount > 0 ? (totalCriterionScoreSum / totalCriterionCount) : 0;
+        setAverageScore(`${Math.round(avg)}/100`);
+
+        // 2. Fetch details for each unique evaluated project to get egresado_id
+        const projectDetailsPromises = uniqueProjectIds.map(async (projectId) => {
+          try {
+            const projectResponse = await fetch(`${apiUrlProjectsBase}${projectId}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (!projectResponse.ok) {
+              console.error(`Error fetching project ${projectId} details:`, projectResponse.status);
+              return null; // Return null or handle error as needed
+            }
+
+            const projectData = await projectResponse.json();
+            return projectData; 
+
+          } catch (error) {
+            console.error(`Error fetching project ${projectId} details:`, error);
+            return null;
+          }
+        });
+
+        const fetchedProjectDetails = await Promise.all(projectDetailsPromises);
+        const validProjectDetails = fetchedProjectDetails.filter(detail => detail !== null);
+        // Map project details by ID for easy lookup
+        const projectDetailsMap = new Map(validProjectDetails.map(project => [project.id, project]));
+
+        // 3. Fetch details for unique evaluators and egresados
+        const uniqueEvaluatorIds = Array.from(new Set<number>(evaluationsData.map((evaluation: any) => evaluation.evaluador_id)));
+        const uniqueEgresadoIds = Array.from(new Set<number>(validProjectDetails.map(project => project.egresado_id)));
+        const uniqueUserIds = Array.from(new Set([...uniqueEvaluatorIds, ...uniqueEgresadoIds]));
+
+        const userDetailsPromises = uniqueUserIds.map(async (userId) => {
+             if (userId === null || userId === undefined) return null; // Handle potential null/undefined IDs
+             try {
+               const userResponse = await fetch(`${apiUrlUsersBase}${userId}`, {
+                 method: 'GET',
+                 headers: {
+                   'Authorization': `Bearer ${userToken}`,
+                   'Content-Type': 'application/json',
+                 },
+               });
+
+               if (!userResponse.ok) {
+                 console.error(`Error fetching user ${userId} details:`, userResponse.status);
+                 return null; 
+               }
+
+               const userData = await userResponse.json();
+               return userData;
+
+             } catch (error) {
+               console.error(`Error fetching user ${userId} details:`, error);
+               return null;
+             }
+           });
+
+           const fetchedUserDetails = await Promise.all(userDetailsPromises);
+           const validUserDetails = fetchedUserDetails.filter(user => user !== null);
+           // Map user details by ID for easy lookup
+           const userDetailsMap = new Map(validUserDetails.map(user => [user.id, user]));
+
+        // 4. Combine data: enrich evaluations with project and user names
+        const combinedEvaluations = evaluationsData.map((evaluation: any) => {
+            const project = projectDetailsMap.get(evaluation.proyecto_id);
+            const evaluator = userDetailsMap.get(evaluation.evaluador_id);
+            const student = project ? userDetailsMap.get(project.egresado_id) : null;
+
+            // Calculate average score for the current evaluation
+            let evaluationCriterionScoreSum = 0;
+            let evaluationCriterionCount = 0;
+             if (evaluation.criterios && Array.isArray(evaluation.criterios)) {
+               evaluation.criterios.forEach((criterio: any) => {
+                 if (typeof criterio.puntuacion === 'number') {
+                   evaluationCriterionScoreSum += criterio.puntuacion;
+                   evaluationCriterionCount++;
+                 }
+               });
+             }
+             const evaluationAvgScore = evaluationCriterionCount > 0 ? (evaluationCriterionScoreSum / evaluationCriterionCount) : 0;
+
+            return {
+                ...evaluation, // Keep original evaluation data
+                projectName: project ? project.titulo : 'N/A',
+                studentName: student ? student.nombre : 'N/A',
+                evaluatorName: evaluator ? evaluator.nombre : 'N/A',
+                averageEvaluationScore: Math.round(evaluationAvgScore), // Add calculated avg score for this evaluation
+            };
+        });
+
+        setEnrichedEvaluations(combinedEvaluations);
+
+        // Calculate the average of the average scores for each evaluation
+        let sumOfEvaluationAverages = 0;
+        if (combinedEvaluations.length > 0) {
+            combinedEvaluations.forEach((evaluation: any) => {
+                sumOfEvaluationAverages += evaluation.averageEvaluationScore;
+            });
+            const overallAverage = sumOfEvaluationAverages / combinedEvaluations.length;
+            setAverageScore(`${Math.round(overallAverage)}/100`); // Round and format
+        } else {
+             setAverageScore('--/100');
+        }
+
+        // Group evaluations by project ID and find the most recent one for each project
+        const evaluationsByProject: { [key: number]: any[] } = combinedEvaluations.reduce((acc: { [key: number]: any[] }, evaluation: any) => {
+            acc[evaluation.proyecto_id] = acc[evaluation.proyecto_id] || [];
+            acc[evaluation.proyecto_id].push(evaluation);
+            return acc;
+        }, {});
+
+        const latestEvaluations = Object.values(evaluationsByProject).map((evals: any[]) => {
+            // Sort evaluations for this project by creation date in descending order
+            evals.sort((a: any, b: any) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());
+            return evals[0]; // Return the most recent evaluation for this project
+        });
+
+        // Pasar las evaluaciones más recientes por proyecto a EvaluacionProyectosTabla
+        setEnrichedEvaluations(latestEvaluations); // Reutilizamos el estado para la lista filtrada
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setTotalEvaluations('Error');
+        setAverageScore('Error/100');
+        setEvaluatedProjectsCount('Error');
+        setEnrichedEvaluations([]);
+      }
+    };
+
+    fetchEvaluationData();
+  }, [navigate]); // Dependencia de navigate para evitar advertencia
 
   const handleModifyRubricaClick = () => {
     navigate('/modificar-rubrica');
   };
+
+  const data = [
+    { title: "Evaluaciones totales", value: totalEvaluations.toString() },
+    { title: "Puntuación promedio", value: averageScore },
+    { title: "Proyectos evaluados", value: evaluatedProjectsCount.toString() }
+  ];
 
   return (
     <div style={{ width: "100%", margin: "auto", textAlign: "center" }}>
@@ -36,7 +235,7 @@ const Proyectos: React.FC = () => {
       <div style={{borderRadius:"12px",border:"2px solid #dbe0e5",height:"420px", marginTop:"20px",padding:"20px"}}>
       <TrendChart></TrendChart>
       </div>
-      <EvaluacionProyectosTabla></EvaluacionProyectosTabla>
+      <EvaluacionProyectosTabla evaluationsData={enrichedEvaluations}></EvaluacionProyectosTabla>
       <DescargarCSV></DescargarCSV>
       {/* Nuevo botón para modificar rúbrica */}
       <button

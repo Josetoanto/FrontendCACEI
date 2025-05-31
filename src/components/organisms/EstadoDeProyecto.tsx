@@ -1,6 +1,15 @@
 import ProjectCard from "../molecule/ProjectCard";
 
-const EstadoDeProyecto: React.FC = () => {
+// Definir la interfaz para las props
+interface EstadoDeProyectoProps {
+  evidenciasCount: number;
+  evaluationsCount: number | string; // Aceptar number o string
+  uploadDate: string;
+  projectStatus: string;
+}
+
+// Actualizar la definición del componente para aceptar las props
+const EstadoDeProyecto: React.FC<EstadoDeProyectoProps> = ({ evidenciasCount, evaluationsCount, uploadDate, projectStatus }) => {
   return (
     <div style={{
       display: "flex",
@@ -8,10 +17,11 @@ const EstadoDeProyecto: React.FC = () => {
       justifyContent: "center",
       paddingTop: "20px"
     }}>
-      <ProjectCard iconClass="fas fa-folder-open" title="3 Evidencias" value="Evidencias de proyectos" />
-      <ProjectCard iconClass="fas fa-user-check" title="15 Evaluadores" value="Este proyecto ha sido revisado 15 veces" />
-      <ProjectCard iconClass="fas fa-calendar-alt" title="Subido el 16 de Mayo" value="Fecha de subida del proyecto" />
-      <ProjectCard iconClass="fas fa-check-circle" title="Finalizado" value="Estado actual del proyecto" />
+      {/* Usar datos dinámicos en ProjectCard */}
+      <ProjectCard iconClass="fas fa-folder-open" title={`${evidenciasCount} Evidencias`} value="Evidencias de proyectos" />
+      <ProjectCard iconClass="fas fa-user-check" title={`${evaluationsCount} Evaluaciones`} value={`Este proyecto ha sido revisado ${evaluationsCount} veces`} />
+      <ProjectCard iconClass="fas fa-calendar-alt" title={`Subido el ${uploadDate}`} value="Fecha de subida del proyecto" />
+      <ProjectCard iconClass="fas fa-check-circle" title={projectStatus} value="Estado actual del proyecto" />
     </div>
   );
 };

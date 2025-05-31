@@ -27,7 +27,7 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc 
         </div>
 
         {/* Contenido */}
-        <p style={{ fontSize: "14px", color: "#666" , marginBottom: "10px"}}>Creada a las {createdAt}</p>
+        <p style={{ fontSize: "14px", color: "#666" , marginBottom: "10px"}}>Creada el {createdAt}</p>
       </div>
     </div>
   );

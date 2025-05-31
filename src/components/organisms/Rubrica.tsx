@@ -3,23 +3,26 @@ interface RubricaItem {
     puntuacion: number;
   }
   
-  const rubricas: RubricaItem[] = [
-    { nombreRubrica: "Calidad del código", puntuacion: 85 },
-    { nombreRubrica: "Documentación", puntuacion: 90 },
-    { nombreRubrica: "Desempeño", puntuacion: 78 },
-    { nombreRubrica: "Usabilidad", puntuacion: 92 },
-  ];
+  // Definir la interfaz para las props, incluyendo evaluationDetails
+  interface RubricaProps {
+      evaluationDetails: any; // Usamos any por ahora, idealmente sería el tipo de la evaluación enriquecida
+  }
   
-  const Rubrica: React.FC = () => {
+  // Actualizar la definición del componente para aceptar evaluationDetails
+  const Rubrica: React.FC<RubricaProps> = ({ evaluationDetails }) => {
+      // Usar los criterios de evaluationDetails si están disponibles
+      const rubricasToShow = evaluationDetails?.criterios || [];
+  
     return (
       <div style={{ paddingTop: "10px", backgroundColor: "transparent", borderRadius: "10px" }}>
         <h2 style={{ textAlign: "left", marginBottom: "14px" , fontSize:"18px"}}>Rúbrica de Evaluación</h2>
   
         {/* Tabla de rúbrica */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {rubricas.map((item, index) => (
+          {rubricasToShow.map((item: any, index: number) => (
             <div key={index} style={{ paddingBottom: "10px", borderBottom: "1px solid #ddd" }}>
-              <p style={{ fontSize: "14px", color: "#61788A", margin: "16px 0 0" }}>{item.nombreRubrica}</p>
+              {/* Mostrar nombre del criterio y puntuación de la evaluación específica */}
+              <p style={{ fontSize: "14px", color: "#61788A", margin: "16px 0 0" }}>{item.comentario || 'Sin comentario'}</p> {/* Asumiendo que 'comentario' es el nombre del criterio o una descripción */}
               <p style={{ fontSize: "14px", color: "black", margin: "5px 0 0" }}>{item.puntuacion}/100</p>
             </div>
           ))}

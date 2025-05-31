@@ -1,17 +1,21 @@
 import ProyectoEvaluado from "../atoms/ProyectoEvaluado";
 
-const proyectos = [
-  { nombreProyecto: "Plataforma E-Commerce", estudiante: "Liam Carter", evaluador: "Sophia Walker", puntuacion: 88 },
-  { nombreProyecto: "App de celular", estudiante: "Chloe Davis", evaluador: "Ethan Wright", puntuacion: 92 },
-  { nombreProyecto: "Social Media Dashboard", estudiante: "Noah Taylor", evaluador: "Isabella Bennett", puntuacion: 76 },
-  { nombreProyecto: "Data Analytics Tool", estudiante: "Mia Evans", evaluador: "Jackson Lewis", puntuacion: 85 },
-  { nombreProyecto: "AI-Powered Chatbot", estudiante: "Oliver Robinson", evaluador: "Grace Hill", puntuacion: 90 }
-];
+// Definir la interfaz para las props, incluyendo evaluationsData
+interface EvaluacionProyectosTablaProps {
+  evaluationsData: any[]; // Usamos any[] por ahora, idealmente sería un tipo más específico basado en la estructura combinada
+}
 
-const EvaluacionProyectosTabla: React.FC = () => {
+// Eliminar datos estáticos
+// const proyectos = [
+//   { nombreProyecto: "Plataforma E-Commerce", estudiante: "Liam Carter", evaluador: "Sophia Walker", puntuacion: 88 },
+//   // ... otros proyectos estáticos
+// ];
+
+// Actualizar la definición del componente para aceptar evaluationsData
+const EvaluacionProyectosTabla: React.FC<EvaluacionProyectosTablaProps> = ({ evaluationsData }) => {
   return (
     <div style={{ margin: "auto", marginBottom:"18px" }}>
-      <h2 style={{fontSize: "24px", textAlign: "left", marginBottom: "12px" }}>Evaluaciones de proyectos recientes</h2>
+      <h2 style={{fontSize: "24px", textAlign: "left", marginBottom: "12px" }}>Proyectos recientes</h2>
       <table style={{ width: "100%", borderCollapse: "collapse", boxShadow: "2px 2px 10px rgba(0,0,0,0.1)" }}>
         <thead>
           <tr style={{ backgroundColor: "#f8f8f8", textAlign: "center" }}>
@@ -23,8 +27,9 @@ const EvaluacionProyectosTabla: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {proyectos.map((proyecto, index) => (
-            <ProyectoEvaluado key={index} {...proyecto} />
+          {/* Mapear sobre evaluationsData y pasar cada evaluación enriquecida a ProyectoEvaluado */}
+          {evaluationsData.map((evaluation: any) => (
+            <ProyectoEvaluado key={evaluation.id} evaluation={evaluation} />
           ))}
         </tbody>
       </table>
