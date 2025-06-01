@@ -1,34 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../organisms/Header';
 import RubricaItemEditable from '../molecule/RubricaItemEditable';
 
 // Datos iniciales de la rúbrica
-const initialRubricas = [
-  { id: 1, titulo: "Diseño", descripcion: "Se evalúa la coherencia y estética visual del proyecto." },
-  { id: 2, titulo: "Impacto en la comunidad", descripcion: "Cómo afecta positiva o negativamente a su entorno." },
-  { id: 3, titulo: "Implementación y ejecución", descripcion: "La viabilidad y correcta aplicación del proyecto." },
-  { id: 4, titulo: "Sustentabilidad", descripcion: "Capacidad de perdurar en el tiempo sin afectar recursos." },
-  { id: 5, titulo: "Innovación y originalidad", descripcion: "Uso creativo y novedoso de tecnologías o ideas." }
-];
 
 const ModificarRubrica: React.FC = () => {
-  const [rubricas, setRubricas] = useState(initialRubricas);
+  const [rubricas, setRubricas] = useState<{ id: number; titulo: string; descripcion: string; }[]>([]); // Inicializa con un array vacío y especifica el tipo
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRubricas = async () => {
+      try {
+        const token = localStorage.getItem('userToken'); // Obtén el token del localStorage
+        if (!token) {
+          setError('No se encontró el token de autenticación.');
+          setLoading(false);
+          return;
+        }
+
+        const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/criteria';
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}` // Añade el token al encabezado
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al cargar las rúbricas: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        // Mapea los datos de la API al formato esperado por el componente
+        const formattedRubricas = data.map((item: any) => ({
+          id: item.id,
+          titulo: item.nombre, // 'nombre' de la API se mapea a 'titulo'
+          descripcion: item.descripcion,
+        }));
+        setRubricas(formattedRubricas);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRubricas();
+  }, []); // El array vacío asegura que se ejecute una sola vez al montar
 
   // Función para agregar una nueva rúbrica
-  const handleAddRubrica = () => {
+  const handleAddRubrica = async () => {
     if (rubricas.length < 5) {
-      const newId = Date.now();
-      const nuevaRubrica = { id: newId, titulo: "Nueva Rúbrica", descripcion: "Descripción de la nueva rúbrica." };
-      setRubricas([...rubricas, nuevaRubrica]);
+      const newId = Date.now(); // Genera un ID temporal para el estado local
+      const nuevaRubrica = {
+        id: newId,
+        titulo: "Nueva Rúbrica",
+        descripcion: "Descripción de la nueva rúbrica."
+      };
+
+      try {
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+          return;
+        }
+
+        const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/criteria';
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nombre: "Nueva Rubrica", // Nombre por defecto para la nueva rúbrica
+            descripcion: "Descripcion de Rubrica", // Descripción por defecto
+            peso: 100, // Valor de peso fijado a 100
+            competencia_asociada: "" // Valor por defecto, ya que se ignora
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error al agregar rúbrica: ${response.status} - ${errorText}`);
+        }
+
+        const addedRubrica = await response.json();
+        // Asumiendo que la API devuelve la rúbrica creada con su ID real y otros datos
+        const formattedAddedRubrica = {
+          id: addedRubrica.id,
+          titulo: addedRubrica.nombre,
+          descripcion: addedRubrica.descripcion,
+        };
+
+        setRubricas([...rubricas, formattedAddedRubrica]);
+      } catch (err: any) {
+        alert(`Error al agregar la rúbrica: ${err.message}`);
+      }
     }
   };
 
   // Función para eliminar una rúbrica por su ID
-  const handleRemoveRubrica = (id: number) => {
+  const handleRemoveRubrica = async (id: number) => {
     if (rubricas.length > 3) {
-      setRubricas(rubricas.filter(rubrica => rubrica.id !== id));
+      try {
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+          return;
+        }
+
+        const apiUrl = `https://gcl58kpp-8000.use2.devtunnels.ms/criteria/${id}`;
+        const response = await fetch(apiUrl, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error al eliminar rúbrica: ${response.status} - ${errorText}`);
+        }
+
+        // Si la eliminación en la API es exitosa, actualiza el estado local
+        setRubricas(rubricas.filter(rubrica => rubrica.id !== id));
+        alert('Rúbrica eliminada exitosamente.');
+      } catch (err: any) {
+        alert(`Error al eliminar la rúbrica: ${err.message}`);
+      }
     }
   };
+
+  if (loading) {
+    return <div>Cargando rúbricas...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>

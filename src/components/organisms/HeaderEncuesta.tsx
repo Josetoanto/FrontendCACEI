@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import upLogo from "../../assets/upLogo.png";
-import ProfilePicture from "../atoms/ProfilePicture";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderEncuestaProps {
   activo: string;
@@ -11,6 +11,14 @@ interface HeaderEncuestaProps {
 }
 
 const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode, onSave }) => {
+  const navigate = useNavigate();
+
+  const handleCancel = () => {
+    if (window.confirm("¿Estás seguro que quieres cancelar? Perderás todos los cambios no guardados.")) {
+      navigate('/home');
+    }
+  };
+
   return (
     <div style={{
       padding: "16px",
@@ -38,7 +46,14 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surv
             border: "none",
             cursor: "pointer"
           }}>{isEditMode ? "Guardar" : "Publicar"}</button>
-    <ProfilePicture src={""} ></ProfilePicture>
+          <button onClick={handleCancel} style={{
+            backgroundColor: "#dc3545", // Color rojo para cancelar
+            color: "#fff",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer"
+          }}>Cancelar</button>
         </div>
       </div>
 

@@ -70,6 +70,7 @@ const Home: React.FC = () => {
                     // Si necesitas la descripción u otros campos en el futuro, añádelos aquí
                 }));
                 setEncuestas(mappedEncuestas);
+                console.log("Todas las encuestas mapeadas:", mappedEncuestas);
             }
 
         } catch (error) {
@@ -92,12 +93,16 @@ const Home: React.FC = () => {
         encuesta.fin < now
     );
 
+    const futureEncuestas = encuestas.filter(encuesta =>
+        encuesta.inicio > now
+    );
+
     return (
         <div style={{paddingBottom:"24px"}}>
             <Header></Header>
             <div style={{ width: '75%', margin: '0 auto'}}>
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
-            <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Proyectos"]} />
+            <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Futuras", "Proyectos"]} />
             {/* Mostrar EncuestaList basado en la opción activa y el tipo de usuario */}
             {activeOption === "Encuestas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && encuestas.length > 0 && <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>}
             {activeOption === "Activas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && activeEncuestas.length > 0 && <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>}
@@ -106,6 +111,13 @@ const Home: React.FC = () => {
                     <EncuestaList title={'Encuestas Cerradas'} encuestas={closedEncuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>
                 ) : (
                     <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas cerradas en este momento.</p>
+                )
+            )}
+            {activeOption === "Futuras" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && (
+                futureEncuestas.length > 0 ? (
+                    <EncuestaList title={'Encuestas Futuras'} encuestas={futureEncuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>
+                ) : (
+                    <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas futuras en este momento.</p>
                 )
             )}
             {/* Eliminar el placeholder de Calendario */}

@@ -40,7 +40,7 @@ interface CreacionDeEncuestaProps {
   setQuestionsToDelete: Dispatch<SetStateAction<number[]>>;
 }
 
-const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData, setSurveyData, onQuestionsChange, questionsToDelete, setQuestionsToDelete }) => {
+const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData, setSurveyData, onQuestionsChange, setQuestionsToDelete }) => {
     const [preguntas, setPreguntas] = useState<Question[]>([]);
     const nextId = useRef(1);
 

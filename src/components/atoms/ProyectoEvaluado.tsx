@@ -15,7 +15,7 @@ const ProyectoEvaluado: React.FC<ProyectoEvaluadoProps> = ({ evaluation }) => {
   const navigate = useNavigate();
 
   const handleViewClick = () => {
-    navigate(`/revision/proyecto/${evaluation.proyecto_id}`);
+    navigate(`/revision/proyecto/${evaluation.proyecto_id}/evaluacion/${evaluation.id}`);
   };
 
   return (

@@ -8,27 +8,45 @@ import Rubrica from "../organisms/Rubrica";
 
 const Revision: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
+    const { evaluationId } = useParams<{ evaluationId: string }>();
     const [projectDetails, setProjectDetails] = useState<any>(null);
     const [studentName, setStudentName] = useState<string | null>(null);
     const [projectEvaluations, setProjectEvaluations] = useState<any[]>([]);
-    const [latestEvaluation, setLatestEvaluation] = useState<any>(null);
+    const [currentEvaluation, setCurrentEvaluation] = useState<any>(null);
     const [evidenceData, setEvidenceData] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             const userToken = localStorage.getItem('userToken');
 
-            if (!userToken || !projectId) {
-                console.log('No user token or project ID found.');
+            if (!userToken || !projectId || !evaluationId) {
+                console.log('No user token, project ID, or evaluation ID found.');
                 return;
             }
 
             const apiUrlEvaluations = 'https://gcl58kpp-8000.use2.devtunnels.ms/evaluations';
+            const apiUrlEvaluationSpecific = `https://gcl58kpp-8000.use2.devtunnels.ms/evaluations/${evaluationId}`;
             const apiUrlProjectsBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects/';
             const apiUrlUsersBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/';
             const apiUrlEvidencesBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/evidences/project/';
 
             try {
+                const specificEvaluationResponse = await fetch(apiUrlEvaluationSpecific, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!specificEvaluationResponse.ok) {
+                    console.error(`Error fetching specific evaluation ${evaluationId} details:`, specificEvaluationResponse.status);
+                    setCurrentEvaluation(null);
+                    return;
+                }
+                const specificEvaluationData = await specificEvaluationResponse.json();
+                setCurrentEvaluation(specificEvaluationData);
+
                 const projectResponse = await fetch(`${apiUrlProjectsBase}${projectId}`, {
                     method: 'GET',
                     headers: {
@@ -42,7 +60,6 @@ const Revision: React.FC = () => {
                     setProjectDetails(null);
                     setStudentName('Error');
                     setProjectEvaluations([]);
-                    setLatestEvaluation(null);
                     setEvidenceData([]);
                     return;
                 }
@@ -83,20 +100,12 @@ const Revision: React.FC = () => {
                 if (!evaluationsResponse.ok) {
                     console.error('Error fetching all evaluations:', evaluationsResponse.status);
                     setProjectEvaluations([]);
-                    setLatestEvaluation(null);
                     return;
                 }
 
                 const allEvaluationsData = await evaluationsResponse.json();
-                const projectEvaluations = allEvaluationsData.filter((evalItem: any) => evalItem.proyecto_id.toString() === projectId);
-                setProjectEvaluations(projectEvaluations);
-
-                let mostRecentEvaluation = null;
-                if(projectEvaluations.length > 0) {
-                    projectEvaluations.sort((a: any, b: any) => new Date(b.actualizado_en || b.creado_en).getTime() - new Date(a.actualizado_en || a.creado_en).getTime());
-                    mostRecentEvaluation = projectEvaluations[0];
-                }
-                setLatestEvaluation(mostRecentEvaluation);
+                const projectEvaluationsFiltered = allEvaluationsData.filter((evalItem: any) => evalItem.proyecto_id.toString() === projectId);
+                setProjectEvaluations(projectEvaluationsFiltered);
 
                 const evidencesResponse = await fetch(`${apiUrlEvidencesBase}${projectId}`, {
                     method: 'GET',
@@ -120,7 +129,7 @@ const Revision: React.FC = () => {
                 setProjectDetails(null);
                 setStudentName('Error');
                 setProjectEvaluations([]);
-                setLatestEvaluation(null);
+                setCurrentEvaluation(null);
                 setEvidenceData([]);
             }
         };
@@ -150,10 +159,10 @@ const Revision: React.FC = () => {
     }
 
     let averageEvaluationScore = '--';
-    if(latestEvaluation && latestEvaluation.criterios && Array.isArray(latestEvaluation.criterios)){
+    if(currentEvaluation && currentEvaluation.criterios && Array.isArray(currentEvaluation.criterios)){
         let totalCriterionScoreSum = 0;
         let totalCriterionCount = 0;
-        latestEvaluation.criterios.forEach((criterio: any) => {
+        currentEvaluation.criterios.forEach((criterio: any) => {
             if(typeof criterio.puntuacion === 'number'){
                 totalCriterionScoreSum += criterio.puntuacion;
                 totalCriterionCount++;
@@ -163,8 +172,8 @@ const Revision: React.FC = () => {
     }
 
     let projectLatestComment = 'Sin comentario';
-    if(latestEvaluation && latestEvaluation.criterios && Array.isArray(latestEvaluation.criterios) && latestEvaluation.criterios.length > 0) {
-        const lastCriterionWithComment = [...latestEvaluation.criterios].reverse().find((criterio: any) => criterio.comentario);
+    if(currentEvaluation && currentEvaluation.criterios && Array.isArray(currentEvaluation.criterios) && currentEvaluation.criterios.length > 0) {
+        const lastCriterionWithComment = [...currentEvaluation.criterios].reverse().find((criterio: any) => criterio.comentario);
         if(lastCriterionWithComment){
             projectLatestComment = lastCriterionWithComment.comentario;
         }
@@ -198,7 +207,7 @@ const Revision: React.FC = () => {
                 <div style={{ flex: "30%", padding: "20px", backgroundColor: "transparent", borderRadius: "8px" }}>
                     <h3>Puntuacion general</h3>
                     <InformationCard title={"Puntos totales"} value={`${averageEvaluationScore}/100`} ></InformationCard>
-                    <Rubrica evaluationDetails={latestEvaluation}></Rubrica>
+                    <Rubrica evaluationDetails={currentEvaluation}></Rubrica>
                 </div>
             </div>
         </div>

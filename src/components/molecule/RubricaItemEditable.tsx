@@ -16,10 +16,43 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemov
   const [descripcion, setDescripcion] = useState(item.descripcion);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Aquí iría la lógica para guardar los cambios, probablemente llamando a una API
     console.log('Guardar cambios:', { id: item.id, titulo, descripcion });
-    setIsEditing(false);
+
+    try {
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+        return;
+      }
+
+      const apiUrl = `https://gcl58kpp-8000.use2.devtunnels.ms/criteria/${item.id}`;
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: titulo, // El título del estado se mapea a 'nombre' en la API
+          descripcion: descripcion, // Ahora también enviamos la descripción
+          peso: 100, // Siempre enviamos un peso de 100
+          competencia_asociada: "" // Valor por defecto, ya que no se puede modificar por el momento
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error al actualizar rúbrica: ${response.status} - ${errorText}`);
+      }
+
+      // No necesitamos procesar la respuesta si solo actualizamos el título en la UI
+      setIsEditing(false); // Sale del modo edición al guardar
+      alert('Rúbrica actualizada exitosamente.');
+    } catch (err: any) {
+      alert(`Error al guardar los cambios: ${err.message}`);
+    }
   };
 
   return (

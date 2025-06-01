@@ -1,8 +1,15 @@
 import upLogo from '../../assets/upLogo.png';
 
-const HeaderTittle: React.FC = () => {
+interface HeaderTittleProps {
+    onClick?: () => void;
+}
+
+const HeaderTittle: React.FC<HeaderTittleProps> = ({ onClick }) => {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', paddingLeft:"10px" }}>
+        <div 
+            style={{ display: 'flex', alignItems: 'center', paddingLeft:"10px", cursor: onClick ? 'pointer' : 'default' }}
+            onClick={onClick}
+        >
             <img 
                 src={upLogo}
                 alt="Logo de UP" 

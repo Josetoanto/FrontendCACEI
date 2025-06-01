@@ -22,7 +22,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/egresado" element={<HomeEgresado />} />
-                <Route path="/revision/proyecto/:projectId" element={<RevisionPage />} />
+                <Route path="/revision/proyecto/:projectId/evaluacion/:evaluationId" element={<RevisionPage />} />
                 <Route path="/agregarProyecto" element={<AgregarProyecto></AgregarProyecto>} />
                 <Route path="/evaluador" element={<HomeEvaluador></HomeEvaluador>} />
                 <Route path="/evaluar/:evaluationId" element={<EvaluacionProyecto></EvaluacionProyecto>} />

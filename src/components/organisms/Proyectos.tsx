@@ -178,22 +178,6 @@ const Proyectos: React.FC = () => {
              setAverageScore('--/100');
         }
 
-        // Group evaluations by project ID and find the most recent one for each project
-        const evaluationsByProject: { [key: number]: any[] } = combinedEvaluations.reduce((acc: { [key: number]: any[] }, evaluation: any) => {
-            acc[evaluation.proyecto_id] = acc[evaluation.proyecto_id] || [];
-            acc[evaluation.proyecto_id].push(evaluation);
-            return acc;
-        }, {});
-
-        const latestEvaluations = Object.values(evaluationsByProject).map((evals: any[]) => {
-            // Sort evaluations for this project by creation date in descending order
-            evals.sort((a: any, b: any) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());
-            return evals[0]; // Return the most recent evaluation for this project
-        });
-
-        // Pasar las evaluaciones más recientes por proyecto a EvaluacionProyectosTabla
-        setEnrichedEvaluations(latestEvaluations); // Reutilizamos el estado para la lista filtrada
-
       } catch (error) {
         console.error('Error fetching data:', error);
         setTotalEvaluations('Error');

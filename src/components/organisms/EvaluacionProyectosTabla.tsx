@@ -15,7 +15,7 @@ interface EvaluacionProyectosTablaProps {
 const EvaluacionProyectosTabla: React.FC<EvaluacionProyectosTablaProps> = ({ evaluationsData }) => {
   return (
     <div style={{ margin: "auto", marginBottom:"18px" }}>
-      <h2 style={{fontSize: "24px", textAlign: "left", marginBottom: "12px" }}>Proyectos recientes</h2>
+      <h2 style={{fontSize: "24px", textAlign: "left", marginBottom: "12px" }}>Evaluaciones mas recientes</h2>
       <table style={{ width: "100%", borderCollapse: "collapse", boxShadow: "2px 2px 10px rgba(0,0,0,0.1)" }}>
         <thead>
           <tr style={{ backgroundColor: "#f8f8f8", textAlign: "center" }}>
