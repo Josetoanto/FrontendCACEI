@@ -7,9 +7,10 @@ interface HeaderEncuestaProps {
   setActivo: Dispatch<SetStateAction<string>>;
   surveyTitle: string;
   isEditMode: boolean;
+  onSave: () => Promise<void>;
 }
 
-const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode }) => {
+const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode, onSave }) => {
   return (
     <div style={{
       padding: "16px",
@@ -29,7 +30,7 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surv
 
         {/* Derecha: Botón Publicar + Imagen Perfil */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button style={{
+          <button onClick={onSave} style={{
             backgroundColor: "#007bff",
             color: "#fff",
             padding: "8px 16px",

@@ -1,6 +1,6 @@
 import InfoEncuesta from "../molecule/InfoEncuesta";
 import Pregunta from "../molecule/Pregunta";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Dispatch, SetStateAction } from "react";
 
 interface Option {
   id: number;
@@ -33,9 +33,10 @@ interface Survey {
 interface CreacionDeEncuestaProps {
   questions: Question[];
   surveyData: Survey | null;
+  setSurveyData: Dispatch<SetStateAction<Survey | null>>;
 }
 
-const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData }) => {
+const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData, setSurveyData }) => {
     const [preguntas, setPreguntas] = useState<Question[]>([]);
     const nextId = useRef(1);
 
@@ -64,7 +65,7 @@ const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surv
     return (
       <div style={{ background: "#fafbfc", minHeight: "100vh", padding: "0 0 80px 0" , backgroundColor:"#f0ebf8"}}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-          <InfoEncuesta surveyData={surveyData} />
+          <InfoEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />
           {preguntas.map((pregunta) => (
             <div
               key={pregunta.id}

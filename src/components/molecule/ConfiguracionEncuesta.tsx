@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 
 interface Survey {
   id: number;
@@ -12,22 +12,48 @@ interface Survey {
 
 interface ConfiguracionEncuestaProps {
   surveyData: Survey | null;
+  setSurveyData: Dispatch<SetStateAction<Survey | null>>;
 }
 
-const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData }) => {
-  const [tipoUsuario, setTipoUsuario] = useState(surveyData?.tipo || "Egresado");
+const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData }) => {
+  const [tipoUsuario, setTipoUsuario] = useState<Survey['tipo'] | "Anonima">(surveyData?.tipo || "egresado");
   const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? new Date(surveyData.inicio).toISOString().split('T')[0] : "");
   const [fechaFin, setFechaFin] = useState(surveyData?.fin ? new Date(surveyData.fin).toISOString().split('T')[0] : "");
   const [activa, setActiva] = useState(surveyData?.anonima === 1);
 
   useEffect(() => {
     if (surveyData) {
-      setTipoUsuario(surveyData.tipo);
+      setTipoUsuario(surveyData.anonima === 1 ? "Anonima" : surveyData.tipo);
       setFechaInicio(new Date(surveyData.inicio).toISOString().split('T')[0]);
       setFechaFin(new Date(surveyData.fin).toISOString().split('T')[0]);
       setActiva(surveyData.anonima === 1);
+      console.log('ConfiguracionEncuesta recibió surveyData:', surveyData);
     }
   }, [surveyData]);
+
+  const handleTipoUsuarioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = e.target.value as 'egresado' | 'empleador' | 'autoevaluacion' | 'Anonima';
+    setTipoUsuario(selectedValue);
+    if (setSurveyData) {
+      setSurveyData(prev => prev ? { ...prev, tipo: selectedValue === 'Anonima' ? 'autoevaluacion' : selectedValue, anonima: selectedValue === 'Anonima' ? 1 : 0 } : null);
+    }
+  };
+
+  const handleFechaInicioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setFechaInicio(newDate);
+    if (setSurveyData) {
+      setSurveyData(prev => prev ? { ...prev, inicio: `${newDate} 00:00:01` } : null);
+    }
+  };
+
+  const handleFechaFinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setFechaFin(newDate);
+    if (setSurveyData) {
+      setSurveyData(prev => prev ? { ...prev, fin: `${newDate} 23:59:59` } : null);
+    }
+  };
 
   return (
     <div style={{
@@ -55,7 +81,7 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
         </div>
         <select
           value={tipoUsuario}
-          onChange={e => setTipoUsuario(e.target.value)}
+          onChange={handleTipoUsuarioChange}
           style={{
             width: "260px",
             padding: "12px 16px",
@@ -66,12 +92,13 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
             boxShadow: "0 2px 8px 0 #ece6f6"
           }}
         >
-          <option value="Egresado">Egresado</option>
-          <option value="Empleador">Empleador</option>
+          <option value="egresado">Egresado</option>
+          <option value="empleador">Empleador</option>
+          <option value="autoevaluacion">Autoevaluación</option>
           <option value="Anonima">Anónima</option>
         </select>
       </div>
-      {tipoUsuario === "Anonima" && (
+      {(tipoUsuario === "Anonima" || surveyData?.anonima === 1) && (
         <div style={{
           marginTop: "16px",
           display: "flex",
@@ -110,7 +137,7 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
             <input
               type="date"
               value={fechaInicio}
-              onChange={e => setFechaInicio(e.target.value)}
+              onChange={handleFechaInicioChange}
               style={{
                 padding: "12px 16px",
                 borderRadius: "8px",
@@ -126,7 +153,7 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
             <input
               type="date"
               value={fechaFin}
-              onChange={e => setFechaFin(e.target.value)}
+              onChange={handleFechaFinChange}
               style={{
                 padding: "12px 16px",
                 borderRadius: "8px",

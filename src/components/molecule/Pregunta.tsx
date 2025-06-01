@@ -70,6 +70,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
           type="text"
           value={titulo}
           onChange={(e) => editable && setTitulo(e.target.value)}
+          placeholder="Ponga su pregunta aquí..."
           style={{
             flex: 2,
             fontSize: "16px",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 
 interface Survey {
   id: number;
@@ -13,9 +13,10 @@ interface Survey {
 interface InfoEncuestaProps {
   editable?: boolean;
   surveyData?: Survey | null;
+  setSurveyData?: Dispatch<SetStateAction<Survey | null>>;
 }
 
-const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData }) => {
+const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData, setSurveyData }) => {
   const [titulo, setTitulo] = useState(surveyData?.titulo || "Encuesta sin título");
   const [descripcion, setDescripcion] = useState(surveyData?.descripcion || "Descripción de la encuesta...");
 
@@ -23,8 +24,25 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
     if (surveyData) {
       setTitulo(surveyData.titulo);
       setDescripcion(surveyData.descripcion);
+      console.log('InfoEncuesta recibió surveyData:', surveyData);
     }
   }, [surveyData]);
+
+  const handleTituloChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitulo(newTitle);
+    if (setSurveyData) {
+      setSurveyData(prev => prev ? { ...prev, titulo: newTitle } : null);
+    }
+  };
+
+  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDescription = e.target.value;
+    setDescripcion(newDescription);
+    if (setSurveyData) {
+      setSurveyData(prev => prev ? { ...prev, descripcion: newDescription } : null);
+    }
+  };
 
   return (
     <div style={{
@@ -50,7 +68,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
       <input 
         type="text"
         value={titulo}
-        onChange={(e) => editable && setTitulo(e.target.value)}
+        onChange={handleTituloChange}
         style={{
           width: "100%",
           fontSize: "28px",
@@ -69,7 +87,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
       <input 
         type="text"
         value={descripcion}
-        onChange={(e) => editable && setDescripcion(e.target.value)}
+        onChange={handleDescripcionChange}
         style={{
           width: "100%",
           fontSize: "16px",
