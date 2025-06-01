@@ -31,7 +31,7 @@ type PreguntaProps = {
 const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange }) => {
   const [titulo, setTitulo] = useState(initialQuestion?.texto || "Pregunta sin título");
   const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
-  const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
+  const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
   const [numEstrellas, setNumEstrellas] = useState(initialQuestion?.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
   const [selectedRating, setSelectedRating] = useState(0);
 
@@ -39,7 +39,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
     if (initialQuestion) {
       setTitulo(initialQuestion.texto);
       setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
-      setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
+      setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
       setNumEstrellas(initialQuestion.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
     }
   }, [initialQuestion]);
@@ -92,7 +92,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
     let newNumEstrellas = numEstrellas;
 
     if (newType === "Opción Múltiple") {
-      newOpciones = ["Opción 1"];
+      newOpciones = ["Opción 1", "Opción 2"];
     } else if (newType === "Escala Likert") {
       newOpciones = [];
       newNumEstrellas = 5;

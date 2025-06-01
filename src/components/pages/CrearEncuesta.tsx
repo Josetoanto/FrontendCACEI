@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import HeaderEncuesta from "../organisms/HeaderEncuesta";
 import CreacionDeEncuesta from "../organisms/CreacionDeEncuesta";
 import RespuestaCard from "../molecule/RespuestaCard";
@@ -43,6 +43,7 @@ const CrearEncuesta: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questionsToDelete, setQuestionsToDelete] = useState<number[]>([]); // Nuevo estado para IDs de preguntas a eliminar
+  const navigate = useNavigate();
 
   // Ref para almacenar el surveyData más reciente
   const latestSurveyData = useRef(surveyData);
@@ -65,8 +66,18 @@ const CrearEncuesta: React.FC = () => {
 
   const fetchSurveyData = useCallback(async () => {
     if (!isEditMode) {
+      // Initialize surveyData with default values for new survey creation
+      setSurveyData({
+        id: 0, // Placeholder, will be updated by API
+        titulo: "Encuesta sin título",
+        descripcion: "Descripción de la encuesta...",
+        tipo: 'egresado', // Default type for new surveys (adjust if needed)
+        anonima: 0, // Default to not anonymous
+        inicio: '', // Will be set by user via ConfiguracionEncuesta
+        fin: '',     // Will be set by user via ConfiguracionEncuesta
+      });
       setLoading(false);
-      return; // Si no hay ID, es una nueva encuesta, no se carga nada
+      return; // If no ID, it's a new survey, nothing to fetch
     }
 
     const userToken = localStorage.getItem('userToken');
@@ -127,45 +138,92 @@ const CrearEncuesta: React.FC = () => {
       return;
     }
 
-    console.log('Enviando surveyData:', latestSurveyData.current);
+    // NEW: Check for mandatory dates for creation mode
+    if (!isEditMode) { // Only for new survey creation
+        if (!latestSurveyData.current.inicio || !latestSurveyData.current.fin) {
+            alert('Las fechas de inicio y fin son obligatorias para crear una nueva encuesta.');
+            return;
+        }
+    }
 
     try {
-      // Actualizar los datos de la encuesta
-      const surveyResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/surveys/${latestSurveyData.current.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`
-        },
-        body: JSON.stringify({
-          titulo: latestSurveyData.current.titulo,
-          descripcion: latestSurveyData.current.descripcion,
-          anonima: latestSurveyData.current.anonima === 1 ? true : false, // Convertir 0/1 a true/false para la API
-          inicio: formatToApiDate(latestSurveyData.current.inicio),
-          fin: formatToApiDate(latestSurveyData.current.fin)
-        })
-      });
+      let surveyIdToUse = latestSurveyData.current.id; // Default to existing ID for edit mode
 
-      if (!surveyResponse.ok) {
-        let errorMessage = `Error al guardar la encuesta: ${surveyResponse.status} ${surveyResponse.statusText}`;
-        try {
-          const errorBody = await surveyResponse.json(); // Intentar leer como JSON
-          errorMessage = `Error al guardar la encuesta: ${JSON.stringify(errorBody)}`;
-        } catch (jsonError) {
-          const errorText = await surveyResponse.text(); // Si no es JSON, leer como texto
-          errorMessage = `Error al guardar la encuesta (texto): ${errorText}`;
-        }
-        throw new Error(errorMessage);
+      if (!isEditMode) {
+          // Creation Mode: POST survey first
+          console.log('Creando nueva encuesta:', latestSurveyData.current);
+          const createSurveyResponse = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/surveys/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({
+                  titulo: latestSurveyData.current.titulo,
+                  descripcion: latestSurveyData.current.descripcion,
+                  tipo: latestSurveyData.current.tipo, // Send type
+                  anonima: latestSurveyData.current.anonima === 1,
+                  inicio: formatToApiDate(latestSurveyData.current.inicio),
+                  fin: formatToApiDate(latestSurveyData.current.fin)
+              })
+          });
+
+          if (!createSurveyResponse.ok) {
+              let errorMessage = `Error al crear la encuesta: ${createSurveyResponse.status} ${createSurveyResponse.statusText}`;
+              try {
+                  const errorBody = await createSurveyResponse.json();
+                  errorMessage = `Error al crear la encuesta: ${JSON.stringify(errorBody)}`;
+              } catch (jsonError) {
+                  const errorText = await createSurveyResponse.text();
+                  errorMessage = `Error al crear la encuesta (texto): ${errorText}`;
+              }
+              throw new Error(errorMessage);
+          }
+          const newSurvey = await createSurveyResponse.json();
+          surveyIdToUse = newSurvey.id; // Get the new ID for questions
+          alert('Encuesta creada exitosamente!');
+          // Update surveyData with the new ID and other fields returned by the API
+          setSurveyData(prev => prev ? { ...prev, ...newSurvey, id: newSurvey.id } : newSurvey);
+      } else {
+          // Edit Mode: PUT survey
+          console.log('Actualizando encuesta existente:', latestSurveyData.current);
+          const surveyResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/surveys/${latestSurveyData.current.id}`, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({
+                  titulo: latestSurveyData.current.titulo,
+                  descripcion: latestSurveyData.current.descripcion,
+                  anonima: latestSurveyData.current.anonima === 1, // Convert 0/1 to true/false for API
+                  inicio: formatToApiDate(latestSurveyData.current.inicio),
+                  fin: formatToApiDate(latestSurveyData.current.fin)
+              })
+          });
+
+          if (!surveyResponse.ok) {
+              let errorMessage = `Error al guardar la encuesta: ${surveyResponse.status} ${surveyResponse.statusText}`;
+              try {
+                  const errorBody = await surveyResponse.json();
+                  errorMessage = `Error al guardar la encuesta: ${JSON.stringify(errorBody)}`;
+              } catch (jsonError) {
+                  const errorText = await surveyResponse.text();
+                  errorMessage = `Error al guardar la encuesta (texto): ${errorText}`;
+              }
+              throw new Error(errorMessage);
+          }
+           alert('Encuesta actualizada exitosamente!');
       }
 
-      // Actualizar las preguntas existentes y añadir las nuevas
+      // Process questions (both for creation and edit)
       for (const question of questionsData) {
         const questionTypeApi: 'abierta' | 'multiple' | 'likert' = question.tipo;
 
         let optionsPayload: Option[] = [];
         if (questionTypeApi === 'multiple') {
           optionsPayload = question.opciones.map((opt, index) => ({
-            pregunta_id: question.id,
+            pregunta_id: question.id || 0, // Will be updated by API if it's a new question
             valor: (index + 1).toString(),
             etiqueta: opt.etiqueta,
             peso: index + 1,
@@ -173,7 +231,7 @@ const CrearEncuesta: React.FC = () => {
           }));
         } else if (questionTypeApi === 'likert') {
           optionsPayload = Array.from({ length: question.opciones.length > 0 ? question.opciones.length : 5 }, (_, i) => ({
-            pregunta_id: question.id,
+            pregunta_id: question.id || 0, // Will be updated by API
             valor: (i + 1).toString(),
             etiqueta: (i + 1).toString(),
             peso: i + 1,
@@ -182,7 +240,7 @@ const CrearEncuesta: React.FC = () => {
         }
 
         const questionPayload = {
-          encuesta_id: question.encuesta_id || (latestSurveyData.current?.id || 0),
+          encuesta_id: surveyIdToUse, // Use the new ID for new surveys
           tipo: questionTypeApi,
           texto: question.texto,
           orden: question.orden,
@@ -194,7 +252,7 @@ const CrearEncuesta: React.FC = () => {
           options: optionsPayload,
         };
 
-        if (question.id && question.id !== 0) { // Si la pregunta ya tiene un ID, actualizarla
+        if (question.id && question.id !== 0) { // If question has an ID, update it
           console.log(`Actualizando pregunta ${question.id}:`, question);
           const questionResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/questions/${question.id}`, {
             method: 'PUT',
@@ -209,7 +267,7 @@ const CrearEncuesta: React.FC = () => {
             const errorBody = await questionResponse.json();
             throw new Error(`Error al actualizar la pregunta ${question.id}: ${JSON.stringify(errorBody)}`);
           }
-        } else { // Si la pregunta no tiene ID, crearla (es nueva)
+        } else { // If question doesn't have an ID, create it (new)
           console.log('Creando nueva pregunta:', question);
           const createQuestionResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/questions/`, {
             method: 'POST',
@@ -246,6 +304,8 @@ const CrearEncuesta: React.FC = () => {
 
       alert('Encuesta y preguntas guardadas exitosamente!');
       await fetchSurveyData(); // Recargar los datos después de un guardado exitoso
+      // NEW: Redirect to home after successful save
+      navigate('/home');
     } catch (err: any) {
       console.error('Error al guardar datos:', err);
       alert(`Error al guardar la encuesta: ${err.message}`);

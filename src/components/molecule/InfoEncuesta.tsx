@@ -36,7 +36,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
     }
   };
 
-  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDescripcionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newDescription = e.target.value;
     setDescripcion(newDescription);
     if (setSurveyData) {
@@ -52,7 +52,8 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
       backgroundColor: "#fff",
       borderRadius: "10px",
       boxShadow: "2px 2px 10px rgba(0,0,0,0.1)",
-      marginTop:"24px"
+      marginTop:"24px",
+      minWidth:"650px"
     }}>
       {/* Línea superior */}
       <div style={{
@@ -84,12 +85,11 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
       />
 
       {/* Descripción (Editable o solo lectura) */}
-      <input 
-        type="text"
+      <textarea 
         value={descripcion}
         onChange={handleDescripcionChange}
         style={{
-          width: "100%",
+          width: "90%",
           fontSize: "16px",
           color: "#70757a",
           padding:"20px",
@@ -98,8 +98,12 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
           outline: "none",
           backgroundColor: "transparent",
           marginTop: "5px",
+          resize: "none",
+          minHeight: "50px",
+          overflowY: "hidden",
         }}
         readOnly={!editable}
+        rows={2}
       />
     </div>
   );
