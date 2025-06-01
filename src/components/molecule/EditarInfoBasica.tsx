@@ -7,29 +7,34 @@ interface EditarInfoBasicaProps {
     ubicacion: string;
     descripcion: string;
   };
-  onSave: (newData: EditarInfoBasicaProps['initialData']) => void;
   onCancel: () => void;
+  onBasicInfoChange: (newData: { nombre: string; ubicacion: string; descripcion: string; }) => void;
 }
 
-const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onSave, onCancel }) => {
-  const [formData, setFormData] = useState(initialData);
+const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onCancel, onBasicInfoChange }) => {
+  const [formData, setFormData] = useState({
+      nombre: initialData.nombre,
+      ubicacion: initialData.ubicacion,
+      descripcion: initialData.descripcion,
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({ ...prevData, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+    setFormData(prevData => {
+        const updatedData = { ...prevData, [name]: value };
+        onBasicInfoChange(updatedData);
+        return updatedData;
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{
+    <div style={{
         padding: "20px",
         backgroundColor: "#fff",
         borderRadius: "12px",
     }}>
+      <h3 style={{ marginBottom: "15px" }}>Editar Información Básica</h3>
+      
       <div style={{ marginBottom: "15px" }}>
         <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Nombre:</label>
         <input
@@ -41,17 +46,10 @@ const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onSave
         />
       </div>
       <div style={{ marginBottom: "15px" }}>
-        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Profesión:</label>
-        <input
-          type="text"
-          name="profesion"
-          value={formData.profesion}
-          onChange={handleChange}
-          style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
-        />
+        {/* La profesión se obtiene del último puesto de trabajo y no se edita aquí */}
       </div>
       <div style={{ marginBottom: "15px" }}>
-        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Ubicación:</label>
+        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Número de teléfono:</label>
         <input
           type="text"
           name="ubicacion"
@@ -69,29 +67,8 @@ const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onSave
           style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ddd", minHeight: "100px" }}
         />
       </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-        <button type="button" onClick={onCancel} style={{
-            backgroundColor: "#ccc",
-            color: "#000",
-            borderRadius: "5px",
-            border: "none",
-            padding: "10px 20px",
-            cursor: "pointer"
-        }}>
-          Cancelar
-        </button>
-        <button type="submit" style={{
-            backgroundColor: "#007bff",
-            color: "#fff",
-            borderRadius: "5px",
-            border: "none",
-            padding: "10px 20px",
-            cursor: "pointer"
-        }}>
-          Guardar
-        </button>
-      </div>
-    </form>
+      {/* Botones de guardar y cancelar movidos al componente padre PerfilDeUsuario */}
+    </div>
   );
 };
 

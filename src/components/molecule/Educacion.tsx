@@ -23,15 +23,14 @@ interface EducacionProps {
     const displayFecha = educacion?.fecha;
 
     // Only define handleSave if editing props are provided
-    const handleSave = (newData: { institucion: string; fecha: string }) => {
-      if(setEducacion && toggleEditing) {
+    const handleEducationChange = (newData: { institucion: string; fecha: string }) => {
+      if(setEducacion) { // Check if setEducacion is provided
         setEducacion(newData);
-        toggleEditing(); // Exit editing mode after saving
-      }
+      } 
     };
   
     // Only render EditarEducacion if in editing mode and editing props are available
-    if (isEditing && educacion && setEducacion && toggleEditing) {
+    if (isEditing && educacion && setEducacion) {
       return (
          <div style={{
             backgroundColor: "#fff",
@@ -44,8 +43,8 @@ interface EducacionProps {
           <h2 style={{ textAlign: "left", marginBottom: "15px", fontSize: "18px", paddingLeft: "15px" }}>Educación</h2>
           <EditarEducacion 
             initialData={educacion} 
-            onSave={handleSave} 
-            onCancel={toggleEditing}
+            onSave={handleEducationChange} 
+            onCancel={() => {}} // No operation, as global cancel is used
           />
          </div>
       );

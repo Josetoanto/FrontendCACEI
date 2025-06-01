@@ -13,16 +13,12 @@ interface PerfilCardProps {
   };
   isEditing?: boolean;
   toggleEditing?: () => void;
-  onSave?: (newData: {
-    nombre: string;
-    profesion: string;
-    ubicacion: string;
-    descripcion: string;
-  }) => void;
   onCancel?: () => void;
+  showEditButton?: boolean;
+  onBasicInfoChange: (newData: { nombre: string; ubicacion: string; descripcion: string; }) => void;
 }
 
-const PerfilCard: React.FC<PerfilCardProps> = ({ userData, isEditing, toggleEditing, onSave, onCancel }) => {
+const PerfilCard: React.FC<PerfilCardProps> = ({ userData, isEditing, toggleEditing, onCancel, showEditButton = true, onBasicInfoChange }) => {
   return (
     <div style={{
       maxWidth: "1000px",
@@ -37,13 +33,13 @@ const PerfilCard: React.FC<PerfilCardProps> = ({ userData, isEditing, toggleEdit
             isEditing ? (
                 <EditarInfoBasica 
                     initialData={userData} 
-                    onSave={onSave!}
                     onCancel={onCancel!}
+                    onBasicInfoChange={onBasicInfoChange}
                 />
             ) : (
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <UserInfo nombre={userData.nombre} fotoPerfil={userData.fotoPerfil} profesion={userData.profesion} ubicacion={userData.ubicacion} />
-                    <EditarPerfil onClick={toggleEditing} />
+                    {showEditButton && <EditarPerfil onClick={toggleEditing} />}
                 </div>
             )
         }

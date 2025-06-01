@@ -1,12 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Survey {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  tipo: 'egresado' | 'empleador' | 'autoevaluacion';
+  anonima: 0 | 1;
+  inicio: string;
+  fin: string;
+}
 
 interface InfoEncuestaProps {
   editable?: boolean;
+  surveyData?: Survey | null;
 }
 
-const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true }) => {
-  const [titulo, setTitulo] = useState("Encuesta sin título");
-  const [descripcion, setDescripcion] = useState("Descripción de la encuesta...");
+const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData }) => {
+  const [titulo, setTitulo] = useState(surveyData?.titulo || "Encuesta sin título");
+  const [descripcion, setDescripcion] = useState(surveyData?.descripcion || "Descripción de la encuesta...");
+
+  useEffect(() => {
+    if (surveyData) {
+      setTitulo(surveyData.titulo);
+      setDescripcion(surveyData.descripcion);
+    }
+  }, [surveyData]);
 
   return (
     <div style={{

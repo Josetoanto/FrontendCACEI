@@ -15,15 +15,11 @@ const EditarEducacion: React.FC<EditarEducacionProps> = ({ initialData, onSave, 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+    onSave({ ...formData, [name]: value });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{
+    <div style={{
         padding: "20px",
         backgroundColor: "#fff",
         borderRadius: "12px",
@@ -50,30 +46,7 @@ const EditarEducacion: React.FC<EditarEducacionProps> = ({ initialData, onSave, 
           style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
         />
       </div>
-
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-        <button type="button" onClick={onCancel} style={{
-            backgroundColor: "#ccc",
-            color: "#000",
-            borderRadius: "5px",
-            border: "none",
-            padding: "10px 20px",
-            cursor: "pointer"
-        }}>
-          Cancelar
-        </button>
-        <button type="submit" style={{
-            backgroundColor: "#007bff",
-            color: "#fff",
-            borderRadius: "5px",
-            border: "none",
-            padding: "10px 20px",
-            cursor: "pointer"
-        }}>
-          Guardar
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 

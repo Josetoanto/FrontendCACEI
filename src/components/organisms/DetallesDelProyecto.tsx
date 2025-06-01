@@ -8,7 +8,7 @@ interface ProyectoDetallesProps {
     ultimoComentario: string;
   }
   
-  const DetallesDelProyecto: React.FC<ProyectoDetallesProps> = ({ titulo, descripcion, evidencia, evidenceFiles, ultimoComentario }) => {
+  const DetallesDelProyecto: React.FC<ProyectoDetallesProps> = ({ titulo, descripcion, evidenceFiles, ultimoComentario }) => {
     // Estado para almacenar las URLs de Blob
     const [evidenceUrls, setEvidenceUrls] = useState<{
         url: string;

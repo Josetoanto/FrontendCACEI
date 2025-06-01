@@ -1,17 +1,30 @@
+import { useNavigate } from 'react-router-dom';
+
 interface EncuestaCardProps {
   title: string;
   createdAt: string;
   imageSrc: string;
+  id: number;
 }
 
-const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc }) => {
+const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc, id }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/crearEncuesta/${id}`);
+  };
+
   return (
-    <div style={{
-      width: "600px",
-      display: "flex",
-      alignItems: "center",
-      padding: "15px",
-    }}>
+    <div
+      style={{
+        width: "600px",
+        display: "flex",
+        alignItems: "center",
+        padding: "15px",
+        cursor: "pointer",
+      }}
+      onClick={handleClick}
+    >
       {/* Imagen */}
       <img 
         src={imageSrc} 

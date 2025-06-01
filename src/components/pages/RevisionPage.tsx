@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import InformationCard from "../molecule/InformationCard";
 import DetallesDelProyecto from "../organisms/DetallesDelProyecto";
 import EstadoDeProyecto from "../organisms/EstadoDeProyecto";
@@ -191,7 +191,7 @@ const Revision: React.FC = () => {
                         uploadDate={formattedCreationDate}
                         projectStatus={formattedProjectStatus}
                     />
-                    <h3 style={{ fontSize: "14px", color: "#61788A" }}>Subido por {studentName || 'Cargando...'} el {formattedCreationDate}</h3>
+                    <h3 style={{ fontSize: "14px", color: "#61788A" }}>Subido por <Link to={`/perfil/${projectDetails?.egresado_id}`}>{studentName || 'Cargando...'}</Link> el {formattedCreationDate}</h3>
                 </div>
 
                 {/* Columna derecha (30%) */}

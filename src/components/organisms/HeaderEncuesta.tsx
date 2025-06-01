@@ -5,9 +5,11 @@ import ProfilePicture from "../atoms/ProfilePicture";
 interface HeaderEncuestaProps {
   activo: string;
   setActivo: Dispatch<SetStateAction<string>>;
+  surveyTitle: string;
+  isEditMode: boolean;
 }
 
-const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo }) => {
+const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode }) => {
   return (
     <div style={{
       padding: "16px",
@@ -22,7 +24,7 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo }) =>
         {/* Izquierda: Imagen + Nombre Encuesta */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <img src={upLogo} alt="Encuesta" style={{  marginRight: "12px", height: "auto", width: "36px" }} />
-          <h2 style={{ margin: 0, fontSize:"18px" }}>Encuesta de satisfacción</h2>
+          <h2 style={{ margin: 0, fontSize:"18px" }}>{surveyTitle}</h2>
         </div>
 
         {/* Derecha: Botón Publicar + Imagen Perfil */}
@@ -34,7 +36,7 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo }) =>
             borderRadius: "8px",
             border: "none",
             cursor: "pointer"
-          }}>Publicar</button>
+          }}>{isEditMode ? "Guardar" : "Publicar"}</button>
     <ProfilePicture src={""} ></ProfilePicture>
         </div>
       </div>

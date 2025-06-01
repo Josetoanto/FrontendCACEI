@@ -1,13 +1,57 @@
 import InfoEncuesta from "../molecule/InfoEncuesta";
 import Pregunta from "../molecule/Pregunta";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
-const CreacionDeEncuesta: React.FC = () => {
-    const [preguntas, setPreguntas] = useState([{ id: 0 }]);
+interface Option {
+  id: number;
+  pregunta_id: number;
+  valor: string;
+  etiqueta: string;
+  peso: number;
+}
+
+interface Question {
+  id: number;
+  encuesta_id: number;
+  tipo: 'abierta' | 'multiple';
+  texto: string;
+  orden: number;
+  competencia_asociada: string;
+  opciones: Option[];
+}
+
+interface Survey {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  tipo: 'egresado' | 'empleador' | 'autoevaluacion';
+  anonima: 0 | 1;
+  inicio: string;
+  fin: string;
+}
+
+interface CreacionDeEncuestaProps {
+  questions: Question[];
+  surveyData: Survey | null;
+}
+
+const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData }) => {
+    const [preguntas, setPreguntas] = useState<Question[]>([]);
     const nextId = useRef(1);
 
+    useEffect(() => {
+      if (questions && questions.length > 0) {
+        const sortedQuestions = [...questions].sort((a, b) => a.orden - b.orden);
+        setPreguntas(sortedQuestions);
+        nextId.current = Math.max(...questions.map(q => q.id)) + 1;
+      } else {
+        setPreguntas([{ id: 0, encuesta_id: 0, tipo: 'abierta', texto: '', orden: 0, competencia_asociada: '', opciones: [] }]);
+        nextId.current = 1;
+      }
+    }, [questions]);
+
     const agregarPregunta = () => {
-      setPreguntas([...preguntas, { id: nextId.current }]);
+      setPreguntas([...preguntas, { id: nextId.current, encuesta_id: 0, tipo: 'abierta', texto: '', orden: 0, competencia_asociada: '', opciones: [] }]);
       nextId.current += 1;
     };
 
@@ -20,7 +64,7 @@ const CreacionDeEncuesta: React.FC = () => {
     return (
       <div style={{ background: "#fafbfc", minHeight: "100vh", padding: "0 0 80px 0" , backgroundColor:"#f0ebf8"}}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-          <InfoEncuesta />
+          <InfoEncuesta surveyData={surveyData} />
           {preguntas.map((pregunta) => (
             <div
               key={pregunta.id}
@@ -38,7 +82,7 @@ const CreacionDeEncuesta: React.FC = () => {
                 alignItems: "stretch"
               }}
             >
-              <Pregunta onEliminarPregunta={() => eliminarPregunta(pregunta.id)} id={pregunta.id} />
+              <Pregunta onEliminarPregunta={() => eliminarPregunta(pregunta.id)} id={pregunta.id} initialQuestion={pregunta} />
             </div>
           ))}
         </div>

@@ -1,20 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Option {
+  id: number;
+  pregunta_id: number;
+  valor: string;
+  etiqueta: string;
+  peso: number;
+}
+
+interface Question {
+  id: number;
+  encuesta_id: number;
+  tipo: 'abierta' | 'multiple';
+  texto: string;
+  orden: number;
+  competencia_asociada: string;
+  opciones: Option[];
+}
 
 type PreguntaProps = {
   onEliminarPregunta?: () => void;
   editable?: boolean;
-  initialTipoPregunta?: string;
-  initialOpciones?: string[];
   id: number;
+  initialQuestion?: Question;
 };
 
-const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, initialTipoPregunta, initialOpciones, id }) => {
-  const [titulo, setTitulo] = useState("Pregunta sin título");
-  const [tipoPregunta, setTipoPregunta] = useState(initialTipoPregunta || "Opción Múltiple");
-  const [opciones, setOpciones] = useState(initialOpciones || ["Opción 1"]);
-  const [esObligatoria, setEsObligatoria] = useState(false);
+const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion }) => {
+  const [titulo, setTitulo] = useState(initialQuestion?.texto || "Pregunta sin título");
+  const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
+  const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
   const [numEstrellas, setNumEstrellas] = useState(5);
   const [selectedRating, setSelectedRating] = useState(0);
+
+  useEffect(() => {
+    if (initialQuestion) {
+      setTitulo(initialQuestion.texto);
+      setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
+      setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
+    }
+  }, [initialQuestion]);
 
   const agregarOpcion = () => {
     setOpciones([...opciones, `Opción ${opciones.length + 1}`]);
@@ -248,39 +272,6 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
               <path d="M9 3V4H4V6H5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V6H20V4H15V3H9ZM7 6H17V19H7V6ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z"/>
             </svg>
           </button>
-          {/* Switch de obligatoria */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", borderLeft: "1px solid #e0e0e0", paddingLeft: "24px" }}>
-            <span style={{ color: "#222", fontSize: "16px" }}>Obligatoria</span>
-            <label style={{ position: "relative", display: "inline-block", width: "40px", height: "22px" }}>
-              <input
-                type="checkbox"
-                checked={esObligatoria}
-                onChange={(e) => setEsObligatoria(e.target.checked)}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: "absolute",
-                cursor: "pointer",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: esObligatoria ? "#4285f4" : "#ccc",
-                borderRadius: "34px",
-                transition: "background-color 0.2s"
-              }}></span>
-              <span style={{
-                position: "absolute",
-                left: esObligatoria ? "20px" : "2px",
-                top: "2px",
-                width: "18px",
-                height: "18px",
-                backgroundColor: "#fff",
-                borderRadius: "50%",
-                transition: "left 0.2s"
-              }}></span>
-            </label>
-          </div>
         </div>
       )}
 

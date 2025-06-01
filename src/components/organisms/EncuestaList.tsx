@@ -10,6 +10,7 @@ interface EncuestaListProps {
   encuestas: {
     title: string;
     createdAt: string;
+    id: number;
   }[];
 }
 
@@ -39,6 +40,7 @@ const EncuestaList: React.FC<EncuestaListProps> = ({ title, encuestas }) => {
             title={encuesta.title}
             createdAt={encuesta.createdAt}
             imageSrc={images[index % images.length]}
+            id={encuesta.id}
           />
         ))}
       </div>

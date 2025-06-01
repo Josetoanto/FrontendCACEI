@@ -1,10 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const ConfiguracionEncuesta: React.FC = () => {
-  const [tipoUsuario, setTipoUsuario] = useState("Egresado");
-  const [fechaInicio, setFechaInicio] = useState("2025-04-22");
-  const [fechaFin, setFechaFin] = useState("2025-04-25");
-  const [activa, setActiva] = useState(false);
+interface Survey {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  tipo: 'egresado' | 'empleador' | 'autoevaluacion';
+  anonima: 0 | 1; // 0 para no anónima, 1 para anónima
+  inicio: string;
+  fin: string;
+}
+
+interface ConfiguracionEncuestaProps {
+  surveyData: Survey | null;
+}
+
+const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData }) => {
+  const [tipoUsuario, setTipoUsuario] = useState(surveyData?.tipo || "Egresado");
+  const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? new Date(surveyData.inicio).toISOString().split('T')[0] : "");
+  const [fechaFin, setFechaFin] = useState(surveyData?.fin ? new Date(surveyData.fin).toISOString().split('T')[0] : "");
+  const [activa, setActiva] = useState(surveyData?.anonima === 1);
+
+  useEffect(() => {
+    if (surveyData) {
+      setTipoUsuario(surveyData.tipo);
+      setFechaInicio(new Date(surveyData.inicio).toISOString().split('T')[0]);
+      setFechaFin(new Date(surveyData.fin).toISOString().split('T')[0]);
+      setActiva(surveyData.anonima === 1);
+    }
+  }, [surveyData]);
 
   return (
     <div style={{
@@ -121,37 +144,6 @@ const ConfiguracionEncuesta: React.FC = () => {
       <hr style={{ border: "none", borderTop: "1px solid #ece6f6", margin: "32px 0" }} />
 
       {/* Encuesta activa */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <span style={{ fontWeight: "bold", fontSize: "16px" }}>Encuesta activa</span>
-        <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={activa}
-            onChange={() => setActiva(!activa)}
-            style={{ display: "none" }}
-          />
-          <span style={{
-            width: "40px",
-            height: "22px",
-            background: activa ? "#b39ddb" : "#e0e0e0",
-            borderRadius: "12px",
-            position: "relative",
-            transition: "background 0.2s"
-          }}>
-            <span style={{
-              position: "absolute",
-              left: activa ? "20px" : "2px",
-              top: "2px",
-              width: "18px",
-              height: "18px",
-              background: "#fff",
-              borderRadius: "50%",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-              transition: "left 0.2s"
-            }} />
-          </span>
-        </label>
-      </div>
     </div>
   );
 };
