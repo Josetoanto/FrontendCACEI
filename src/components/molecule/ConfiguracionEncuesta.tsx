@@ -82,6 +82,7 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
         <select
           value={tipoUsuario}
           onChange={handleTipoUsuarioChange}
+          disabled={!!surveyData?.id}
           style={{
             width: "260px",
             padding: "12px 16px",

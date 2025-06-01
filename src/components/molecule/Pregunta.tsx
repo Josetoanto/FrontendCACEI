@@ -11,11 +11,12 @@ interface Option {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple';
+  tipo: 'abierta' | 'multiple' | 'likert';
   texto: string;
   orden: number;
   competencia_asociada: string;
   opciones: Option[];
+  tempClientId?: number;
 }
 
 type PreguntaProps = {
@@ -23,13 +24,15 @@ type PreguntaProps = {
   editable?: boolean;
   id: number;
   initialQuestion?: Question;
+  surveyId: number;
+  onQuestionChange: (updatedQuestion: Question) => void;
 };
 
-const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion }) => {
+const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange }) => {
   const [titulo, setTitulo] = useState(initialQuestion?.texto || "Pregunta sin título");
   const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
   const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
-  const [numEstrellas, setNumEstrellas] = useState(5);
+  const [numEstrellas, setNumEstrellas] = useState(initialQuestion?.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
   const [selectedRating, setSelectedRating] = useState(0);
 
   useEffect(() => {
@@ -37,23 +40,92 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
       setTitulo(initialQuestion.texto);
       setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
       setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1"]);
+      setNumEstrellas(initialQuestion.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
     }
   }, [initialQuestion]);
 
-  const agregarOpcion = () => {
-    setOpciones([...opciones, `Opción ${opciones.length + 1}`]);
-  };
+  const updateQuestionState = (newTitulo: string, newTipo: string, newOpciones: string[], newNumEstrellas: number) => {
+    const questionTypeApi = newTipo === 'Opción Múltiple' ? 'multiple' : newTipo === 'Escala Likert' ? 'likert' : 'abierta';
 
-  // Función para eliminar una opción, pero nunca dejar menos de una
-  const eliminarOpcion = (index: number) => {
-    if (opciones.length > 1) {
-      setOpciones(opciones.filter((_, i) => i !== index));
+    let optionsPayload: Option[] = [];
+    if (questionTypeApi === 'multiple') {
+      optionsPayload = newOpciones.map((opt, index) => ({
+        pregunta_id: id,
+        valor: (index + 1).toString(),
+        etiqueta: opt,
+        peso: index + 1,
+        id: initialQuestion?.opciones[index]?.id || 0,
+      }));
+    } else if (questionTypeApi === 'likert') {
+      optionsPayload = Array.from({ length: newNumEstrellas }, (_, i) => ({
+        pregunta_id: id,
+        valor: (i + 1).toString(),
+        etiqueta: (i + 1).toString(),
+        peso: i + 1,
+        id: initialQuestion?.opciones[i]?.id || 0,
+      }));
     }
+
+    onQuestionChange({
+      id: id,
+      encuesta_id: surveyId,
+      tipo: questionTypeApi,
+      texto: newTitulo,
+      orden: initialQuestion?.orden || 0,
+      competencia_asociada: initialQuestion?.competencia_asociada || "",
+      opciones: optionsPayload,
+      tempClientId: initialQuestion?.tempClientId,
+    });
   };
 
-  // Función para editar el nombre de una opción
-  const editarOpcion = (index: number, nuevoValor: string) => {
-    setOpciones(opciones.map((op, i) => i === index ? nuevoValor : op));
+  const handleTituloChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitulo = e.target.value;
+    setTitulo(newTitulo);
+    updateQuestionState(newTitulo, tipoPregunta, opciones, numEstrellas);
+  };
+
+  const handleTipoPreguntaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newType = e.target.value;
+    setTipoPregunta(newType);
+
+    let newOpciones = opciones;
+    let newNumEstrellas = numEstrellas;
+
+    if (newType === "Opción Múltiple") {
+      newOpciones = ["Opción 1"];
+    } else if (newType === "Escala Likert") {
+      newOpciones = [];
+      newNumEstrellas = 5;
+    }
+    setOpciones(newOpciones);
+    setNumEstrellas(newNumEstrellas);
+    updateQuestionState(titulo, newType, newOpciones, newNumEstrellas);
+  };
+
+  const handleOpcionChange = (index: number, nuevoValor: string) => {
+    const newOpciones = opciones.map((op, i) => i === index ? nuevoValor : op);
+    setOpciones(newOpciones);
+    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+  };
+
+  const handleNumEstrellasChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newNumEstrellas = Number(e.target.value);
+    setNumEstrellas(newNumEstrellas);
+    updateQuestionState(titulo, tipoPregunta, opciones, newNumEstrellas);
+  };
+
+  const agregarOpcion = () => {
+    const newOpciones = [...opciones, `Opción ${opciones.length + 1}`];
+    setOpciones(newOpciones);
+    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+  };
+
+  const eliminarOpcion = (index: number) => {
+    if (opciones.length > 2) {
+      const newOpciones = opciones.filter((_, i) => i !== index);
+      setOpciones(newOpciones);
+      updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+    }
   };
 
   return (
@@ -65,14 +137,14 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
     }}>
       
       {/* Título de la pregunta y selector de tipo en la misma línea */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "10px" }}>
+      <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "10px", width: "100%" }}>
         <input 
           type="text"
           value={titulo}
-          onChange={(e) => editable && setTitulo(e.target.value)}
+          onChange={editable ? handleTituloChange : undefined}
           placeholder="Ponga su pregunta aquí..."
           style={{
-            flex: 2,
+            flexGrow: 1,
             fontSize: "16px",
             border: "none",
             borderBottom: "2px solid #cfd8dc",
@@ -86,13 +158,14 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
         {editable && (
           <select 
             value={tipoPregunta}
-            onChange={(e) => editable && setTipoPregunta(e.target.value)}
+            onChange={editable ? handleTipoPreguntaChange : undefined}
             style={{
-              flex: 1,
+              width: "160px",
               padding: "8px",
               borderRadius: "8px",
               border: "1px solid #ddd",
               height:"50px",
+              flexShrink: 0
             }}
             disabled={!editable}
           >
@@ -113,8 +186,9 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                 <input
                   type="text"
                   value={opcion}
-                  onChange={e => editable && editarOpcion(index, e.target.value)}
+                  onChange={e => editable && handleOpcionChange(index, e.target.value)}
                   style={{
+                    flexGrow: 1,
                     margin: 0,
                     border: "none",
                     background: "transparent",
@@ -126,7 +200,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                   }}
                   readOnly={!editable}
                 />
-                {editable && opciones.length > 1 && index !== 0 && (
+                {editable && opciones.length > 2 && index > 1 && (
                   <button
                     onClick={() => eliminarOpcion(index)}
                     style={{
@@ -142,7 +216,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                     title="Eliminar opción"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#70757a" viewBox="0 0 24 24">
-                      <path d="M9 3V4H4V6H5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V6H20V4H15V3H9ZM7 6H17V19H7V6ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z"/>
+                      <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41z"/>
                     </svg>
                   </button>
                 )}
@@ -158,11 +232,10 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                   color: "#70757a",
                   borderRadius: "6px",
                   border: "none",
-                  cursor: opciones.length >= 4 ? "not-allowed" : "pointer",
+                  cursor: "pointer",
                   marginTop: "10px",
-                  opacity: opciones.length >= 4 ? 0.5 : 1
+                  opacity: 1
                 }}
-                disabled={opciones.length >= 4}
               >
                 Agregar opción
               </button>
@@ -176,7 +249,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
             {editable && (
               <select
                 value={numEstrellas}
-                onChange={e => setNumEstrellas(Number(e.target.value))}
+                onChange={handleNumEstrellasChange}
                 style={{
                   width: "70px",
                   fontSize: "14px",

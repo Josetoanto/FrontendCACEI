@@ -13,11 +13,12 @@ interface Option {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple';
+  tipo: 'abierta' | 'multiple' | 'likert';
   texto: string;
   orden: number;
   competencia_asociada: string;
   opciones: Option[];
+  tempClientId?: number;
 }
 
 interface Survey {
@@ -34,9 +35,12 @@ interface CreacionDeEncuestaProps {
   questions: Question[];
   surveyData: Survey | null;
   setSurveyData: Dispatch<SetStateAction<Survey | null>>;
+  onQuestionsChange: (updatedQuestions: Question[]) => void;
+  questionsToDelete: number[];
+  setQuestionsToDelete: Dispatch<SetStateAction<number[]>>;
 }
 
-const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData, setSurveyData }) => {
+const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surveyData, setSurveyData, onQuestionsChange, questionsToDelete, setQuestionsToDelete }) => {
     const [preguntas, setPreguntas] = useState<Question[]>([]);
     const nextId = useRef(1);
 
@@ -46,20 +50,55 @@ const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surv
         setPreguntas(sortedQuestions);
         nextId.current = Math.max(...questions.map(q => q.id)) + 1;
       } else {
-        setPreguntas([{ id: 0, encuesta_id: 0, tipo: 'abierta', texto: '', orden: 0, competencia_asociada: '', opciones: [] }]);
+        setPreguntas([{ id: 0, encuesta_id: 0, tipo: 'abierta', texto: '', orden: 0, competencia_asociada: '', opciones: [], tempClientId: Date.now() }]);
         nextId.current = 1;
       }
     }, [questions]);
 
     const agregarPregunta = () => {
-      setPreguntas([...preguntas, { id: nextId.current, encuesta_id: 0, tipo: 'abierta', texto: '', orden: 0, competencia_asociada: '', opciones: [] }]);
-      nextId.current += 1;
+      const newQuestion: Question = {
+        id: 0,
+        tempClientId: Date.now(),
+        encuesta_id: surveyData?.id || 0,
+        tipo: 'multiple',
+        texto: "Pregunta sin título",
+        orden: preguntas.length + 1,
+        competencia_asociada: "",
+        opciones: [
+          { id: 0, pregunta_id: 0, valor: "1", etiqueta: "Opción 1", peso: 1 },
+          { id: 0, pregunta_id: 0, valor: "2", etiqueta: "Opción 2", peso: 2 }
+        ]
+      };
+      const updatedPreguntas = [...preguntas, newQuestion];
+      setPreguntas(updatedPreguntas);
+      onQuestionsChange(updatedPreguntas);
     };
 
-    const eliminarPregunta = (id: number) => {
-      if (preguntas.length > 1) {
-        setPreguntas(preguntas.filter((p) => p.id !== id));
+    const eliminarPregunta = (idToDelete: number) => {
+      const questionToRemove = preguntas.find(p => p.id === idToDelete || p.tempClientId === idToDelete);
+      if (!questionToRemove) return;
+
+      if (questionToRemove.id !== 0) {
+        setQuestionsToDelete(prev => [...prev, questionToRemove.id]);
       }
+
+      const updatedPreguntas = preguntas.filter((p) => p.id !== idToDelete && p.tempClientId !== idToDelete);
+      setPreguntas(updatedPreguntas);
+      onQuestionsChange(updatedPreguntas);
+    };
+
+    const handleQuestionChange = (updatedQuestion: Question) => {
+      const updatedPreguntas = preguntas.map(q => {
+        if (updatedQuestion.id === 0 && updatedQuestion.tempClientId && q.tempClientId === updatedQuestion.tempClientId) {
+          return updatedQuestion;
+        }
+        if (updatedQuestion.id !== 0 && q.id === updatedQuestion.id) {
+          return updatedQuestion;
+        }
+        return q;
+      });
+      setPreguntas(updatedPreguntas);
+      onQuestionsChange(updatedPreguntas);
     };
 
     return (
@@ -68,7 +107,7 @@ const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surv
           <InfoEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />
           {preguntas.map((pregunta) => (
             <div
-              key={pregunta.id}
+              key={pregunta.id || pregunta.tempClientId}
               style={{
                 width: "100%",
                 maxWidth: "650px",
@@ -83,7 +122,14 @@ const CreacionDeEncuesta: React.FC<CreacionDeEncuestaProps> = ({ questions, surv
                 alignItems: "stretch"
               }}
             >
-              <Pregunta onEliminarPregunta={() => eliminarPregunta(pregunta.id)} id={pregunta.id} initialQuestion={pregunta} />
+              <Pregunta
+                onEliminarPregunta={() => eliminarPregunta(pregunta.id !== 0 ? pregunta.id : (pregunta.tempClientId || 0))}
+                id={pregunta.id || 0}
+                initialQuestion={pregunta}
+                editable={true}
+                surveyId={surveyData?.id || 0}
+                onQuestionChange={handleQuestionChange}
+              />
             </div>
           ))}
         </div>

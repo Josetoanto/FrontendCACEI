@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../organisms/Header';
 import HomeMenu from '../molecule/homeMenu';
@@ -26,61 +26,61 @@ const Home: React.FC = () => {
     const [encuestas, setEncuestas] = useState<any[]>([]); // Estado para almacenar encuestas de la API
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchEncuestas = async () => {
-            const userToken = localStorage.getItem('userToken');
-            const userDataString = localStorage.getItem('userData');
+    const fetchEncuestas = useCallback(async () => {
+        const userToken = localStorage.getItem('userToken');
+        const userDataString = localStorage.getItem('userData');
+        
+        if (!userToken || !userDataString) {
+            // Redirigir si no hay token o datos de usuario
+            navigate('/login');
+            return;
+        }
+
+        try {
+            const userData = JSON.parse(userDataString);
             
-            if (!userToken || !userDataString) {
-                // Redirigir si no hay token o datos de usuario
-                navigate('/login');
-                return;
-            }
+            // Verificar si el usuario es Administrador
+            if (userData.tipo === 'Administrador') {
+                const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/surveys/';
 
-            try {
-                const userData = JSON.parse(userDataString);
-                
-                // Verificar si el usuario es Administrador
-                if (userData.tipo === 'Administrador') {
-                    const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/surveys/';
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-                    const response = await fetch(apiUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${userToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-
-                    if (!response.ok) {
-                        // Manejar respuestas no exitosas
-                        console.error('Error al obtener encuestas:', response.status);
-                        // Opcional: mostrar un mensaje al usuario
-                         alert('No se pudieron cargar las encuestas.');
-                        return;
-                    }
-
-                    const data = await response.json();
-                    // Mapear los datos de la API al formato esperado por EncuestaList/EncuestaCard
-                    const mappedEncuestas = data.map((encuesta: any) => ({
-                        id: encuesta.id,
-                        title: encuesta.titulo,
-                        createdAt: new Date(encuesta.creado_en).toLocaleDateString(), // Puedes ajustar el formato si es necesario
-                        inicio: new Date(encuesta.inicio),
-                        fin: new Date(encuesta.fin),
-                        // Si necesitas la descripción u otros campos en el futuro, añádelos aquí
-                    }));
-                    setEncuestas(mappedEncuestas);
+                if (!response.ok) {
+                    // Manejar respuestas no exitosas
+                    console.error('Error al obtener encuestas:', response.status);
+                    // Opcional: mostrar un mensaje al usuario
+                     alert('No se pudieron cargar las encuestas.');
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Error al obtener encuestas:', error);
-                 alert('Error al cargar encuestas.');
+                const data = await response.json();
+                // Mapear los datos de la API al formato esperado por EncuestaList/EncuestaCard
+                const mappedEncuestas = data.map((encuesta: any) => ({
+                    id: encuesta.id,
+                    title: encuesta.titulo,
+                    createdAt: new Date(encuesta.creado_en).toLocaleDateString(), // Puedes ajustar el formato si es necesario
+                    inicio: new Date(encuesta.inicio),
+                    fin: new Date(encuesta.fin),
+                    // Si necesitas la descripción u otros campos en el futuro, añádelos aquí
+                }));
+                setEncuestas(mappedEncuestas);
             }
-        };
 
+        } catch (error) {
+            console.error('Error al obtener encuestas:', error);
+             alert('Error al cargar encuestas.');
+        }
+    }, [navigate]);
+
+    useEffect(() => {
         fetchEncuestas();
-    }, [navigate]); // Ejecutar el efecto solo una vez al montar el componente
+    }, [fetchEncuestas]); // Ahora fetchEncuestas es una dependencia
 
     const now = new Date();
 
@@ -99,11 +99,11 @@ const Home: React.FC = () => {
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
             <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Proyectos"]} />
             {/* Mostrar EncuestaList basado en la opción activa y el tipo de usuario */}
-            {activeOption === "Encuestas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && encuestas.length > 0 && <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas}></EncuestaList>}
-            {activeOption === "Activas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && activeEncuestas.length > 0 && <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas}></EncuestaList>}
+            {activeOption === "Encuestas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && encuestas.length > 0 && <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>}
+            {activeOption === "Activas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && activeEncuestas.length > 0 && <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>}
             {activeOption === "Cerradas" && localStorage.getItem('userData') && JSON.parse(localStorage.getItem('userData') || '{}').tipo === 'Administrador' && (
                 closedEncuestas.length > 0 ? (
-                    <EncuestaList title={'Encuestas Cerradas'} encuestas={closedEncuestas}></EncuestaList>
+                    <EncuestaList title={'Encuestas Cerradas'} encuestas={closedEncuestas} onRefreshEncuestas={fetchEncuestas}></EncuestaList>
                 ) : (
                     <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas cerradas en este momento.</p>
                 )
