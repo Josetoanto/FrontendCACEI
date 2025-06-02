@@ -101,6 +101,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
           resize: "none",
           minHeight: "50px",
           overflowY: "hidden",
+          fontFamily: "Arial, sans-serif",
         }}
         readOnly={!editable}
         rows={2}

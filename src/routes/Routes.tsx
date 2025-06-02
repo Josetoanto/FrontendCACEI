@@ -29,7 +29,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/perfil/:userId" element={<PerfilDeUsuario></PerfilDeUsuario>} />
                 <Route path="/perfilEvaluador" element={<PerfilDeEvaluador />} />
                 <Route path="/crearEncuesta/:id?" element={<CrearEncuesta />} />
-                <Route path="/responderEncuesta" element={<ResponderEncuesta />} />
+                <Route path="/responderEncuesta/:id" element={<ResponderEncuesta />} />
                 <Route path="/ingresar-codigo" element={<IngresarCodigo />} />
                 <Route path="/modificar-rubrica" element={<ModificarRubrica />} />
             </Routes>

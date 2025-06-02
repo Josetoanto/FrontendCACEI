@@ -15,7 +15,6 @@ const EvaluacionProyecto: React.FC = () => {
       datos={[
         { etiqueta: "Presentador", valor: "Ava Turner" },
         { etiqueta: "Fecha de presentación", valor: "10 de mayo, 2025" },
-        { etiqueta: "Estatus", valor: "Finalizado" },
         { etiqueta: "Evidencia", valor: "Video de presentación" }
       ]} />
       <DescripcionProyecto descripcion="Este proyecto tiene como objetivo mostrar ideas innovadoras de startups en la industria tecnológica. Los participantes presentarán sus conceptos, planes de negocios y análisis de mercado a un panel de jueces. La evaluación se centrará en la creatividad, la viabilidad y el impacto potencial dentro del sector tecnológico." />

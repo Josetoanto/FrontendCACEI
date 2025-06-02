@@ -11,13 +11,16 @@ interface EncuestaListProps {
     title: string;
     createdAt: string;
     id: number;
+    isFuture?: boolean;
+    inicio?: Date;
   }[];
   onRefreshEncuestas: () => void;
+  userType?: string;
 }
 
 const images = [encuestImage1, encuestImage2, encuestImage3];
 
-const EncuestaList: React.FC<EncuestaListProps> = ({ title, encuestas, onRefreshEncuestas }) => {
+const EncuestaList: React.FC<EncuestaListProps> = ({ title, encuestas, onRefreshEncuestas, userType }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (query: string) => {
@@ -43,6 +46,9 @@ const EncuestaList: React.FC<EncuestaListProps> = ({ title, encuestas, onRefresh
             imageSrc={images[index % images.length]}
             id={encuesta.id}
             onDeleteSuccess={onRefreshEncuestas}
+            isFuture={encuesta.isFuture}
+            inicio={encuesta.inicio}
+            userType={userType}
           />
         ))}
       </div>

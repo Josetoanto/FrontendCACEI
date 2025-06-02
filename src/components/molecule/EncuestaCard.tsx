@@ -7,15 +7,24 @@ interface EncuestaCardProps {
   imageSrc: string;
   id: number;
   onDeleteSuccess: () => void;
+  isFuture?: boolean;
+  inicio?: Date;
+  userType?: string;
 }
 
-const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc, id, onDeleteSuccess }) => {
+const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc, id, onDeleteSuccess, isFuture, inicio, userType }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
-    navigate(`/crearEncuesta/${id}`);
+    if (!isFuture) {
+      if (userType === 'Administrador') {
+        navigate(`/crearEncuesta/${id}`);
+      } else if (userType === 'Egresado' || userType === 'Evaluador' || userType === 'Empleador') {
+        navigate(`/responderEncuesta/${id}`);
+      }
+    }
   };
 
   const handleToggleMenu = (e: React.MouseEvent) => {
@@ -78,7 +87,7 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         display: "flex",
         alignItems: "center",
         padding: "15px",
-        cursor: "pointer",
+        cursor: isFuture ? "default" : "pointer",
       }}
     >
       {/* Imagen */}
@@ -92,13 +101,20 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
         {/* Encabezado */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
-          <h2 style={{ fontSize: "16px", margin: 0, cursor: "pointer" }} onClick={handleClick}>{title}</h2>
-          <i 
-            className="fas fa-ellipsis-v" 
-            style={{ cursor: "pointer", color: "#555" , marginLeft:"10px"}}
-            onClick={handleToggleMenu}
-          ></i>
-          {showMenu && (
+          <h2 style={{
+            fontSize: "16px", 
+            margin: 0, 
+            cursor: isFuture ? "default" : "pointer",
+            color: isFuture ? "#A9A9A9" : "inherit"
+          }} onClick={handleClick}>{title}</h2>
+          {userType === 'Administrador' && (
+            <i 
+              className="fas fa-ellipsis-v" 
+              style={{ cursor: "pointer", color: "#555" , marginLeft:"10px"}}
+              onClick={handleToggleMenu}
+            ></i>
+          )}
+          {showMenu && userType === 'Administrador' && (
             <div 
               ref={menuRef} 
               style={{
@@ -136,7 +152,11 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         </div>
 
         {/* Contenido */}
-        <p style={{ fontSize: "14px", color: "#666" , marginBottom: "10px"}}>Creada el {createdAt}</p>
+        {isFuture && inicio ? (
+          <p style={{ fontSize: "14px", color: "#A9A9A9", marginBottom: "10px" }}>Activa el {inicio.toLocaleDateString()}</p>
+        ) : (
+          <p style={{ fontSize: "14px", color: "#666", marginBottom: "10px" }}>Creada el {createdAt}</p>
+        )}
       </div>
     </div>
   );

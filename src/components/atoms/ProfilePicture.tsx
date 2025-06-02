@@ -17,6 +17,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({ src, alt = "Perfil", on
         height: "35px",
         cursor: onClick ? 'pointer' : 'default'
          }}
+        onClick={onClick}
         onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'} 
         onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}

@@ -4,6 +4,7 @@ import HeaderEncuesta from "../organisms/HeaderEncuesta";
 import CreacionDeEncuesta from "../organisms/CreacionDeEncuesta";
 import RespuestaCard from "../molecule/RespuestaCard";
 import ConfiguracionEncuesta from "../molecule/ConfiguracionEncuesta";
+import RespuestaDisplay from "../molecule/RespuestaCard";
 
 interface Survey {
   id: number;
@@ -324,7 +325,7 @@ const CrearEncuesta: React.FC = () => {
     <div style={{ backgroundColor: "#f0ebf8", minHeight: "100vh", paddingBottom: "12px" }}>
       <HeaderEncuesta activo={activo} setActivo={setActivo} surveyTitle={surveyData?.titulo || "Nueva Encuesta"} isEditMode={isEditMode} onSave={handleSave} />
       {activo === "Preguntas" && <CreacionDeEncuesta questions={questionsData} surveyData={surveyData} setSurveyData={setSurveyData} onQuestionsChange={handleQuestionsChange} questionsToDelete={questionsToDelete} setQuestionsToDelete={setQuestionsToDelete} />}
-      {activo === "Respuestas" && <RespuestaCard></RespuestaCard>}
+      {activo === "Respuestas" && <RespuestaDisplay surveyId={surveyData?.id || null} questions={questionsData} />}
       {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />}
     </div>
   );

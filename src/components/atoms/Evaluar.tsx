@@ -1,11 +1,15 @@
 import { useNavigate } from "react-router-dom";
 
-const Evaluar: React.FC = () => {
+interface EvaluarProps {
+  projectId: number;
+}
+
+const Evaluar: React.FC<EvaluarProps> = ({ projectId }) => {
   const navigate = useNavigate();
 
   return (
     <button 
-      onClick={() => navigate("/evaluar")}
+      onClick={() => navigate(`/evaluar/${projectId}`)}
       style={{
         backgroundColor: "transparent",
         color: "#61788a",

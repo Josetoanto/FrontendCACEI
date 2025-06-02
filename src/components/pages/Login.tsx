@@ -43,7 +43,7 @@ const Login: React.FC = () => {
             navigate('/egresado');
             break;
           case 'Empleador':
-            navigate('/empleador');
+            navigate('/evaluador');
             break;
           default:
             alert('Tipo de usuario desconocido. Redirigiendo a la página principal.');

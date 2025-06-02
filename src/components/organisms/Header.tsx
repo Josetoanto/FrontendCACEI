@@ -25,7 +25,7 @@ const Header: React.FC = () => {
   };
 
   const handleProfileClick = () => {
-    if (userType === 'Egresado' || userType === 'Empleador') {
+    if ((userType === 'Egresado' || userType === 'Empleador') && userData.id) {
       navigate(`/perfil/${userData.id}`);
     }
   };

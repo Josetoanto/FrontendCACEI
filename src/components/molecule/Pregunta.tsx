@@ -25,26 +25,48 @@ type PreguntaProps = {
   id: number;
   initialQuestion?: Question;
   surveyId: number;
-  onQuestionChange: (updatedQuestion: Question) => void;
+  onQuestionChange?: (updatedQuestion: Question) => void;
+  onAnswerChange?: (questionId: number, value: string | number) => void;
+  initialAnswer?: string | number;
 };
 
-const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange }) => {
+const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange, onAnswerChange, initialAnswer }) => {
   const [titulo, setTitulo] = useState(initialQuestion?.texto || "Pregunta sin título");
-  const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
+  const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : initialQuestion?.tipo === 'likert' ? "Escala Likert" : "Opción Múltiple");
   const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
   const [numEstrellas, setNumEstrellas] = useState(initialQuestion?.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [openAnswer, setOpenAnswer] = useState("");
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialQuestion) {
       setTitulo(initialQuestion.texto);
-      setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : "Opción Múltiple");
+      setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : initialQuestion.tipo === 'likert' ? "Escala Likert" : "Opción Múltiple");
       setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
       setNumEstrellas(initialQuestion.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
+      
+      if (!editable && initialAnswer !== undefined) {
+        if (typeof initialAnswer === 'number') {
+          setSelectedRating(initialAnswer);
+        } else if (typeof initialAnswer === 'string') {
+          if (tipoPregunta === "Pregunta Abierta") {
+            setOpenAnswer(initialAnswer);
+          } else if (tipoPregunta === "Opción Múltiple") {
+            setSelectedOption(initialAnswer);
+          }
+        }
+      } else {
+        setSelectedRating(0);
+        setOpenAnswer("");
+        setSelectedOption(null);
+      }
     }
-  }, [initialQuestion]);
+  }, [initialQuestion, initialAnswer, editable, tipoPregunta]);
 
   const updateQuestionState = (newTitulo: string, newTipo: string, newOpciones: string[], newNumEstrellas: number) => {
+    if (!onQuestionChange) return;
+
     const questionTypeApi = newTipo === 'Opción Múltiple' ? 'multiple' : newTipo === 'Escala Likert' ? 'likert' : 'abierta';
 
     let optionsPayload: Option[] = [];
@@ -182,7 +204,20 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
           <div>
             {opciones.map((opcion, index) => (
               <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "10px", gap: "8px" }}>
-                <input type="radio" name={`pregunta-${id}`} style={{ accentColor: "#4285f4" , height:"16px", width:"14px"}} />
+                <input 
+                  type="radio" 
+                  name={`pregunta-${id}`} 
+                  value={opcion}
+                  checked={selectedOption === opcion}
+                  onChange={(e) => {
+                    if (!editable) {
+                      setSelectedOption(e.target.value);
+                      onAnswerChange?.(id, e.target.value);
+                    }
+                  }}
+                  style={{ accentColor: "#4285f4" , height:"16px", width:"14px"}}
+                  disabled={editable}
+                />
                 <input
                   type="text"
                   value={opcion}
@@ -286,7 +321,12 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                   strokeWidth="2"
                   strokeLinecap="round" 
                   strokeLinejoin="round"
-                  onClick={() => editable ? null : setSelectedRating(i + 1)}
+                  onClick={() => {
+                    if (!editable) {
+                      setSelectedRating(i + 1);
+                      onAnswerChange?.(id, i + 1);
+                    }
+                  }}
                   style={{ cursor: editable ? "default" : "pointer" }}
                 >
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -304,7 +344,12 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
             <div>
               <input
                 type="text"
-                disabled={editable}
+                value={openAnswer}
+                onChange={(e) => {
+                  setOpenAnswer(e.target.value);
+                  onAnswerChange?.(id, e.target.value);
+                }}
+                readOnly={editable}
                 placeholder="Respuesta"
                 style={{
                   display: "block",
@@ -325,7 +370,7 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
       </div>
 
       {/* Controles adicionales */}
-      {editable && (
+      {editable && onEliminarPregunta && (
         <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "24px", borderTop: "none" }}>
           {/* Botón de eliminar pregunta */}
           <button
