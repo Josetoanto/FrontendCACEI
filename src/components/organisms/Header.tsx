@@ -17,7 +17,7 @@ const Header: React.FC = () => {
         navigate('/egresado');
         break;
       case 'Empleador':
-        navigate('/empleador');
+        navigate('/evaluador');
         break;
       default:
         navigate('/');
@@ -25,7 +25,9 @@ const Header: React.FC = () => {
   };
 
   const handleProfileClick = () => {
-    if ((userType === 'Egresado' || userType === 'Empleador') && userData.id) {
+    if (userType === 'Egresado' && userData.id) {
+      navigate(`/perfil/${userData.id}`);
+    } else if (userType === 'Empleador') {
       navigate(`/perfil/${userData.id}`);
     }
   };

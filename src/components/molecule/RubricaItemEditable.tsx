@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2'; // Importa SweetAlert2
 
 interface RubricaItemEditableProps {
   item: { // Define la estructura del item de la rúbrica
@@ -23,7 +24,11 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemov
     try {
       const token = localStorage.getItem('userToken');
       if (!token) {
-        alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+        Swal.fire({ // Cambiado de alert a Swal.fire
+          icon: 'error',
+          title: 'Error de autenticación',
+          text: 'No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.',
+        });
         return;
       }
 
@@ -49,9 +54,17 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemov
 
       // No necesitamos procesar la respuesta si solo actualizamos el título en la UI
       setIsEditing(false); // Sale del modo edición al guardar
-      alert('Rúbrica actualizada exitosamente.');
+      Swal.fire({ // Cambiado de alert a Swal.fire
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Rúbrica actualizada exitosamente.',
+      });
     } catch (err: any) {
-      alert(`Error al guardar los cambios: ${err.message}`);
+      Swal.fire({ // Cambiado de alert a Swal.fire
+        icon: 'error',
+        title: 'Error al guardar',
+        text: `Error al guardar los cambios: ${err.message}`,
+      });
     }
   };
 

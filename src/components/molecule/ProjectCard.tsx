@@ -1,8 +1,9 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import React from 'react';
 
 interface ProjectCardProps {
   iconClass: string;
-  title: string;
+  title: string | React.ReactNode;
   value: string;
 }
 

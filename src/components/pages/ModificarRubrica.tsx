@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../organisms/Header';
 import RubricaItemEditable from '../molecule/RubricaItemEditable';
+import Swal from 'sweetalert2';
 
 // Datos iniciales de la rúbrica
 
@@ -61,7 +62,11 @@ const ModificarRubrica: React.FC = () => {
       try {
         const token = localStorage.getItem('userToken');
         if (!token) {
-          alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de autenticación',
+            text: 'No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.',
+          });
           return;
         }
 
@@ -95,7 +100,11 @@ const ModificarRubrica: React.FC = () => {
 
         setRubricas([...rubricas, formattedAddedRubrica]);
       } catch (err: any) {
-        alert(`Error al agregar la rúbrica: ${err.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al agregar',
+          text: `Error al agregar la rúbrica: ${err.message}`,
+        });
       }
     }
   };
@@ -106,7 +115,11 @@ const ModificarRubrica: React.FC = () => {
       try {
         const token = localStorage.getItem('userToken');
         if (!token) {
-          alert('No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de autenticación',
+            text: 'No se encontró el token de autenticación. Por favor, inicia sesión de nuevo.',
+          });
           return;
         }
 
@@ -125,9 +138,17 @@ const ModificarRubrica: React.FC = () => {
 
         // Si la eliminación en la API es exitosa, actualiza el estado local
         setRubricas(rubricas.filter(rubrica => rubrica.id !== id));
-        alert('Rúbrica eliminada exitosamente.');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Rúbrica eliminada exitosamente.',
+        });
       } catch (err: any) {
-        alert(`Error al eliminar la rúbrica: ${err.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al eliminar',
+          text: `Error al eliminar la rúbrica: ${err.message}`,
+        });
       }
     }
   };

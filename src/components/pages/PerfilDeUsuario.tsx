@@ -103,6 +103,63 @@ const PerfilDeUsuario: React.FC = () => {
             if (profileResponse.ok) {
                 tempProfileData = await profileResponse.json();
                 console.log('Datos de perfil profesional obtenidos:', tempProfileData);
+            } else if (profileResponse.status === 404) {
+                console.log(`No professional profile found for user ID ${idToFetch} in PerfilDeUsuario. Creating a new one.`);
+                const defaultProfileData = {
+                    user_id: idToFetch,
+                    resumen: "Resumen profesional general del usuario.",
+                    formacion: [
+                        {
+                            institucion: "Nombre de la Universidad/Instituto",
+                            titulo: "Título de la Carrera",
+                            anio_inicio: 0,
+                            anio_fin: 0
+                        }
+                    ],
+                    experiencias: [
+                        {
+                            empresa: "Nombre de la Empresa",
+                            puesto: "Puesto de Trabajo",
+                            anio_inicio: 0,
+                            anio_fin: 0,
+                            descripcion: "Breve descripción de las responsabilidades y logros."
+                        }
+                    ],
+                    competencias: [
+                        "Habilidad 1",
+                        "Habilidad 2",
+                        "Habilidad 3"
+                    ],
+                    linkedin_url: "https://www.linkedin.com/in/nombre-de-usuario"
+                };
+
+                const createProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(defaultProfileData),
+                });
+
+                if (createProfileResponse.ok) {
+                    console.log(`Perfil profesional creado para el usuario ID: ${idToFetch} en PerfilDeUsuario.`);
+                    // Re-fetch the newly created profile
+                    const newProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToFetch}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${userToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (newProfileResponse.ok) {
+                        tempProfileData = await newProfileResponse.json();
+                    } else {
+                        console.error('Error re-fetching newly created professional profile in PerfilDeUsuario:', newProfileResponse.status);
+                    }
+                } else {
+                    console.error('Error creating professional profile in PerfilDeUsuario:', createProfileResponse.status, await createProfileResponse.text());
+                }
             } else {
                 console.error(`Error fetching professional profile for user ID ${idToFetch}:`, profileResponse.status);
             }

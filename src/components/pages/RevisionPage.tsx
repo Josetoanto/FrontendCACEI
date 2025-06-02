@@ -14,6 +14,8 @@ const Revision: React.FC = () => {
     const [projectEvaluations, setProjectEvaluations] = useState<any[]>([]);
     const [currentEvaluation, setCurrentEvaluation] = useState<any>(null);
     const [evidenceData, setEvidenceData] = useState<any[]>([]);
+    const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
+    const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,6 +48,31 @@ const Revision: React.FC = () => {
                 }
                 const specificEvaluationData = await specificEvaluationResponse.json();
                 setCurrentEvaluation(specificEvaluationData);
+
+                // Obtener el nombre del evaluador
+                const evaluatorId = specificEvaluationData.evaluador_id;
+                if (evaluatorId) {
+                    const evaluatorResponse = await fetch(`${apiUrlUsersBase}${evaluatorId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${userToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (evaluatorResponse.ok) {
+                        const evaluatorData = await evaluatorResponse.json();
+                        setEvaluatorName(evaluatorData.nombre);
+                        setEvaluatorId(evaluatorId);
+                    } else {
+                        console.error(`Error fetching evaluator ${evaluatorId} details:`, evaluatorResponse.status);
+                        setEvaluatorName('N/A');
+                        setEvaluatorId(null);
+                    }
+                } else {
+                    setEvaluatorName('N/A');
+                    setEvaluatorId(null);
+                }
 
                 const projectResponse = await fetch(`${apiUrlProjectsBase}${projectId}`, {
                     method: 'GET',
@@ -131,6 +158,8 @@ const Revision: React.FC = () => {
                 setProjectEvaluations([]);
                 setCurrentEvaluation(null);
                 setEvidenceData([]);
+                setEvaluatorName('Error');
+                setEvaluatorId(null);
             }
         };
 
@@ -142,10 +171,13 @@ const Revision: React.FC = () => {
     const formattedCreationDate = projectDetails?.creado_en ? new Date(projectDetails.creado_en).toLocaleDateString() : 'Cargando...';
     
     let formattedProjectStatus = 'Cargando...';
+    let projectStatusDescription = 'Estado actual del proyecto';
+
     if (projectDetails?.estado) {
         switch (projectDetails.estado) {
             case 'en_revision':
-                formattedProjectStatus = 'En revision';
+                formattedProjectStatus = evaluatorName ? `Revisado por ${evaluatorName}` : 'En revisión';
+                projectStatusDescription = evaluatorName ? "Persona que ha realizado la evaluación" : "Estado actual del proyecto";
                 break;
             case 'evaluado':
                 formattedProjectStatus = 'Evaluado';
@@ -199,6 +231,8 @@ const Revision: React.FC = () => {
                         evaluationsCount={projectEvaluations.length}
                         uploadDate={formattedCreationDate}
                         projectStatus={formattedProjectStatus}
+                        projectStatusDescription={projectStatusDescription}
+                        evaluatorId={evaluatorId}
                     />
                     <h3 style={{ fontSize: "14px", color: "#61788A" }}>Subido por <Link to={`/perfil/${projectDetails?.egresado_id}`}>{studentName || 'Cargando...'}</Link> el {formattedCreationDate}</h3>
                 </div>

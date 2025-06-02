@@ -78,7 +78,7 @@ const PerfilDeEvaluador: React.FC = () => {
             }
 
             // Fetch professional profile data
-            const profileResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToFetch}`, {
+            const profileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToFetch}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -88,6 +88,64 @@ const PerfilDeEvaluador: React.FC = () => {
 
             if (profileResponse.ok) {
                 tempProfileData = await profileResponse.json();
+            } else if (profileResponse.status === 404) {
+                console.log(`No professional profile found for user ID ${idToFetch}. Creating a new one.`);
+                const defaultProfileData = {
+                    user_id: idToFetch,
+                    resumen: "Ingeniero en Sistemas con experiencia en desarrollo web.",
+                    formacion: [
+                        {
+                            institucion: "Universidad Nacional",
+                            titulo: "Ingeniería en Sistemas",
+                            anio_inicio: 2018,
+                            anio_fin: 2022
+                        }
+                    ],
+                    experiencias: [
+                        {
+                            empresa: "Tech Solutions",
+                            puesto: "Desarrollador Full Stack",
+                            anio_inicio: 2022,
+                            anio_fin: 2024,
+                            descripcion: "Desarrollo de aplicaciones web y móviles."
+                        }
+                    ],
+                    competencias: [
+                        "Trabajo en equipo",
+                        "Comunicación",
+                        "Resolución de problemas"
+                    ],
+                    linkedin_url: "https://www.linkedin.com/in/usuario"
+                };
+
+                const createProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(defaultProfileData),
+                });
+
+                if (createProfileResponse.ok) {
+                    console.log(`Perfil profesional creado para el usuario ID: ${idToFetch}`);
+                    console.log('Professional profile created successfully.');
+                    // Re-fetch the newly created profile
+                    const newProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToFetch}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${userToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (newProfileResponse.ok) {
+                        tempProfileData = await newProfileResponse.json();
+                    } else {
+                        console.error('Error re-fetching newly created professional profile:', newProfileResponse.status);
+                    }
+                } else {
+                    console.error('Error creating professional profile:', createProfileResponse.status, await createProfileResponse.text());
+                }
             } else {
                 console.error(`Error fetching professional profile for user ID ${idToFetch}:`, profileResponse.status);
             }
@@ -234,7 +292,7 @@ const PerfilDeEvaluador: React.FC = () => {
             }
 
             // Update /professional-profiles/user/:userId
-            const profileUpdateResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToUpdate}`, {
+            const profileUpdateResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToUpdate}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
