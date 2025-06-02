@@ -1,7 +1,7 @@
 import DatoPresentacion from "../atoms/DatoPresentacion";
 
 interface DetallesProps {
-  datos: { etiqueta: string; valor: string }[];
+  datos: { etiqueta: string; valor: React.ReactNode }[];
 }
 
 const DetallesPresentacion: React.FC<DetallesProps> = ({ datos }) => {

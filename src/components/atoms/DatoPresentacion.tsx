@@ -1,6 +1,6 @@
 interface DatoPresentacionProps {
     etiqueta: string;  // Texto a la izquierda
-    valor: string;      // Texto a la derecha
+    valor: React.ReactNode;      // Texto a la derecha
   }
   
   const DatoPresentacion: React.FC<DatoPresentacionProps> = ({ etiqueta, valor }) => {
