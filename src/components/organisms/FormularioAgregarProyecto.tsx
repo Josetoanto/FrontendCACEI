@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import Swal from "sweetalert2";
 
 const FormularioAgregarProyecto: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -6,6 +8,7 @@ const FormularioAgregarProyecto: React.FC = () => {
     descripcion: "",
   });
   const [evidencias, setEvidencias] = useState<{ titulo: string; descripcion: string; archivo: File | null }[]>([]);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,7 +46,11 @@ const FormularioAgregarProyecto: React.FC = () => {
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
-        alert("No autenticado. Por favor, inicia sesión.");
+        Swal.fire({
+          icon: 'warning',
+          title: 'No autenticado',
+          text: 'Por favor, inicia sesión para continuar.',
+        });
         return;
     }
 
@@ -64,7 +71,11 @@ const FormularioAgregarProyecto: React.FC = () => {
 
       if (!projectResponse.ok) {
         const errorText = await projectResponse.text();
-        alert(`Error al crear el proyecto: ${projectResponse.status} - ${errorText}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al crear el proyecto',
+          text: `Error: ${projectResponse.status} - ${errorText}`,
+        });
         return;
       }
 
@@ -76,7 +87,11 @@ const FormularioAgregarProyecto: React.FC = () => {
 
       for (const evidencia of evidencias) {
         if (!evidencia.archivo) {
-          alert("Por favor, adjunta un archivo PDF para todas las evidencias.");
+          Swal.fire({
+            icon: 'warning',
+            title: 'Archivos requeridos',
+            text: 'Por favor, adjunta un archivo PDF para todas las evidencias.',
+          });
           return; // Detener si falta un archivo en alguna evidencia
         }
 
@@ -91,7 +106,11 @@ const FormularioAgregarProyecto: React.FC = () => {
         } else if (evidencia.archivo.type === 'image/jpeg' || evidencia.archivo.type === 'image/jpg') {
           tipoIdForEvidence = '2';
         } else {
-          alert(`Tipo de archivo no soportado para la evidencia '${evidencia.titulo || evidencia.archivo.name}'. Solo se permiten PDF e imágenes JPG.`);
+          Swal.fire({
+            icon: 'error',
+            title: 'Tipo de archivo no soportado',
+            text: `El tipo de archivo para la evidencia '${evidencia.titulo || evidencia.archivo.name}' no es soportado. Solo se permiten PDF e imágenes JPG.`,
+          });
           continue; // Saltar esta evidencia y continuar con la siguiente
         }
 
@@ -112,24 +131,41 @@ const FormularioAgregarProyecto: React.FC = () => {
           if (!evidenceResponse.ok) {
             const errorText = await evidenceResponse.text();
             console.error(`Error al crear evidencia para el proyecto ${projectId}: ${evidenceResponse.status} - ${errorText}`);
-            alert(`Error al crear una evidencia: ${evidencia.titulo || evidencia.archivo.name}. Ver consola para más detalles.`);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error al crear evidencia',
+              text: `Error al crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, revisa la consola para más detalles.`,
+            });
           } else {
             console.log(`Evidencia '${evidencia.titulo || evidencia.archivo.name}' creada con éxito.`);
           }
         } catch (error) {
           console.error(`Error al conectar con la API para crear evidencia '${evidencia.titulo || evidencia.archivo.name}':`, error);
-          alert(`Error al crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, inténtalo de nuevo más tarde.`);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: `Error al conectar con la API para crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, inténtalo de nuevo más tarde.`,
+          });
         }
       }
 
-      alert("Proyecto y evidencias creadas con éxito.");
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Proyecto y evidencias creadas con éxito.',
+      });
       // Opcional: limpiar el formulario
       setFormData({ nombre: "", descripcion: "" });
       setEvidencias([]); // Limpiar evidencias
+      navigate('/egresado'); // Redirigir al usuario
 
     } catch (error) {
       console.error('Error general al procesar el proyecto o las evidencias:', error);
-      alert('Error al crear el proyecto o las evidencias. Por favor, inténtalo de nuevo más tarde.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error general',
+        text: 'Error al crear el proyecto o las evidencias. Por favor, inténtalo de nuevo más tarde.',
+      });
     }
   };
 
@@ -220,7 +256,7 @@ const FormularioAgregarProyecto: React.FC = () => {
             marginBottom: "20px",
           }}
         >
-          Añadir Otra Evidencia
+          Añadir evidencia
         </button>
 
         {/* Botón de agregar */}

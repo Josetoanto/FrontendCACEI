@@ -22,7 +22,7 @@ interface RubricaItem {
           {rubricasToShow.map((item: any, index: number) => (
             <div key={index} style={{ paddingBottom: "10px", borderBottom: "1px solid #ddd" }}>
               {/* Mostrar nombre del criterio y puntuación de la evaluación específica */}
-              <p style={{ fontSize: "14px", color: "#61788A", margin: "16px 0 0" }}>{item.comentario || 'Sin comentario'}</p> {/* Asumiendo que 'comentario' es el nombre del criterio o una descripción */}
+              <p style={{ fontSize: "14px", color: "#61788A", margin: "16px 0 0" }}>{item.nombre || 'Sin nombre de rúbrica'}</p>
               <p style={{ fontSize: "14px", color: "black", margin: "5px 0 0" }}>{item.puntuacion}/100</p>
             </div>
           ))}

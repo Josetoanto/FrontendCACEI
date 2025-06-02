@@ -7,11 +7,11 @@ interface RubricaItemEditableProps {
     titulo: string;
     descripcion: string;
   };
-  onRemove: (id: number) => void; // Añade prop para eliminar
-  canRemove: boolean; // Añade prop para indicar si se puede eliminar
+  // onRemove: (id: number) => void; // Añade prop para eliminar
+  // canRemove: boolean; // Añade prop para indicar si se puede eliminar
 }
 
-const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemove, canRemove }) => { // Acepta nuevas props
+const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item }) => { // Acepta nuevas props
   const [desplegado, setDesplegado] = useState(false);
   const [titulo, setTitulo] = useState(item.titulo);
   const [descripcion, setDescripcion] = useState(item.descripcion);
@@ -164,7 +164,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemov
                 >
                   Editar
                 </button>
-                {canRemove && ( // Muestra el botón de eliminar condicionalmente
+                {/* {canRemove && ( // Muestra el botón de eliminar condicionalmente
                   <button 
                     onClick={() => onRemove(item.id)}
                     style={{
@@ -178,7 +178,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item, onRemov
                   >
                     Eliminar
                   </button>
-                )}
+                )} */}
               </>
             )}
           </div>

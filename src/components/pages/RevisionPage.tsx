@@ -16,6 +16,7 @@ const Revision: React.FC = () => {
     const [evidenceData, setEvidenceData] = useState<any[]>([]);
     const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
     const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
+    const [allCriteria, setAllCriteria] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -31,6 +32,7 @@ const Revision: React.FC = () => {
             const apiUrlProjectsBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects/';
             const apiUrlUsersBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/';
             const apiUrlEvidencesBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/evidences/project/';
+            const apiUrlCriteria = 'https://gcl58kpp-8000.use2.devtunnels.ms/criteria';
 
             try {
                 const specificEvaluationResponse = await fetch(apiUrlEvaluationSpecific, {
@@ -47,7 +49,37 @@ const Revision: React.FC = () => {
                     return;
                 }
                 const specificEvaluationData = await specificEvaluationResponse.json();
-                setCurrentEvaluation(specificEvaluationData);
+
+                // Obtener todos los criterios
+                const criteriaResponse = await fetch(apiUrlCriteria, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!criteriaResponse.ok) {
+                    console.error('Error fetching criteria:', criteriaResponse.status);
+                    setAllCriteria([]);
+                    return;
+                }
+                const criteriaData = await criteriaResponse.json();
+                setAllCriteria(criteriaData);
+
+                // Mapear los nombres de los criterios a la evaluación específica
+                const enrichedCriterios = specificEvaluationData.criterios.map((criterioEvaluado: any) => {
+                    const matchingCriterion = criteriaData.find((criterio: any) => criterio.id === criterioEvaluado.criterio_id);
+                    return {
+                        ...criterioEvaluado,
+                        nombre: matchingCriterion ? matchingCriterion.nombre : 'Criterio desconocido',
+                    };
+                });
+
+                setCurrentEvaluation({
+                    ...specificEvaluationData,
+                    criterios: enrichedCriterios,
+                });
 
                 // Obtener el nombre del evaluador
                 const evaluatorId = specificEvaluationData.evaluador_id;

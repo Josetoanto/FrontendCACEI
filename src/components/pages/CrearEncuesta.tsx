@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import HeaderEncuesta from "../organisms/HeaderEncuesta";
 import CreacionDeEncuesta from "../organisms/CreacionDeEncuesta";
-import RespuestaCard from "../molecule/RespuestaCard";
 import ConfiguracionEncuesta from "../molecule/ConfiguracionEncuesta";
 import RespuestaDisplay from "../molecule/RespuestaCard";
+import Swal from 'sweetalert2'; // Importar SweetAlert2
 
 interface Survey {
   id: number;
@@ -83,7 +83,7 @@ const CrearEncuesta: React.FC = () => {
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
-      setError('No se encontró el token de usuario. Por favor, inicie sesión.');
+      Swal.fire('¡Atención!', 'No se encontró el token de usuario. Por favor, inicie sesión.', 'warning');
       setLoading(false);
       return;
     }
@@ -135,14 +135,14 @@ const CrearEncuesta: React.FC = () => {
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
-      alert('No se encontró el token de usuario. Por favor, inicie sesión.');
+      Swal.fire('¡Atención!', 'No se encontró el token de usuario. Por favor, inicie sesión.', 'warning');
       return;
     }
 
     // NEW: Check for mandatory dates for creation mode
     if (!isEditMode) { // Only for new survey creation
         if (!latestSurveyData.current.inicio || !latestSurveyData.current.fin) {
-            alert('Las fechas de inicio y fin son obligatorias para crear una nueva encuesta.');
+            Swal.fire('¡Atención!', 'Las fechas de inicio y fin son obligatorias para crear una nueva encuesta.', 'warning');
             return;
         }
     }
@@ -182,7 +182,7 @@ const CrearEncuesta: React.FC = () => {
           }
           const newSurvey = await createSurveyResponse.json();
           surveyIdToUse = newSurvey.id; // Get the new ID for questions
-          alert('Encuesta creada exitosamente!');
+          Swal.fire('¡Éxito!', 'Encuesta creada exitosamente!', 'success');
           // Update surveyData with the new ID and other fields returned by the API
           setSurveyData(prev => prev ? { ...prev, ...newSurvey, id: newSurvey.id } : newSurvey);
       } else {
@@ -214,7 +214,6 @@ const CrearEncuesta: React.FC = () => {
               }
               throw new Error(errorMessage);
           }
-           alert('Encuesta actualizada exitosamente!');
       }
 
       // Process questions (both for creation and edit)
@@ -286,30 +285,27 @@ const CrearEncuesta: React.FC = () => {
         }
       }
 
-      // Eliminar preguntas marcadas para eliminación
-      for (const questionIdToDelete of questionsToDelete) {
-        console.log(`Eliminando pregunta ${questionIdToDelete}`);
-        const deleteResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/questions/${questionIdToDelete}`, {
+      // Delete questions marked for deletion
+      for (const questionId of questionsToDelete) {
+        console.log(`Eliminando pregunta con ID: ${questionId}`);
+        const deleteQuestionResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/questions/${questionId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${userToken}`
           }
         });
-
-        if (!deleteResponse.ok) {
-          const errorBody = await deleteResponse.json();
-          throw new Error(`Error al eliminar pregunta ${questionIdToDelete}: ${JSON.stringify(errorBody)}`);
+        if (!deleteQuestionResponse.ok) {
+          console.error(`Error al eliminar la pregunta ${questionId}:`, await deleteQuestionResponse.text());
+          throw new Error(`Error al eliminar la pregunta ${questionId}`);
         }
       }
-      setQuestionsToDelete([]); // Limpiar la lista de preguntas a eliminar después de la operación
 
-      alert('Encuesta y preguntas guardadas exitosamente!');
-      await fetchSurveyData(); // Recargar los datos después de un guardado exitoso
-      // NEW: Redirect to home after successful save
-      navigate('/home');
+      Swal.fire('¡Éxito!', `Encuesta ${isEditMode ? 'actualizada' : 'creada'} exitosamente!`, 'success');
+      navigate('/home'); // Redirigir al usuario después de guardar exitosamente
+
     } catch (err: any) {
-      console.error('Error al guardar datos:', err);
-      alert(`Error al guardar la encuesta: ${err.message}`);
+      console.error('Error al guardar la encuesta:', err);
+      Swal.fire('Error', err.message || 'Hubo un error al guardar la encuesta.', 'error');
     }
   };
 

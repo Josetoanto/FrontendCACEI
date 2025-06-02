@@ -1,5 +1,6 @@
 import AgregarProyectoBoton from "../atoms/AgregarProyectoBoton";
 import Proyecto from "../molecule/Proyecto";
+import React, { useState } from 'react';
 
 interface ListaDeProyectosProps {
   titulo: string;
@@ -8,6 +9,12 @@ interface ListaDeProyectosProps {
 }
 
 const ListaDeProyectos: React.FC<ListaDeProyectosProps> = ({ titulo, proyectos, onDelete }) => {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const handleToggleMenu = (id: number | null) => {
+    setOpenMenuId(id);
+  };
+
   return (
     <div style={{
       margin: "auto",
@@ -21,7 +28,15 @@ const ListaDeProyectos: React.FC<ListaDeProyectosProps> = ({ titulo, proyectos, 
       {proyectos.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column" }}>
           {proyectos.map((proyecto, index) => (
-            <Proyecto key={index} nombre={proyecto.nombre} fecha={proyecto.fecha} id={proyecto.id} onDelete={onDelete} />
+            <Proyecto 
+              key={proyecto.id}
+              nombre={proyecto.nombre} 
+              fecha={proyecto.fecha} 
+              id={proyecto.id} 
+              onDelete={onDelete}
+              isOpen={proyecto.id === openMenuId}
+              onToggleMenu={handleToggleMenu}
+            />
           ))}
         </div>
       ) : (

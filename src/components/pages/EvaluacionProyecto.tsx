@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import DescripcionProyecto from "../atoms/DescripcionProyecto";
-import EnviarReporte from "../atoms/EnviarReporte";
 import DetallesPresentacion from "../molecule/DetallesPresentacion";
 import Header from "../organisms/Header";
 import RubricaPresentacion from "../organisms/RubricaPresentacion";
 
 const EvaluacionProyecto: React.FC = () => {
     const { evaluationId } = useParams<{ evaluationId: string }>();
+    const navigate = useNavigate();
     const [projectTitle, setProjectTitle] = useState("Cargando título...");
     const [projectDescription, setProjectDescription] = useState("Cargando descripción...");
     const [presenterName, setPresenterName] = useState("Cargando presentador...");
@@ -16,6 +17,7 @@ const EvaluacionProyecto: React.FC = () => {
     const [evidenceUrls, setEvidenceUrls] = useState<{ url: string; filename: string; mime_type: string }[]>([]);
     const [comentarioGeneral, setComentarioGeneral] = useState('');
     const [rubricasEvaluadas, setRubricasEvaluadas] = useState<{ criterio_id: number; puntuacion: number | null }[]>([]);
+    const [isFormValid, setIsFormValid] = useState(false);
 
     useEffect(() => {
         const fetchProjectAndUserData = async () => {
@@ -114,15 +116,23 @@ const EvaluacionProyecto: React.FC = () => {
       setRubricasEvaluadas(evaluadas);
     };
 
+    useEffect(() => {
+      const hasRubricas = rubricasEvaluadas.length > 0;
+      const allRubricasFilled = rubricasEvaluadas.every(rubrica => 
+        rubrica.puntuacion !== null && rubrica.puntuacion >= 1 && rubrica.puntuacion <= 100
+      );
+      setIsFormValid(hasRubricas && allRubricasFilled);
+    }, [rubricasEvaluadas]);
+
     const handleEnviarReporte = async () => {
       const token = localStorage.getItem('userToken');
       if (!token) {
-        alert("No se encontró el token de usuario. Por favor, inicia sesión de nuevo.");
+        Swal.fire('Error', 'No se encontró el token de usuario. Por favor, inicia sesión de nuevo.', 'error');
         return;
       }
 
       if (!evaluationId) {
-        alert("No se encontró el ID del proyecto.");
+        Swal.fire('Error', 'No se encontró el ID del proyecto.', 'error');
         return;
       }
 
@@ -153,12 +163,11 @@ const EvaluacionProyecto: React.FC = () => {
           throw new Error(`Error al enviar el reporte: ${response.status} - ${errorText}`);
         }
 
-        alert("Reporte enviado con éxito.");
-        // Redirigir a una página de éxito o al home del evaluador
-        // navigate('/evaluador'); // Descomentar si tienes useNavigate importado y configurado
+        Swal.fire('Éxito', 'Reporte enviado con éxito.', 'success');
+        navigate('/evaluador');
       } catch (error: any) {
         console.error("Error al enviar el reporte:", error);
-        alert(`Error: ${error.message}`);
+        Swal.fire('Error', `Error: ${error.message}`, 'error');
       }
     };
 
@@ -219,6 +228,7 @@ const EvaluacionProyecto: React.FC = () => {
           fontWeight:"lighter",
           marginBottom:"25px"
         }}
+        disabled={!isFormValid}
       >
         Enviar reporte
       </button>

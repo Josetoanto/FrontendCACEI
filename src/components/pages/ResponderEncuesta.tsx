@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useCallback } from 'react';
 import InfoEncuesta from "../molecule/InfoEncuesta";
 import Pregunta from "../molecule/Pregunta";
+import Swal from 'sweetalert2';
 
 interface Survey {
   id: number;
@@ -43,6 +44,8 @@ const ResponderEncuesta: React.FC = () => {
 
   // Obtener el ID del usuario actual del localStorage
   const currentUserId = JSON.parse(localStorage.getItem('userData') || '{}').id;
+  const navigate = useNavigate();
+  const userType = JSON.parse(localStorage.getItem('userData') || '{}').tipo;
 
   // Función para manejar el cambio de respuesta de una pregunta individual
   const handleAnswerChange = useCallback((questionId: number, value: string | number) => {
@@ -242,13 +245,21 @@ const ResponderEncuesta: React.FC = () => {
         throw new Error(`Error al ${hasResponded ? 'actualizar' : 'enviar'} las respuestas: ${response.status} - ${errorData.detail || response.statusText}`);
       }
       const data = await response.json();
-      alert(`Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente.`);
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: `Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente.`,
+      });
       console.log(`Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente:`, data);
       // Opcional: Volver a cargar la respuesta del usuario para asegurar el estado más reciente
       fetchUserResponse();
     } catch (err: any) {
       console.error('Error al enviar respuestas:', err);
-      alert(`Error al enviar respuestas: ${err.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al enviar respuestas: ${err.message}`,
+      });
     }
   }, [surveyId, answers, questions, hasResponded, userResponseId, fetchUserResponse]);
 
@@ -319,6 +330,25 @@ const ResponderEncuesta: React.FC = () => {
             opacity: hasResponded ? 0.7 : 1,
           }}>
             {hasResponded ? "Encuesta Respondida" : "Enviar"}
+          </button>
+        </div>
+      )}
+      {hasResponded && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "32px", width: "100%", maxWidth: "650px", marginLeft: "auto", marginRight: "auto" }}>
+          <button 
+            onClick={() => navigate(userType === 'Egresado' ? '/egresado' : '/evaluador')}
+            style={{
+              background: "#6c3fc2",
+              color: "#fff",
+              border: "none",
+              width: "100%",
+              borderRadius: "8px",
+              padding: "12px 32px",
+              fontSize: "16px",
+              cursor: "pointer",
+            }}
+          >
+            Regresar a la página principal
           </button>
         </div>
       )}

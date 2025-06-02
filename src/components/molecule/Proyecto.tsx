@@ -1,29 +1,39 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import React, { useState } from 'react';
+import React from 'react';
+import Swal from 'sweetalert2';
 
 interface ProyectoProps {
   id: number;
   nombre: string;
   fecha: string;
   onDelete: (id: number) => void;
+  isOpen: boolean;
+  onToggleMenu: (id: number | null) => void;
 }
 
-const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete }) => {
-  const [showMenu, setShowMenu] = useState(false);
-
+const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete, isOpen, onToggleMenu }) => {
   const toggleMenu = () => {
-    setShowMenu(!showMenu);
+    onToggleMenu(isOpen ? null : id);
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("¿Estás seguro de que quieres eliminar este proyecto?");
-    if (!confirmDelete) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminarlo!"
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
-        alert("No autenticado. Por favor, inicia sesión.");
+        await Swal.fire("Error", "No autenticado. Por favor, inicia sesión.", "error");
         return;
     }
 
@@ -39,15 +49,15 @@ const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete }) => {
 
       if (!response.ok) {
         console.error('Error al eliminar proyecto:', response.status);
-        alert('No se pudo eliminar el proyecto.');
+        await Swal.fire("Error", "No se pudo eliminar el proyecto.", "error");
         return;
       }
 
-      alert("Proyecto eliminado con éxito.");
+      await Swal.fire("¡Eliminado!", "El proyecto ha sido eliminado.", "success");
       onDelete(id); // Llama a la función onDelete del padre para actualizar la lista
     } catch (error) {
       console.error('Error al conectar con la API para eliminar:', error);
-      alert('Error al eliminar el proyecto. Por favor, inténtalo de nuevo más tarde.');
+      await Swal.fire("Error", "Error al eliminar el proyecto. Por favor, inténtalo de nuevo más tarde.", "error");
     }
   };
 
@@ -76,7 +86,7 @@ const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete }) => {
           style={{ cursor: "pointer", color: "#888" }}
           onClick={toggleMenu}
         ></i>
-        {showMenu && (
+        {isOpen && (
           <div style={{
             position: "absolute",
             backgroundColor: "#f9f9f9",

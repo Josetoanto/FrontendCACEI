@@ -26,6 +26,12 @@ const RubricaPresentacion: React.FC<RubricaPresentacionProps> = ({ onRubricasCha
         }
         const data = await response.json();
         setRubricas(data);
+        // Inicializar criterioPuntuaciones con null para cada rúbrica cargada
+        const initialPuntuaciones: {[key: number]: number | null} = {};
+        data.forEach((rubrica: any) => {
+          initialPuntuaciones[rubrica.id] = null;
+        });
+        setCriterioPuntuaciones(initialPuntuaciones);
       } catch (error) {
         console.error("Error fetching rubricas:", error);
       }

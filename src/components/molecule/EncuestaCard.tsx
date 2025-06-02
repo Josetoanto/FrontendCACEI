@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 
 interface EncuestaCardProps {
   title: string;
@@ -35,10 +36,21 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta encuesta?')) {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: '¡No podrás revertir esto!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminarla!',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
       const userToken = localStorage.getItem('userToken');
       if (!userToken) {
-        alert('No estás autenticado para realizar esta acción.');
+        Swal.fire('Error', 'No estás autenticado para realizar esta acción.', 'error');
         return;
       }
 
@@ -54,15 +66,15 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         });
 
         if (response.ok) {
-          alert('Encuesta eliminada con éxito.');
+          Swal.fire('¡Eliminada!', 'La encuesta ha sido eliminada.', 'success');
           onDeleteSuccess();
         } else {
           const errorText = await response.text();
-          alert(`Error al eliminar la encuesta: ${response.status} - ${errorText}`);
+          Swal.fire('Error', `Error al eliminar la encuesta: ${response.status} - ${errorText}`, 'error');
         }
       } catch (error) {
         console.error('Error al conectar con la API:', error);
-        alert('Error de red al intentar eliminar la encuesta.');
+        Swal.fire('Error', 'Error de red al intentar eliminar la encuesta.', 'error');
       }
     }
   };

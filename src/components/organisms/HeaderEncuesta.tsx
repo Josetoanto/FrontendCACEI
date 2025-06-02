@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from "react";
 import upLogo from "../../assets/upLogo.png";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 interface HeaderEncuestaProps {
   activo: string;
@@ -14,9 +15,20 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surv
   const navigate = useNavigate();
 
   const handleCancel = () => {
-    if (window.confirm("¿Estás seguro que quieres cancelar? Perderás todos los cambios no guardados.")) {
-      navigate('/home');
-    }
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Perderás todos los cambios no guardados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, seguir editando"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate('/home');
+      }
+    });
   };
 
   return (

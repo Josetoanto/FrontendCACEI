@@ -4,6 +4,7 @@ import Header from '../organisms/Header';
 import HomeMenu from '../molecule/homeMenu';
 import EncuestaList from '../organisms/EncuestaList';
 import Proyectos from '../organisms/Proyectos';
+import Swal from 'sweetalert2';
 
 // Eliminar el mock de encuestas ya que obtendremos datos de la API
 // const encuestas = [
@@ -57,7 +58,7 @@ const Home: React.FC = () => {
                     // Manejar respuestas no exitosas
                     console.error('Error al obtener encuestas:', response.status);
                     // Opcional: mostrar un mensaje al usuario
-                     alert('No se pudieron cargar las encuestas.');
+                     Swal.fire('Error', 'No se pudieron cargar las encuestas.', 'error');
                     return;
                 }
 
@@ -77,7 +78,7 @@ const Home: React.FC = () => {
 
         } catch (error) {
             console.error('Error al obtener encuestas:', error);
-             alert('Error al cargar encuestas.');
+             Swal.fire('Error', 'Error al cargar encuestas.', 'error');
         }
     }, [navigate]);
 
@@ -95,16 +96,14 @@ const Home: React.FC = () => {
         encuesta.fin < now
     );
 
-    const futureEncuestas = encuestas.filter(encuesta =>
-        encuesta.inicio > now
-    );
+   
 
     return (
         <div style={{paddingBottom:"24px"}}>
             <Header></Header>
             <div style={{ width: '75%', margin: '0 auto'}}>
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
-            <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Futuras", "Proyectos"]} />
+            <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Proyectos"]} />
             {/* Mostrar EncuestaList basado en la opción activa y el tipo de usuario */}
             {activeOption === "Encuestas" && userType === 'Administrador' && encuestas.length > 0 && <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>}
             {activeOption === "Activas" && userType === 'Administrador' && activeEncuestas.length > 0 && <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>}
@@ -115,15 +114,6 @@ const Home: React.FC = () => {
                     <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas cerradas en este momento.</p>
                 )
             )}
-            {activeOption === "Futuras" && userType === 'Administrador' && (
-                futureEncuestas.length > 0 ? (
-                    <EncuestaList title={'Encuestas Futuras'} encuestas={futureEncuestas.map(encuesta => ({...encuesta, isFuture: true}))} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>
-                ) : (
-                    <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas futuras en este momento.</p>
-                )
-            )}
-            {/* Eliminar el placeholder de Calendario */}
-            {activeOption === "Calendario" && <div>Contenido para Calendario</div>}
             {activeOption === "Proyectos" && <Proyectos></Proyectos>}
             {/* Botón para crear encuesta solo si activeOption es "Encuestas" y el usuario es Administrador */}
             {activeOption === "Encuestas" && userType === 'Administrador' && (
