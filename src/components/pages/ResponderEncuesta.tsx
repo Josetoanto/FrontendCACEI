@@ -41,11 +41,15 @@ const ResponderEncuesta: React.FC = () => {
   const [answers, setAnswers] = useState<{[key: number]: string | number}>({}); // Estado para almacenar las respuestas
   const [hasResponded, setHasResponded] = useState(false); // Nuevo estado
   const [userResponseId, setUserResponseId] = useState<number | null>(null); // Nuevo estado para el ID de la respuesta
+  const [isSubmitting, setIsSubmitting] = useState(false); // Estado para evitar doble envío
 
   // Obtener el ID del usuario actual del localStorage
   const currentUserId = JSON.parse(localStorage.getItem('userData') || '{}').id;
   const navigate = useNavigate();
   const userType = JSON.parse(localStorage.getItem('userData') || '{}').tipo;
+
+  // Nuevo: obtener el código anónimo si existe
+  const [codigoAnonimo] = useState<string | null>(localStorage.getItem('codigoEncuestaAnonima'));
 
   // Función para manejar el cambio de respuesta de una pregunta individual
   const handleAnswerChange = useCallback((questionId: number, value: string | number) => {
@@ -64,7 +68,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     const userToken = localStorage.getItem('userToken');
-    if (!userToken) {
+    if (!userToken && !codigoAnonimo) {
       setError('No autenticado.');
       setIsLoading(false);
       return;
@@ -72,7 +76,7 @@ const ResponderEncuesta: React.FC = () => {
 
     try {
       const surveyResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/surveys/${surveyId}`, {
-        headers: { 'Authorization': `Bearer ${userToken}` },
+        headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
       if (!surveyResponse.ok) {
@@ -85,7 +89,7 @@ const ResponderEncuesta: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [surveyId]);
+  }, [surveyId, codigoAnonimo]);
 
   const fetchQuestionsData = useCallback(async () => {
     if (!surveyId) {
@@ -95,7 +99,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     const userToken = localStorage.getItem('userToken');
-    if (!userToken) {
+    if (!userToken && !codigoAnonimo) {
       setError('No autenticado.');
       setIsLoading(false);
       return;
@@ -103,7 +107,7 @@ const ResponderEncuesta: React.FC = () => {
 
     try {
       const questionsResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/questions/survey/${surveyId}`, {
-        headers: { 'Authorization': `Bearer ${userToken}` },
+        headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
       if (!questionsResponse.ok) {
@@ -116,7 +120,7 @@ const ResponderEncuesta: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [surveyId]);
+  }, [surveyId, codigoAnonimo]);
 
   // Nueva función para verificar si el usuario ya respondió la encuesta
   const fetchUserResponse = useCallback(async () => {
@@ -124,6 +128,8 @@ const ResponderEncuesta: React.FC = () => {
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) return;
+    // No buscar respuestas previas si es anónimo
+    if (codigoAnonimo) return;
 
     try {
       const response = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/responses/survey/${surveyId}`, {
@@ -159,7 +165,7 @@ const ResponderEncuesta: React.FC = () => {
     } catch (err) {
       console.error('Error al verificar respuestas previas:', err);
     }
-  }, [surveyId, currentUserId, questions]); // `questions` es una dependencia para pre-cargar respuestas
+  }, [surveyId, currentUserId, questions, codigoAnonimo]); // `questions` es una dependencia para pre-cargar respuestas
 
   useEffect(() => {
     fetchSurveyData();
@@ -174,14 +180,18 @@ const ResponderEncuesta: React.FC = () => {
   }, [questions, currentUserId, fetchUserResponse]);
 
   const handleSubmit = useCallback(async () => {
+    if (isSubmitting) return; // Evita doble envío
+    setIsSubmitting(true);
     if (!surveyId) {
       setError('ID de encuesta no proporcionado.');
+      setIsSubmitting(false);
       return;
     }
 
     const userToken = localStorage.getItem('userToken');
-    if (!userToken) {
+    if (!userToken && !codigoAnonimo) {
       setError('No autenticado.');
+      setIsSubmitting(false);
       return;
     }
 
@@ -223,20 +233,32 @@ const ResponderEncuesta: React.FC = () => {
     };
 
     // Determinar el método y la URL de la API
-    const method = hasResponded ? 'PUT' : 'POST';
-    const apiUrl = hasResponded 
-      ? `https://gcl58kpp-8000.use2.devtunnels.ms/responses/${userResponseId}` // Si ya respondió, PUT a su ID de respuesta
-      : `https://gcl58kpp-8000.use2.devtunnels.ms/responses/`; // Si no, POST
+    let method = hasResponded ? 'PUT' : 'POST';
+    let apiUrl = hasResponded 
+      ? `https://gcl58kpp-8000.use2.devtunnels.ms/responses/${userResponseId}`
+      : `https://gcl58kpp-8000.use2.devtunnels.ms/responses/`;
     
-    const bodyToSend = hasResponded ? { details: responseDetails } : requestBody; // Si es PUT, solo los detalles
+    let bodyToSend = requestBody;
+    let headers: any = {
+      'Content-Type': 'application/json'
+    };
+    // Si es anónimo, usar endpoint especial y sin token
+    if (codigoAnonimo) {
+      apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/responses/anonymous/';
+      method = 'POST';
+      bodyToSend = requestBody;
+      headers = { 'Content-Type': 'application/json' };
+    } else if (userToken) {
+      headers = {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      };
+    }
 
     try {
       const response = await fetch(apiUrl, {
         method: method,
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: headers,
         body: JSON.stringify(bodyToSend)
       });
 
@@ -245,6 +267,27 @@ const ResponderEncuesta: React.FC = () => {
         throw new Error(`Error al ${hasResponded ? 'actualizar' : 'enviar'} las respuestas: ${response.status} - ${errorData.detail || response.statusText}`);
       }
       const data = await response.json();
+      // Si es anónimo, marcar como respondido
+      if (codigoAnonimo) {
+        try {
+          await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-invitations/code/${codigoAnonimo}/mark-responded`, {
+            method: 'PUT',
+          });
+          localStorage.removeItem('codigoEncuestaAnonima');
+          await Swal.fire({
+            icon: 'success',
+            title: '¡Encuesta respondida con éxito!',
+            text: 'Gracias por tu participación.',
+          });
+          // Redirigir al login si es anónimo
+          navigate('/login');
+          setIsSubmitting(false);
+          return;
+        } catch (err) {
+          console.error('Error al marcar la invitación anónima como respondida:', err);
+          setIsSubmitting(false);
+        }
+      }
       Swal.fire({
         icon: 'success',
         title: '¡Éxito!',
@@ -253,6 +296,26 @@ const ResponderEncuesta: React.FC = () => {
       console.log(`Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente:`, data);
       // Opcional: Volver a cargar la respuesta del usuario para asegurar el estado más reciente
       fetchUserResponse();
+
+      // --- MARCAR NOTIFICACIONES COMO RESPONDIDAS ---
+      try {
+        const notiRes = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/notifications/user', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        if (notiRes.ok) {
+          const notificaciones = await notiRes.json();
+          const relacionadas = notificaciones.filter((n: any) => n.encuesta_id === surveyId);
+          for (const noti of relacionadas) {
+            await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/notifications/${noti.id}/mark-responded`, {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${userToken}` }
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error al marcar notificaciones como respondidas:', err);
+      }
+      // --- FIN MARCAR NOTIFICACIONES ---
     } catch (err: any) {
       console.error('Error al enviar respuestas:', err);
       Swal.fire({
@@ -260,8 +323,10 @@ const ResponderEncuesta: React.FC = () => {
         title: 'Error',
         text: `Error al enviar respuestas: ${err.message}`,
       });
+      setIsSubmitting(false);
     }
-  }, [surveyId, answers, questions, hasResponded, userResponseId, fetchUserResponse]);
+    setIsSubmitting(false);
+  }, [surveyId, answers, questions, hasResponded, userResponseId, fetchUserResponse, codigoAnonimo, navigate, isSubmitting]);
 
   if (isLoading) {
     return <div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando encuesta...</div>;
@@ -282,7 +347,7 @@ const ResponderEncuesta: React.FC = () => {
   return (
     <div style={{ background: "#fafbfc", minHeight: "100vh", padding: "0 0 80px 0", backgroundColor: "#f0ebf8" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-        <InfoEncuesta editable={!hasResponded} surveyData={displaySurveyData} />
+        <InfoEncuesta editable={false} surveyData={displaySurveyData} />
         {!hasResponded && questions.length > 0 ? (questions.map((pregunta) => (
           <div
             key={pregunta.id}
@@ -318,7 +383,7 @@ const ResponderEncuesta: React.FC = () => {
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "32px", width: "100%", maxWidth: "650px", marginLeft: "auto", marginRight: "auto" }}>
           <button 
             onClick={handleSubmit} 
-            disabled={hasResponded} 
+            disabled={hasResponded || isSubmitting} 
             style={{
             background: "#6c3fc2",
             color: "#fff",
@@ -326,10 +391,10 @@ const ResponderEncuesta: React.FC = () => {
             borderRadius: "8px",
             padding: "12px 32px",
             fontSize: "16px",
-            cursor: hasResponded ? "not-allowed" : "pointer",
-            opacity: hasResponded ? 0.7 : 1,
+            cursor: hasResponded || isSubmitting ? "not-allowed" : "pointer",
+            opacity: hasResponded || isSubmitting ? 0.7 : 1,
           }}>
-            {hasResponded ? "Encuesta Respondida" : "Enviar"}
+            {isSubmitting ? "Enviando..." : hasResponded ? "Encuesta Respondida" : "Enviar"}
           </button>
         </div>
       )}

@@ -9,9 +9,11 @@ interface HeaderEncuestaProps {
   surveyTitle: string;
   isEditMode: boolean;
   onSave: () => Promise<void>;
+  isAnonima?: boolean;
+  isSaving?: boolean;
 }
 
-const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode, onSave }) => {
+const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surveyTitle, isEditMode, onSave, isAnonima = false, isSaving = false }) => {
   const navigate = useNavigate();
 
   const handleCancel = () => {
@@ -45,18 +47,18 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surv
         {/* Izquierda: Imagen + Nombre Encuesta */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <img src={upLogo} alt="Encuesta" style={{  marginRight: "12px", height: "auto", width: "36px" }} />
-          <h2 style={{ margin: 0, fontSize:"18px" }}>{surveyTitle}</h2>
+          <h2 style={{ margin: 0, fontSize:"18px", maxWidth:"700px", overflow:"hidden" }}>{surveyTitle}</h2>
         </div>
 
         {/* Derecha: Botón Publicar + Imagen Perfil */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button onClick={onSave} style={{
+          <button onClick={onSave} disabled={isSaving} style={{
             backgroundColor: "#007bff",
             color: "#fff",
             padding: "8px 16px",
             borderRadius: "8px",
             border: "none",
-            cursor: "pointer"
+            cursor: isSaving ? "not-allowed" : "pointer"
           }}>{isEditMode ? "Guardar" : "Publicar"}</button>
           <button onClick={handleCancel} style={{
             backgroundColor: "#dc3545", // Color rojo para cancelar
@@ -76,7 +78,13 @@ const HeaderEncuesta: React.FC<HeaderEncuestaProps> = ({ activo, setActivo, surv
         marginTop: "12px",
         borderBottom: "2px solid #ddd"
       }}>
-        {["Preguntas", "Respuestas", "Configuración"].map((item) => (
+        {(() => {
+          const tabs = ["Preguntas", "Respuestas", "Configuración"];
+          if (isAnonima) {
+            tabs.push("Correos");
+          }
+          return tabs;
+        })().map((item) => (
           <div 
             key={item} 
             onClick={() => setActivo(item)}

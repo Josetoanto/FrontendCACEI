@@ -65,47 +65,73 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
         borderTopRightRadius:"10px"
       }}></div>
 
-      {/* Título (Editable o solo lectura) */}
-      <input 
-        type="text"
-        value={titulo}
-        onChange={handleTituloChange}
-        style={{
+      {/* Título y descripción: modo solo lectura o editable */}
+      {editable ? (
+        <input 
+          type="text"
+          value={titulo}
+          onChange={handleTituloChange}
+          style={{
+            width: "100%",
+            fontSize: "28px",
+            fontWeight: "bold",
+            padding:"20px",
+            border: "none",
+            outline: "none",
+            backgroundColor: "transparent",
+            paddingBottom:"15px",
+            paddingTop:"5px",
+            maxWidth:"600px"
+          }}
+        />
+      ) : (
+        <div style={{
           width: "100%",
           fontSize: "28px",
           fontWeight: "bold",
           padding:"20px",
-          border: "none",
-          outline: "none",
-          backgroundColor: "transparent",
           paddingBottom:"15px",
           paddingTop:"5px",
-        }}
-        readOnly={!editable}
-      />
+          maxWidth:"600px",
+          color: '#333',
+        }}>{titulo}</div>
+      )}
 
-      {/* Descripción (Editable o solo lectura) */}
-      <textarea 
-        value={descripcion}
-        onChange={handleDescripcionChange}
-        style={{
+      {editable ? (
+        <textarea 
+          value={descripcion}
+          onChange={handleDescripcionChange}
+          style={{
+            width: "90%",
+            fontSize: "16px",
+            color: "#70757a",
+            padding:"20px",
+            paddingTop:"0px",
+            border: "none",
+            outline: "none",
+            backgroundColor: "transparent",
+            marginTop: "5px",
+            resize: "none",
+            minHeight: "50px",
+            overflowY: "hidden",
+            fontFamily: "Arial, sans-serif",
+          }}
+          readOnly={false}
+          rows={2}
+        />
+      ) : (
+        <div style={{
           width: "90%",
           fontSize: "16px",
           color: "#70757a",
           padding:"20px",
           paddingTop:"0px",
-          border: "none",
-          outline: "none",
-          backgroundColor: "transparent",
           marginTop: "5px",
-          resize: "none",
           minHeight: "50px",
-          overflowY: "hidden",
           fontFamily: "Arial, sans-serif",
-        }}
-        readOnly={!editable}
-        rows={2}
-      />
+          whiteSpace: 'pre-line',
+        }}>{descripcion}</div>
+      )}
     </div>
   );
 };

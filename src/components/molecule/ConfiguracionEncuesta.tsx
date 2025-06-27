@@ -13,9 +13,10 @@ interface Survey {
 interface ConfiguracionEncuestaProps {
   surveyData: Survey | null;
   setSurveyData: Dispatch<SetStateAction<Survey | null>>;
+  isEditMode: boolean;
 }
 
-const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData }) => {
+const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData, isEditMode }) => {
   const [tipoUsuario, setTipoUsuario] = useState<Survey['tipo'] | "Anonima">(surveyData?.anonima === 1 ? "Anonima" : (surveyData?.tipo || "egresado"));
   const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? new Date(surveyData.inicio).toISOString().split('T')[0] : "");
   const [fechaFin, setFechaFin] = useState(surveyData?.fin ? new Date(surveyData.fin).toISOString().split('T')[0] : "");
@@ -75,7 +76,6 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
       <h2 style={{ fontWeight: "bold", fontSize: "22px", marginBottom: "32px" }}>Configuración</h2>
       <hr style={{ border: "none", borderTop: "1px solid #ece6f6", margin: "32px 0" }} />
 
-
       {/* Tipo de usuario */}
       <div style={{ marginBottom: "40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
@@ -100,34 +100,10 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
         >
           <option value="egresado">Egresado</option>
           <option value="empleador">Empleador</option>
-          {/* <option value="autoevaluacion">Autoevaluación</option> */}
           <option value="Anonima">Anónima</option>
         </select>
       </div>
-      {(tipoUsuario === "Anonima" || surveyData?.anonima === 1) && (
-        <div style={{
-          marginTop: "16px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end"
-        }}>
-          <span style={{
-            fontWeight: "bold",
-            fontSize: "15px",
-            color: "#6c63ff",
-            background: "#f3f0fa",
-            borderRadius: "8px",
-            padding: "10px 24px",
-            letterSpacing: "4px",
-            boxShadow: "0 2px 8px 0 #ece6f6"
-          }}>
-            {Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join("")}
-          </span>
-          <span style={{ fontSize: "13px", color: "#888", marginTop: "16px" }}>
-            Código de acceso anónimo
-          </span>
-        </div>
-      )}
+
       <hr style={{ border: "none", borderTop: "1px solid #ece6f6", margin: "32px 0" }} />
 
       {/* Calendario */}

@@ -5,6 +5,7 @@ import CreacionDeEncuesta from "../organisms/CreacionDeEncuesta";
 import ConfiguracionEncuesta from "../molecule/ConfiguracionEncuesta";
 import RespuestaDisplay from "../molecule/RespuestaCard";
 import Swal from 'sweetalert2'; // Importar SweetAlert2
+import CorreosAutorizados from "../molecule/CorreosAutorizados";
 
 interface Survey {
   id: number;
@@ -44,6 +45,7 @@ const CrearEncuesta: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questionsToDelete, setQuestionsToDelete] = useState<number[]>([]); // Nuevo estado para IDs de preguntas a eliminar
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   // Ref para almacenar el surveyData más reciente
@@ -131,11 +133,14 @@ const CrearEncuesta: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (isSaving) return; // Evita doble ejecución
+    setIsSaving(true);
     if (!latestSurveyData.current) return;
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
       Swal.fire('¡Atención!', 'No se encontró el token de usuario. Por favor, inicie sesión.', 'warning');
+      setIsSaving(false);
       return;
     }
 
@@ -143,6 +148,7 @@ const CrearEncuesta: React.FC = () => {
     if (!isEditMode) { // Only for new survey creation
         if (!latestSurveyData.current.inicio || !latestSurveyData.current.fin) {
             Swal.fire('¡Atención!', 'Las fechas de inicio y fin son obligatorias para crear una nueva encuesta.', 'warning');
+            setIsSaving(false);
             return;
         }
     }
@@ -182,8 +188,58 @@ const CrearEncuesta: React.FC = () => {
           }
           const newSurvey = await createSurveyResponse.json();
           surveyIdToUse = newSurvey.id; // Get the new ID for questions
-          Swal.fire('¡Éxito!', 'Encuesta creada exitosamente!', 'success');
-          // Update surveyData with the new ID and other fields returned by the API
+          
+          // Crear notificación para la nueva encuesta
+          try {
+            const notificationResponse = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/notifications', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({
+                encuesta_id: newSurvey.id,
+                mensaje: "¡Tienes una nueva notificación sobre la encuesta!"
+              })
+            });
+
+            if (!notificationResponse.ok) {
+              console.warn('Error al crear la notificación:', await notificationResponse.text());
+              // No lanzamos error aquí para no interrumpir el flujo principal
+            } else {
+              console.log('Notificación creada exitosamente para la encuesta:', newSurvey.id);
+            }
+          } catch (notificationError) {
+            console.warn('Error al crear la notificación:', notificationError);
+            // No lanzamos error aquí para no interrumpir el flujo principal
+          }
+          
+          // Enviar invitaciones si la encuesta es anónima
+          if (latestSurveyData.current.anonima === 1) {
+            console.log('Encuesta anónima creada, enviando invitaciones...');
+            try {
+              const result = await enviarInvitaciones(newSurvey.id);
+              console.log('Resultados de invitaciones:', result);
+              // Mostrar mensaje con información de invitaciones
+              let mensaje = 'Encuesta creada exitosamente!';
+              if (result.total > 0) {
+                mensaje += `\n\nSe enviaron ${result.exitosas} invitaciones de ${result.total} correos autorizados.`;
+                if (result.fallidas > 0) {
+                  mensaje += `\n${result.fallidas} invitaciones no se pudieron enviar.`;
+                }
+              } else {
+                mensaje += '\n\nNo hay correos autorizados para enviar invitaciones.';
+              }
+              Swal.fire('¡Éxito!', mensaje, 'success');
+            } catch (invitationError) {
+              console.error('Error al enviar invitaciones:', invitationError);
+              Swal.fire('¡Éxito!', 'Encuesta creada exitosamente, pero hubo un problema al enviar las invitaciones.', 'success');
+            }
+          } else {
+            Swal.fire('¡Éxito!', 'Encuesta creada exitosamente!', 'success');
+          }
+          
+          // Update surveyData with the new ID y otros campos retornados por la API
           setSurveyData(prev => prev ? { ...prev, ...newSurvey, id: newSurvey.id } : newSurvey);
       } else {
           // Edit Mode: PUT survey
@@ -306,8 +362,84 @@ const CrearEncuesta: React.FC = () => {
     } catch (err: any) {
       console.error('Error al guardar la encuesta:', err);
       Swal.fire('Error', err.message || 'Hubo un error al guardar la encuesta.', 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  // Función para enviar invitaciones a correos autorizados
+  const enviarInvitaciones = async (surveyId: number): Promise<{exitosas: number, fallidas: number, total: number}> => {
+    try {
+      const userToken = localStorage.getItem('userToken');
+      if (!userToken) {
+        console.warn('No se encontró el token de usuario para enviar invitaciones');
+        return { exitosas: 0, fallidas: 0, total: 0 };
+      }
+
+      // Obtener la lista de correos autorizados
+      const emailsResponse = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails', {
+        headers: {
+          'Authorization': `Bearer ${userToken}`
+        }
+      });
+
+      if (!emailsResponse.ok) {
+        console.warn('Error al obtener correos autorizados:', await emailsResponse.text());
+        return { exitosas: 0, fallidas: 0, total: 0 };
+      }
+
+      let emails: Array<{id: number, email: string}> = await emailsResponse.json();
+      const uniqueEmails = Array.from(new Set(emails.map(e => e.email)));
+
+      console.log("Correos únicos a invitar:", uniqueEmails);
+
+      if (uniqueEmails.length === 0) {
+        console.log('No hay correos autorizados para enviar invitaciones');
+        return { exitosas: 0, fallidas: 0, total: 0 };
+      }
+
+      let invitacionesExitosas = 0;
+      let invitacionesFallidas = 0;
+
+      for (const email of uniqueEmails) {
+        try {
+          console.log("Enviando invitación a:", email);
+          const invitationResponse = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-invitations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            },
+            body: JSON.stringify({
+              encuesta_id: surveyId,
+              email
+            })
+          });
+
+          if (invitationResponse.ok) {
+            invitacionesExitosas++;
+          } else {
+            invitacionesFallidas++;
+          }
+        } catch (error) {
+          invitacionesFallidas++;
+        }
+      }
+
+      return { 
+        exitosas: invitacionesExitosas, 
+        fallidas: invitacionesFallidas, 
+        total: uniqueEmails.length 
+      };
+
+    } catch (error) {
+      console.error('Error al enviar invitaciones:', error);
+      return { exitosas: 0, fallidas: 0, total: 0 };
+    }
+  };
+
+  // Log para saber si la función se llama más de una vez
+  console.log("Función enviarInvitaciones definida");
 
   if (loading) {
     return <div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando encuesta...</div>;
@@ -319,10 +451,20 @@ const CrearEncuesta: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "#f0ebf8", minHeight: "100vh", paddingBottom: "12px" }}>
-      <HeaderEncuesta activo={activo} setActivo={setActivo} surveyTitle={surveyData?.titulo || "Nueva Encuesta"} isEditMode={isEditMode} onSave={handleSave} />
+      <HeaderEncuesta 
+        activo={activo} 
+        setActivo={setActivo} 
+        surveyTitle={surveyData?.titulo || "Nueva Encuesta"} 
+        isEditMode={isEditMode} 
+        onSave={handleSave}
+        isAnonima={surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion'}
+        isSaving={isSaving}
+      />
       {activo === "Preguntas" && <CreacionDeEncuesta questions={questionsData} surveyData={surveyData} setSurveyData={setSurveyData} onQuestionsChange={handleQuestionsChange} questionsToDelete={questionsToDelete} setQuestionsToDelete={setQuestionsToDelete} />}
       {activo === "Respuestas" && <RespuestaDisplay surveyId={surveyData?.id || null} questions={questionsData} />}
-      {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />}
+      {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} isEditMode={isEditMode} />}
+      {activo === "Correos" && (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') && 
+        <CorreosAutorizados surveyId={isEditMode ? surveyData?.id : undefined} isEditMode={isEditMode} />}
     </div>
   );
 };
