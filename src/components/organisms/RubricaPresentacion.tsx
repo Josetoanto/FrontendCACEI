@@ -63,7 +63,7 @@ const RubricaPresentacion: React.FC<RubricaPresentacionProps> = ({ onRubricasCha
     }}>
       <h2 style={{ textAlign: "left", marginBottom: "15px", fontSize: "16px" }}>Rúbrica de Evaluación</h2>
       
-      {rubricas.map((item, index) => (
+      {rubricas.map((item, _) => (
         <RubricaItem 
           key={item.id} 
           titulo={item.nombre} 

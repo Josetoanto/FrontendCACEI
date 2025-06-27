@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../organisms/Header';
 import RubricaItemEditable from '../molecule/RubricaItemEditable';
-import Swal from 'sweetalert2';
 
 // Datos iniciales de la rúbrica
 

@@ -13,26 +13,21 @@ interface Survey {
 interface ConfiguracionEncuestaProps {
   surveyData: Survey | null;
   setSurveyData: Dispatch<SetStateAction<Survey | null>>;
-  isEditMode: boolean;
 }
 
-const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData, isEditMode }) => {
+const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData }) => {
   const [tipoUsuario, setTipoUsuario] = useState<Survey['tipo'] | "Anonima">(surveyData?.anonima === 1 ? "Anonima" : (surveyData?.tipo || "egresado"));
   const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? new Date(surveyData.inicio).toISOString().split('T')[0] : "");
   const [fechaFin, setFechaFin] = useState(surveyData?.fin ? new Date(surveyData.fin).toISOString().split('T')[0] : "");
-  const [activa, setActiva] = useState(surveyData?.anonima === 1);
 
   useEffect(() => {
     if (surveyData) {
       setTipoUsuario(surveyData.anonima === 1 ? "Anonima" : surveyData.tipo);
-      
       // Ensure dates are valid before trying to format
       const newFechaInicio = surveyData.inicio ? new Date(surveyData.inicio) : null;
       const newFechaFin = surveyData.fin ? new Date(surveyData.fin) : null;
-
       setFechaInicio(newFechaInicio && !isNaN(newFechaInicio.getTime()) ? newFechaInicio.toISOString().split('T')[0] : "");
       setFechaFin(newFechaFin && !isNaN(newFechaFin.getTime()) ? newFechaFin.toISOString().split('T')[0] : "");
-      setActiva(surveyData.anonima === 1);
       console.log('ConfiguracionEncuesta recibió surveyData:', surveyData);
     }
   }, [surveyData]);

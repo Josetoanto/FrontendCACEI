@@ -27,7 +27,7 @@ const ListaDeProyectos: React.FC<ListaDeProyectosProps> = ({ titulo, proyectos, 
       {/* Lista de proyectos o mensaje de no hay proyectos */}
       {proyectos.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {proyectos.map((proyecto, index) => (
+          {proyectos.map((proyecto, _) => (
             <Proyecto 
               key={proyecto.id}
               nombre={proyecto.nombre} 

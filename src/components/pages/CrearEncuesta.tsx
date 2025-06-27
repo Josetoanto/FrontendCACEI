@@ -462,7 +462,7 @@ const CrearEncuesta: React.FC = () => {
       />
       {activo === "Preguntas" && <CreacionDeEncuesta questions={questionsData} surveyData={surveyData} setSurveyData={setSurveyData} onQuestionsChange={handleQuestionsChange} questionsToDelete={questionsToDelete} setQuestionsToDelete={setQuestionsToDelete} />}
       {activo === "Respuestas" && <RespuestaDisplay surveyId={surveyData?.id || null} questions={questionsData} />}
-      {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} isEditMode={isEditMode} />}
+      {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />}
       {activo === "Correos" && (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') && 
         <CorreosAutorizados surveyId={isEditMode ? surveyData?.id : undefined} isEditMode={isEditMode} />}
     </div>

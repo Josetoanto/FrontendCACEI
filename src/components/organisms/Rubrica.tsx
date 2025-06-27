@@ -1,7 +1,4 @@
-interface RubricaItem {
-    nombreRubrica: string;
-    puntuacion: number;
-  }
+
   
   // Definir la interfaz para las props, incluyendo evaluationDetails
   interface RubricaProps {

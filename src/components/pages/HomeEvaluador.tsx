@@ -11,12 +11,10 @@ const HomeEvaluador: React.FC = () => {
     const [activeOption, setActiveOption] = useState("Activas");
     const [activeEncuestas, setActiveEncuestas] = useState<any[]>([]);
     const [futureEncuestas, setFutureEncuestas] = useState<any[]>([]);
-    const [userProjects, setUserProjects] = useState<any[]>([]);
     const [unEvaluatedProjects, setUnEvaluatedProjects] = useState<any[]>([]);
     const navigate = useNavigate();
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     const userType = userData.tipo; // Obtener el tipo de usuario
-    const egresadoId = userData.id; // Obtener el ID del egresado
     const evaluadorId = userData.id; // Asumiendo que el ID del evaluador está en userData.id
 
     const fetchEncuestas = useCallback(async () => {

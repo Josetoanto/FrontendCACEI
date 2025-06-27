@@ -1,13 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-// No longer needed for LinkedIn editing
-/*
-interface CursoData {
-  nombre: string;
-  fecha: string;
-  url: string;
-}
-*/
 
 interface EditarCursosProps {
   linkedinUrl: string;

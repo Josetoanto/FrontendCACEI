@@ -11,7 +11,7 @@ interface EditarInfoBasicaProps {
   onBasicInfoChange: (newData: { nombre: string; ubicacion: string; descripcion: string; }) => void;
 }
 
-const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onCancel, onBasicInfoChange }) => {
+const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onBasicInfoChange }) => {
   const [formData, setFormData] = useState({
       nombre: initialData.nombre,
       ubicacion: initialData.ubicacion,

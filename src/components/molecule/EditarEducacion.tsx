@@ -9,7 +9,7 @@ interface EditarEducacionProps {
   onCancel: () => void;
 }
 
-const EditarEducacion: React.FC<EditarEducacionProps> = ({ initialData, onSave, onCancel }) => {
+const EditarEducacion: React.FC<EditarEducacionProps> = ({ initialData, onSave}) => {
   const [formData, setFormData] = useState(initialData);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

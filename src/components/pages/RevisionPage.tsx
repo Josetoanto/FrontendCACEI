@@ -16,7 +16,7 @@ const Revision: React.FC = () => {
     const [evidenceData, setEvidenceData] = useState<any[]>([]);
     const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
     const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
-    const [allCriteria, setAllCriteria] = useState<any[]>([]);
+    const [, setAllCriteria] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {

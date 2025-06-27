@@ -16,7 +16,7 @@ interface EducacionProps {
   }
   
   // Update component to use props flexibly
-  const Educacion: React.FC<EducacionProps> = ({ educacion, isEditing, setEducacion, toggleEditing }) => {
+  const Educacion: React.FC<EducacionProps> = ({ educacion, isEditing, setEducacion}) => {
 
     // Determine which data to use based on isEditing and availability of props
     const displayInstitucion = educacion?.institucion;

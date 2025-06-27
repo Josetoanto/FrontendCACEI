@@ -1,4 +1,3 @@
-import Curso from "../atoms/Curso";
 import React from 'react';
 
 interface CursoData {
@@ -14,9 +13,8 @@ interface ListaDeCursosProps {
   linkedinUrl?: string;
 }
 
-// const cursos = [...]; // Remove hardcoded data
 
-const ListaDeCursos: React.FC<ListaDeCursosProps> = ({ cursos, isEditing, linkedinUrl }) => {
+const ListaDeCursos: React.FC<ListaDeCursosProps> = ({  isEditing, linkedinUrl }) => {
   return (
     <div style={{
       margin: "auto",

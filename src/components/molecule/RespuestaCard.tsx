@@ -197,16 +197,19 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
                 {(() => {
                   const valueCounts: {[key: string]: number} = {};
                   questionResponses.forEach(response => {
-                    const value = response.valor_numero !== null ? response.valor_numero.toString() : (response.valor_texto || 'N/A');
+                    let value = response.valor_numero !== null && response.valor_numero !== undefined
+                      ? response.valor_numero.toString()
+                      : (response.valor_texto !== null && response.valor_texto !== undefined ? response.valor_texto : 'N/A');
                     valueCounts[value] = (valueCounts[value] || 0) + 1;
                   });
 
                   const totalResponses = questionResponses.length;
+                  if (!totalResponses || totalResponses === 0) return null;
+
                   let currentAngle = 0;
-                  const pieChartSegments = Object.entries(valueCounts).map(([value, count], index) => {
-                    const percentage = (count / totalResponses) * 100;
+                  const pieChartSegments = Object.entries(valueCounts).map(([_, count], index) => {
                     const angle = (count / totalResponses) * 360;
-                    const color = `hsl(${index * 60}, 70%, 60%)`; // Generar colores distintivos
+                    const color = `hsl(${index * 60}, 70%, 60%)`;
                     const segmentStyle = `
                       ${color} ${currentAngle}deg ${(currentAngle + angle)}deg
                     `;
@@ -217,28 +220,23 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
                   const legendItems = Object.entries(valueCounts).map(([value, count], index) => {
                     const percentage = (count / totalResponses) * 100;
                     const color = `hsl(${index * 60}, 70%, 60%)`;
-                    // Mapear valor_numero a etiqueta si es likert o multiple
                     let displayLabel = value;
-                    if (question.tipo === 'multiple' && question.opciones) {
-                      const option = question.opciones.find(opt => opt.valor === value);
+                    if (question.tipo === 'multiple' && Array.isArray(question.opciones)) {
+                      // Buscar opción por valor, asegurando comparación de string
+                      const option = question.opciones.find(opt => opt.valor.toString() === value.toString());
                       if (option) displayLabel = option.etiqueta;
-                    } else if (question.tipo === 'likert') {
+                    } else if (question.tipo === 'likert' && Array.isArray(question.opciones)) {
                       const likertLabels3 = ["Mal", "Medio", "Bien"];
                       const likertLabels5 = ["Muy mal", "Mal", "Más o menos", "Bien", "Muy Bien"];
-                      
-                      // Convertir el valor a número para indexar
                       const numValue = parseInt(value);
-
                       if (question.opciones.length === 3 && numValue >= 1 && numValue <= 3) {
                         displayLabel = likertLabels3[numValue - 1];
                       } else if (question.opciones.length === 5 && numValue >= 1 && numValue <= 5) {
                         displayLabel = likertLabels5[numValue - 1];
                       } else {
-                        // Fallback si no coincide con 3 o 5 estrellas, o si el valor es inválido
                         displayLabel = `Valor ${value}`;
                       }
                     }
-
                     return (
                       <div key={value} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                         <span style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '2px', marginRight: '8px' }}></span>
@@ -253,7 +251,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
                         width: '150px',
                         height: '150px',
                         borderRadius: '50%',
-                        background: `conic-gradient(${pieChartSegments})`,
+                        background: pieChartSegments ? `conic-gradient(${pieChartSegments})` : '#eee',
                         marginBottom: '20px',
                         border: '1px solid #ddd'
                       }}></div>
