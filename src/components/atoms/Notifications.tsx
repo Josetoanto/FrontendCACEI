@@ -38,7 +38,7 @@ const Notifications: React.FC = () => {
     })
       .then(res => res.json())
       .then(async (data: Notificacion[]) => {
-        console.log('Notificaciones recibidas:', data);
+        
         // Para cada notificación, obtener el tipo de encuesta
         const filtradas: NotificacionConEncuesta[] = [];
         for (const noti of data) {
@@ -49,7 +49,7 @@ const Notifications: React.FC = () => {
               }
             });
             const encuesta = await res.json();
-            console.log('Encuesta obtenida para notificación', noti.id, ':', encuesta);
+            
             if (encuesta.tipo?.toLowerCase() === tipoUsuario) {
               filtradas.push({ ...noti, encuestaNombre: encuesta.titulo || 'Encuesta' });
             }
@@ -57,7 +57,7 @@ const Notifications: React.FC = () => {
             // Si falla, no agregar
           }
         }
-        console.log('Notificaciones que coinciden:', filtradas);
+        
         setNotificaciones(filtradas);
         setLoading(false);
       })

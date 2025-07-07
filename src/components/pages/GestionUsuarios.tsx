@@ -68,7 +68,7 @@ const GestionUsuarios: React.FC = () => {
       experiencia: u.experiencia,
       profile_picture: u.profile_picture
     }));
-    console.log('Usuarios procesados para la tabla:', users);
+    
     setUsuarios(users);
     setLoading(false);
   };

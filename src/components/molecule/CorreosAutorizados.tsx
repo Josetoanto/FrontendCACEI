@@ -140,8 +140,8 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      console.log('Estado actual antes de actualizar:', correos);
-      console.log('Enviando actualización para ID:', editingId, 'con email:', editingEmail);
+      
+      
 
       const response = await fetch(`https://egresados.it2id.cc/api/anonymous-emails/${editingId}`, {
         method: 'PUT',
@@ -159,7 +159,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         throw new Error(`Error al actualizar correo: ${JSON.stringify(errorData)}`);
       }
 
-      console.log('Respuesta exitosa de la API');
+      
 
       // Actualizar el estado de forma más simple y directa
       const correoActualizado = {
@@ -170,13 +170,13 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         actualizado_en: new Date().toISOString()
       };
 
-      console.log('Correo actualizado que se va a usar:', correoActualizado);
+      
 
       setCorreos(prevCorreos => {
         const nuevosCorreos = prevCorreos.map(c => 
           c.id === editingId ? correoActualizado : c
         );
-        console.log('Nuevo estado de correos:', nuevosCorreos);
+        
         return nuevosCorreos;
       });
 
@@ -185,7 +185,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
       setEditingEmail("");
       setCorreoError("");
       
-      console.log('Estado de edición limpiado');
+      
       Swal.fire('¡Éxito!', 'Correo actualizado correctamente', 'success');
     } catch (error: any) {
       console.error('Error al actualizar correo:', error);
@@ -420,7 +420,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                 encuesta_id: surveyId,
                 mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
               };
-              console.log('Enviando notificación con body:', notiBody);
+              
               const notiResp = await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
                 method: 'POST',
                 headers: {
@@ -430,7 +430,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                 body: JSON.stringify(notiBody)
               });
               const notiData = await notiResp.json();
-              console.log('Respuesta de notificación:', notiData);
+              
             } catch (notificationError) {
               console.error('Error al enviar la notificación:', notificationError);
             }
@@ -559,7 +559,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                         encuesta_id: surveyId,
                         mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
                       };
-                      console.log('Enviando notificación con body:', notiBody);
+                      
                       const notiResp = await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
                         method: 'POST',
                         headers: {
@@ -569,7 +569,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                         body: JSON.stringify(notiBody)
                       });
                       const notiData = await notiResp.json();
-                      console.log('Respuesta de notificación:', notiData);
+                      
                     } catch (notificationError) {
                       console.error('Error al enviar la notificación:', notificationError);
                     }
@@ -648,7 +648,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
 
       const data: InvitationData[] = await response.json();
       setInvitaciones(data);
-      console.log('Invitaciones cargadas:', data);
+      
     } catch (error) {
       console.error('Error al cargar invitaciones:', error);
     } finally {
@@ -658,7 +658,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
 
   // Log para debuggear el estado en cada render
   useEffect(() => {
-    console.log('Estado de correos en render:', correos);
+    
   }, [correos]);
 
   // Función para enviar nuevas invitaciones
@@ -1128,7 +1128,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
             ) : (
               <div style={{ maxHeight: "400px", overflowY: "auto" }}>
                 {correosFiltrados.map((correo, index) => {
-                  console.log(`Renderizando correo ${index}:`, correo);
+                  
                   return (
                     <div
                       key={correo.id}

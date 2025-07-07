@@ -41,7 +41,7 @@ const EditarInfoBasica: React.FC<EditarInfoBasicaProps> = ({ initialData, onBasi
     });
   };
 
-  console.log('Render EditarInfoBasica, fotoPerfil:', formData.fotoPerfil);
+  
 
   return (
     <div style={{

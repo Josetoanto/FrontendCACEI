@@ -23,7 +23,7 @@ const Revision: React.FC = () => {
             const userToken = localStorage.getItem('userToken');
 
             if (!userToken || !projectId || !evaluationId) {
-                console.log('No user token, project ID, or evaluation ID found.');
+                
                 return;
             }
 

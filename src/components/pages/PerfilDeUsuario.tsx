@@ -51,7 +51,7 @@ const PerfilDeUsuario: React.FC = () => {
 
         const userToken = localStorage.getItem('userToken');
         if (!userToken) {
-            console.log('No user token found.');
+            
             setIsLoading(false);
             return;
         }
@@ -70,7 +70,7 @@ const PerfilDeUsuario: React.FC = () => {
         const idToFetch = userId || currentUserId;
 
         if (!idToFetch) {
-            console.log('No user ID to fetch data.');
+            
             setIsLoading(false);
             return;
         }
@@ -91,7 +91,7 @@ const PerfilDeUsuario: React.FC = () => {
             if (userResponse.ok) {
                 tempUserData = await userResponse.json();
                 setOriginalUserData(tempUserData);
-                console.log('Datos de usuario obtenidos:', tempUserData);
+                
             } else {
                 console.error(`Error fetching user data for ID ${idToFetch}:`, userResponse.status);
             }
@@ -107,9 +107,9 @@ const PerfilDeUsuario: React.FC = () => {
 
             if (profileResponse.ok) {
                 tempProfileData = await profileResponse.json();
-                console.log('Datos de perfil profesional obtenidos:', tempProfileData);
+                
             } else if (profileResponse.status === 404) {
-                console.log(`No professional profile found for user ID ${idToFetch} in PerfilDeUsuario. Creating a new one.`);
+                
                 const defaultProfileData = {
                     user_id: idToFetch,
                     resumen: "Resumen profesional general del usuario.",
@@ -148,7 +148,7 @@ const PerfilDeUsuario: React.FC = () => {
                 });
 
                 if (createProfileResponse.ok) {
-                    console.log(`Perfil profesional creado para el usuario ID: ${idToFetch} en PerfilDeUsuario.`);
+                    
                     // Re-fetch the newly created profile
                     const newProfileResponse = await fetch(`https://egresados.it2id.cc/api/professional-profiles/user/${idToFetch}`, {
                         method: 'GET',
@@ -172,8 +172,8 @@ const PerfilDeUsuario: React.FC = () => {
             // Combine and set states
             setUserData(prevData => {
                 const urlFoto = tempUserData.profile_picture || profileIcon;
-                console.log('Valor de profile_picture recibido del backend:', tempUserData.profile_picture);
-                console.log('URL de foto que se usará:', urlFoto);
+                
+                
                 return {
                     ...prevData,
                     nombre: tempUserData.nombre || prevData.nombre,
@@ -309,7 +309,7 @@ const PerfilDeUsuario: React.FC = () => {
             experiencia: originalUserData.experiencia,
             profile_picture: userData.fotoPerfil // editable
         };
-        console.log('Objeto FINAL a enviar en PUT:', userDataToUpdate);
+        
         // Update /users/:userId
         const userUpdateResponse = await fetch(`https://egresados.it2id.cc/api/users/${idToUpdate}`, {
             method: 'PUT',
@@ -320,14 +320,14 @@ const PerfilDeUsuario: React.FC = () => {
             body: JSON.stringify(userDataToUpdate),
         });
         const responseData = await userUpdateResponse.clone().json().catch(() => null);
-        console.log('Respuesta del backend al actualizar usuario:', responseData);
+        
 
         // Prepare data for /professional-profiles/user/:userId endpoint
         const professionalProfileDataToUpdate: any = {
             resumen: userData.descripcion, // Use latest state
             linkedin_url: linkedinUrl, // Use latest state
         };
-        console.log('Datos de perfil profesional a actualizar:', professionalProfileDataToUpdate);
+        
 
         // Map experienciasData back to API format
         professionalProfileDataToUpdate.experiencias = experienciasData.map(exp => {
@@ -388,10 +388,10 @@ const PerfilDeUsuario: React.FC = () => {
                 throw new Error('Failed to update professional profile.');
             }
 
-            console.log('Perfil actualizado exitosamente!');
+            
             // Re-fetch data to update UI with latest changes from API
             fetchData(); // Call fetchData to refresh all data after save
-            console.log('Datos de usuario después de refrescar:', userData);
+            
 
         } catch (error) {
             console.error('Error durante el guardado del perfil:', error);

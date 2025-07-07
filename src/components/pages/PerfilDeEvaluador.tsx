@@ -38,7 +38,7 @@ const PerfilDeEvaluador: React.FC = () => {
 
         const userToken = localStorage.getItem('userToken');
         if (!userToken) {
-            console.log('No user token found.');
+            
             setIsLoading(false);
             return;
         }
@@ -57,7 +57,7 @@ const PerfilDeEvaluador: React.FC = () => {
         const idToFetch = userId || currentUserId;
 
         if (!idToFetch) {
-            console.log('No user ID to fetch data.');
+            
             setIsLoading(false);
             return;
         }
@@ -78,7 +78,7 @@ const PerfilDeEvaluador: React.FC = () => {
             if (userResponse.ok) {
                 tempUserData = await userResponse.json();
                 setOriginalUserData(tempUserData);
-                console.log('Respuesta GET /users/:id:', tempUserData);
+                
             } else {
                 console.error(`Error fetching user data for ID ${idToFetch}:`, userResponse.status);
             }
@@ -95,7 +95,7 @@ const PerfilDeEvaluador: React.FC = () => {
             if (profileResponse.ok) {
                 tempProfileData = await profileResponse.json();
             } else if (profileResponse.status === 404) {
-                console.log(`No professional profile found for user ID ${idToFetch}. Creating a new one.`);
+                
                 const defaultProfileData = {
                     user_id: idToFetch,
                     resumen: "Ingeniero en Sistemas con experiencia en desarrollo web.",
@@ -134,8 +134,8 @@ const PerfilDeEvaluador: React.FC = () => {
                 });
 
                 if (createProfileResponse.ok) {
-                    console.log(`Perfil profesional creado para el usuario ID: ${idToFetch}`);
-                    console.log('Professional profile created successfully.');
+                    
+                    
                     // Re-fetch the newly created profile
                     const newProfileResponse = await fetch(`https://egresados.it2id.cc/api/professional-profiles/user/${idToFetch}`, {
                         method: 'GET',
@@ -159,8 +159,8 @@ const PerfilDeEvaluador: React.FC = () => {
             // Combine and set states
             setUserData(prevData => {
                 const urlFoto = tempUserData.profile_picture || profileIcon;
-                console.log('Valor de profile_picture recibido del backend:', tempUserData.profile_picture);
-                console.log('URL de foto que se usará:', urlFoto);
+                
+                
                 return {
                     ...prevData,
                     nombre: tempUserData.nombre || prevData.nombre,
@@ -221,7 +221,7 @@ const PerfilDeEvaluador: React.FC = () => {
     };
 
     const handleBasicInfoChange = (newData: { nombre: string; ubicacion: string; descripcion: string; fotoPerfil: string; }) => {
-        console.log('Nueva URL de foto de perfil:', newData.fotoPerfil);
+        
         setUserData(prevData => ({
             ...prevData,
             nombre: newData.nombre,
@@ -284,7 +284,7 @@ const PerfilDeEvaluador: React.FC = () => {
         // delete userDataToUpdate.id;
         // delete userDataToUpdate.creado_en;
         // delete userDataToUpdate.actualizado_en;
-        console.log('Objeto FINAL a enviar en PUT:', userDataToUpdate);
+        
 
         // Update /users/:userId
         const userUpdateResponse = await fetch(`https://egresados.it2id.cc/api/users/${idToUpdate}`, {
@@ -296,7 +296,7 @@ const PerfilDeEvaluador: React.FC = () => {
             body: JSON.stringify(userDataToUpdate),
         });
         const responseData = await userUpdateResponse.clone().json().catch(() => null);
-        console.log('Respuesta del backend al actualizar usuario:', responseData);
+        
 
         if (!userUpdateResponse.ok) {
             console.error('Error updating user data:', userUpdateResponse.status, await userUpdateResponse.text());
@@ -340,10 +340,10 @@ const PerfilDeEvaluador: React.FC = () => {
                 throw new Error('Failed to update professional profile.');
             }
 
-            console.log('Perfil de evaluador actualizado exitosamente!');
-            console.log('Refrescando datos...');
+            
+            
             fetchData(); // Call fetchData to refresh all data after save
-            console.log('Datos de usuario después de refrescar:', userData);
+            
 
         } catch (error) {
             console.error('Error durante el guardado del perfil del evaluador:', error);
@@ -367,7 +367,7 @@ const PerfilDeEvaluador: React.FC = () => {
         );
     }
 
-    console.log('Renderizando PerfilDeEvaluador, fotoPerfil:', userData.fotoPerfil);
+    
 
     return (
       <div style={{paddingBottom:"15px"}}>

@@ -24,7 +24,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
     if (surveyData) {
       setTitulo(surveyData.titulo);
       setDescripcion(surveyData.descripcion);
-      console.log('InfoEncuesta recibió surveyData:', surveyData);
+      
     }
   }, [surveyData]);
 

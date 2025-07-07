@@ -293,7 +293,7 @@ const ResponderEncuesta: React.FC = () => {
         title: '¡Éxito!',
         text: `Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente.`,
       });
-      console.log(`Respuestas ${hasResponded ? 'actualizadas' : 'enviadas'} correctamente:`, data);
+      
       // Opcional: Volver a cargar la respuesta del usuario para asegurar el estado más reciente
       fetchUserResponse();
 

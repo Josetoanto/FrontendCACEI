@@ -28,7 +28,7 @@ const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyDat
       const newFechaFin = surveyData.fin ? new Date(surveyData.fin) : null;
       setFechaInicio(newFechaInicio && !isNaN(newFechaInicio.getTime()) ? newFechaInicio.toISOString().split('T')[0] : "");
       setFechaFin(newFechaFin && !isNaN(newFechaFin.getTime()) ? newFechaFin.toISOString().split('T')[0] : "");
-      console.log('ConfiguracionEncuesta recibió surveyData:', surveyData);
+      
     }
   }, [surveyData]);
 

@@ -164,7 +164,7 @@ const HomeEvaluador: React.FC = () => {
             }));
             
             setUnEvaluatedProjects(filteredProjects);
-            console.log("Proyectos mapeados y filtrados:", filteredProjects);
+            
 
         } catch (error) {
             console.error('Error al obtener o filtrar proyectos:', error);

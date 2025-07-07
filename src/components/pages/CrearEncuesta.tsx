@@ -105,7 +105,7 @@ const CrearEncuesta: React.FC = () => {
         fin: survey.fin ? new Date(survey.fin).toISOString().replace('T', ' ').substring(0, 19) : '',
       };
       setSurveyData(formattedSurvey);
-      console.log('Datos de encuesta cargados/actualizados:', formattedSurvey);
+      
 
       // Fetch Questions
       const questionsResponse = await fetch(`https://egresados.it2id.cc/api/questions/survey/${id}`, {
@@ -158,7 +158,7 @@ const CrearEncuesta: React.FC = () => {
 
       if (!isEditMode) {
           // Creation Mode: POST survey first
-          console.log('Creando nueva encuesta:', latestSurveyData.current);
+          
           const createSurveyResponse = await fetch('https://egresados.it2id.cc/api/surveys/', {
               method: 'POST',
               headers: {
@@ -207,7 +207,7 @@ const CrearEncuesta: React.FC = () => {
               console.warn('Error al crear la notificación:', await notificationResponse.text());
               // No lanzamos error aquí para no interrumpir el flujo principal
             } else {
-              console.log('Notificación creada exitosamente para la encuesta:', newSurvey.id);
+              
             }
           } catch (notificationError) {
             console.warn('Error al crear la notificación:', notificationError);
@@ -216,10 +216,10 @@ const CrearEncuesta: React.FC = () => {
           
           // Enviar invitaciones si la encuesta es anónima
           if (latestSurveyData.current.anonima === 1) {
-            console.log('Encuesta anónima creada, enviando invitaciones...');
+            
             try {
               const result = await enviarInvitaciones(newSurvey.id);
-              console.log('Resultados de invitaciones:', result);
+              
               // Mostrar mensaje con información de invitaciones
               let mensaje = 'Encuesta creada exitosamente!';
               if (result.total > 0) {
@@ -243,7 +243,7 @@ const CrearEncuesta: React.FC = () => {
           setSurveyData(prev => prev ? { ...prev, ...newSurvey, id: newSurvey.id } : newSurvey);
       } else {
           // Edit Mode: PUT survey
-          console.log('Actualizando encuesta existente:', latestSurveyData.current);
+          
           const surveyResponse = await fetch(`https://egresados.it2id.cc/api/surveys/${latestSurveyData.current.id}`, {
               method: 'PUT',
               headers: {
@@ -309,7 +309,7 @@ const CrearEncuesta: React.FC = () => {
         };
 
         if (question.id && question.id !== 0) { // If question has an ID, update it
-          console.log(`Actualizando pregunta ${question.id}:`, question);
+          
           const questionResponse = await fetch(`https://egresados.it2id.cc/api/questions/${question.id}`, {
             method: 'PUT',
             headers: {
@@ -324,7 +324,7 @@ const CrearEncuesta: React.FC = () => {
             throw new Error(`Error al actualizar la pregunta ${question.id}: ${JSON.stringify(errorBody)}`);
           }
         } else { // If question doesn't have an ID, create it (new)
-          console.log('Creando nueva pregunta:', question);
+          
           const createQuestionResponse = await fetch(`https://egresados.it2id.cc/api/questions/`, {
             method: 'POST',
             headers: {
@@ -343,7 +343,7 @@ const CrearEncuesta: React.FC = () => {
 
       // Delete questions marked for deletion
       for (const questionId of questionsToDelete) {
-        console.log(`Eliminando pregunta con ID: ${questionId}`);
+        
         const deleteQuestionResponse = await fetch(`https://egresados.it2id.cc/api/questions/${questionId}`, {
           method: 'DELETE',
           headers: {
@@ -361,7 +361,7 @@ const CrearEncuesta: React.FC = () => {
       // Si la encuesta es anónima o de autoevaluación, enviar invitaciones y notificaciones automáticamente
       if (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') {
         const invitacionesRes = await enviarInvitaciones(surveyIdToUse);
-        console.log('Resultados de invitaciones automáticas:', invitacionesRes);
+        
         // Enviar notificación a todos los invitados
         try {
           const userToken = localStorage.getItem('userToken');
@@ -369,7 +369,7 @@ const CrearEncuesta: React.FC = () => {
             encuesta_id: surveyIdToUse,
             mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
           };
-          console.log('Enviando notificación automática con body:', notiBody);
+          
           const notiResp = await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
             method: 'POST',
             headers: {
@@ -379,7 +379,7 @@ const CrearEncuesta: React.FC = () => {
             body: JSON.stringify(notiBody)
           });
           const notiData = await notiResp.json();
-          console.log('Respuesta de notificación automática:', notiData);
+          
         } catch (notificationError) {
           console.error('Error al enviar la notificación automática:', notificationError);
         }
@@ -419,10 +419,10 @@ const CrearEncuesta: React.FC = () => {
       let emails: Array<{id: number, email: string}> = await emailsResponse.json();
       const uniqueEmails = Array.from(new Set(emails.map(e => e.email)));
 
-      console.log("Correos únicos a invitar:", uniqueEmails);
+      
 
       if (uniqueEmails.length === 0) {
-        console.log('No hay correos autorizados para enviar invitaciones');
+        
         return { exitosas: 0, fallidas: 0, total: 0 };
       }
 
@@ -431,7 +431,7 @@ const CrearEncuesta: React.FC = () => {
 
       for (const email of uniqueEmails) {
         try {
-          console.log("Enviando invitación a:", email);
+          
           const invitationResponse = await fetch('https://egresados.it2id.cc/api/anonymous-invitations', {
             method: 'POST',
             headers: {
@@ -467,7 +467,7 @@ const CrearEncuesta: React.FC = () => {
   };
 
   // Log para saber si la función se llama más de una vez
-  console.log("Función enviarInvitaciones definida");
+  
 
   if (loading) {
     return <div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando encuesta...</div>;

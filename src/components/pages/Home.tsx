@@ -48,7 +48,7 @@ const Home: React.FC = () => {
                 }
 
                 const data = await response.json();
-                console.log("Datos crudos de la API:", data);
+                
                 
                 // Mapear los datos de la API al formato esperado por EncuestaList/EncuestaCard
                 const mappedEncuestas = data.map((encuesta: any) => {
@@ -75,7 +75,7 @@ const Home: React.FC = () => {
                     };
                 });
                 setEncuestas(mappedEncuestas);
-                console.log("Todas las encuestas mapeadas:", mappedEncuestas);
+                
             }
 
         } catch (error) {
@@ -99,10 +99,10 @@ const Home: React.FC = () => {
     );
 
     // Agregar logs para depuración
-    console.log("Fecha actual:", now);
-    console.log("Todas las encuestas:", encuestas);
-    console.log("Encuestas activas:", activeEncuestas);
-    console.log("Encuestas cerradas:", closedEncuestas);
+    
+    
+    
+    
 
    
 

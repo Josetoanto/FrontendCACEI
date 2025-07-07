@@ -19,7 +19,7 @@ const Proyectos: React.FC = () => {
       const userToken = localStorage.getItem('userToken');
 
       if (!userToken) {
-        console.log('No user token found, cannot fetch data.');
+        
         // navigate('/login'); // Uncomment if you want to redirect
         return;
       }

@@ -144,7 +144,7 @@ const FormularioAgregarProyecto: React.FC = () => {
                 text: `Error al crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, revisa la consola para más detalles.`,
               });
             } else {
-              console.log(`Evidencia '${evidencia.titulo || evidencia.archivo.name}' creada con éxito.`);
+              
             }
           } catch (error) {
             console.error(`Error al conectar con la API para crear evidencia '${evidencia.titulo || evidencia.archivo.name}':`, error);
@@ -185,7 +185,7 @@ const FormularioAgregarProyecto: React.FC = () => {
                 text: `Error al crear la evidencia URL: ${evidencia.titulo}. Por favor, revisa la consola para más detalles.`,
               });
             } else {
-              console.log(`Evidencia URL '${evidencia.github_url}' creada con éxito.`);
+              
             }
           } catch (error) {
             console.error(`Error al conectar con la API para crear evidencia URL '${evidencia.github_url}':`, error);

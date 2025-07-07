@@ -19,7 +19,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item }) => { 
 
   const handleSave = async () => {
     // Aquí iría la lógica para guardar los cambios, probablemente llamando a una API
-    console.log('Guardar cambios:', { id: item.id, titulo, descripcion });
+    
 
     try {
       const token = localStorage.getItem('userToken');
