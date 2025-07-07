@@ -18,7 +18,7 @@ const RubricaPresentacion: React.FC<RubricaPresentacionProps> = ({ onRubricasCha
       };
 
       try {
-        const response = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/criteria', {
+        const response = await fetch('http://localhost:8000/criteria', {
           headers: headers,
         });
         if (!response.ok) {

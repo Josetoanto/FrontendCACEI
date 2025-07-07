@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import DescripcionProyecto from "../atoms/DescripcionProyecto";
@@ -15,6 +15,7 @@ const EvaluacionProyecto: React.FC = () => {
     const [projectDate, setProjectDate] = useState("Cargando fecha...");
     const [evidenceFiles, setEvidenceFiles] = useState<any[]>([]);
     const [evidenceUrls, setEvidenceUrls] = useState<{ url: string; filename: string; mime_type: string }[]>([]);
+    const [evidenceLinks, setEvidenceLinks] = useState<{ url: string; descripcion: string; filename?: string }[]>([]);
     const [comentarioGeneral, setComentarioGeneral] = useState('');
     const [rubricasEvaluadas, setRubricasEvaluadas] = useState<{ criterio_id: number; puntuacion: number | null }[]>([]);
     const [isFormValid, setIsFormValid] = useState(false);
@@ -34,7 +35,7 @@ const EvaluacionProyecto: React.FC = () => {
                 };
 
                 // Fetch project data
-                const projectResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/projects/${evaluationId}`, {
+                const projectResponse = await fetch(`http://localhost:8000/projects/${evaluationId}`, {
                     headers: headers,
                 });
                 if (!projectResponse.ok) {
@@ -52,7 +53,7 @@ const EvaluacionProyecto: React.FC = () => {
                 }
 
                 // Fetch evidence data using projectData.id
-                const evidenceResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/evidences/project/${projectData.id}`, {
+                const evidenceResponse = await fetch(`http://localhost:8000/evidences/project/${projectData.id}`, {
                     headers: headers,
                 });
                 if (!evidenceResponse.ok) {
@@ -62,7 +63,7 @@ const EvaluacionProyecto: React.FC = () => {
                 setEvidenceFiles(evidenceData || []);
 
                 // Fetch user data using egresado_id from project data
-                const userResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/users/${projectData.egresado_id}`, {
+                const userResponse = await fetch(`http://localhost:8000/users/${projectData.egresado_id}`, {
                     headers: headers,
                 });
                 if (!userResponse.ok) {
@@ -96,25 +97,29 @@ const EvaluacionProyecto: React.FC = () => {
                     return null;
                 }
             } else {
-                console.warn("Evidence data missing or invalid format:", item.filename);
                 return null;
             }
         }).filter(urlItem => urlItem !== null);
-
         setEvidenceUrls(urls as any);
-
+        // Extraer evidencias tipo URL
+        const links = evidenceFiles.filter(item => item.github_url).map(item => ({
+            url: item.github_url,
+            descripcion: item.descripcion || 'Evidencia URL',
+            filename: item.filename
+        }));
+        setEvidenceLinks(links);
         return () => {
             urls.forEach(urlItem => {
-                 if (urlItem) {
-                     URL.revokeObjectURL(urlItem.url);
-                 }
+                if (urlItem) {
+                    URL.revokeObjectURL(urlItem.url);
+                }
             });
         };
     }, [evidenceFiles]);
 
-    const handleRubricasChange = (evaluadas: { criterio_id: number; puntuacion: number | null }[]) => {
+    const handleRubricasChange = useCallback((evaluadas: { criterio_id: number; puntuacion: number | null }[]) => {
       setRubricasEvaluadas(evaluadas);
-    };
+    }, []);
 
     useEffect(() => {
       const hasRubricas = rubricasEvaluadas.length > 0;
@@ -149,7 +154,7 @@ const EvaluacionProyecto: React.FC = () => {
       };
 
       try {
-        const response = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/evaluations', {
+        const response = await fetch('http://localhost:8000/evaluations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -184,20 +189,36 @@ const EvaluacionProyecto: React.FC = () => {
         { etiqueta: "Evidencia", 
           valor: (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {evidenceUrls.length > 0 ? (
-                evidenceUrls.map((item, index) => (
-                  <div key={index} style={{textAlign: "right"}}>
-                    {item.mime_type.startsWith('image/') ? (
-                      <img src={item.url} alt={item.filename} style={{ maxWidth: '100%', height: 'auto' }} />
-                    ) : (
-                      <a href={item.url} download={item.filename} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: "16px", color: "#007bff", textDecoration: "none", display: "block" }}>
-                        {item.filename}
-                      </a>
-                    )}
+              {/* Evidencias tipo archivo */}
+              {evidenceUrls.length > 0 && evidenceUrls.map((item, index) => (
+                <div key={index} style={{textAlign: "right"}}>
+                  {item.mime_type.startsWith('image/') ? (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                      {item.filename || 'Imagen'} (ver imagen)
+                    </a>
+                  ) : (
+                    <a href={item.url} download={item.filename} target="_blank" rel="noopener noreferrer"
+                      style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                      {item.filename || 'Archivo'}
+                    </a>
+                  )}
+                </div>
+              ))}
+              {/* Evidencias tipo URL */}
+              {evidenceLinks.length > 0 && evidenceLinks.map((item, idx) => {
+                let url = item.url;
+                if (url && !/^https?:\/\//i.test(url)) {
+                  url = 'https://' + url;
+                }
+                return (
+                  <div key={"url-"+idx} style={{textAlign: "right"}}>
+                    <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                      {item.filename || item.descripcion || 'Evidencia URL'}
+                    </a>
                   </div>
-                ))
-              ) : (
+                );
+              })}
+              {evidenceUrls.length === 0 && evidenceLinks.length === 0 && (
                 <span style={{color:"#61788A"}}>No hay evidencias disponibles.</span>
               )}
             </div>

@@ -6,21 +6,7 @@ import EncuestaList from '../organisms/EncuestaList';
 import Proyectos from '../organisms/Proyectos';
 import Swal from 'sweetalert2';
 
-// Eliminar el mock de encuestas ya que obtendremos datos de la API
-// const encuestas = [
-//     {
-//       title: "Encuesta sobre satisfacción académica",
-//       createdAt: "8:15 a.m.",
-//     },
-//     {
-//       title: "Evaluación de nuevos cursos",
-//       createdAt: "2:30 p.m.",
-//     },
-//     {
-//       title: "Opinión sobre eventos universitarios",
-//       createdAt: "5:45 p.m.",
-//     }
-//   ];
+
 
 const Home: React.FC = () => {
     const [activeOption, setActiveOption] = useState("Encuestas");
@@ -33,7 +19,6 @@ const Home: React.FC = () => {
         const userDataString = localStorage.getItem('userData');
         
         if (!userToken || !userDataString) {
-            // Redirigir si no hay token o datos de usuario
             navigate('/login');
             return;
         }
@@ -44,7 +29,7 @@ const Home: React.FC = () => {
             
             // Verificar si el usuario es Administrador
             if (userData.tipo === 'Administrador') {
-                const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/surveys/';
+                const apiUrl = 'http://localhost:8000/surveys/';
 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -63,15 +48,32 @@ const Home: React.FC = () => {
                 }
 
                 const data = await response.json();
+                console.log("Datos crudos de la API:", data);
+                
                 // Mapear los datos de la API al formato esperado por EncuestaList/EncuestaCard
-                const mappedEncuestas = data.map((encuesta: any) => ({
-                    id: encuesta.id,
-                    title: encuesta.titulo,
-                    createdAt: new Date(encuesta.creado_en).toLocaleDateString(), // Puedes ajustar el formato si es necesario
-                    inicio: new Date(encuesta.inicio),
-                    fin: new Date(encuesta.fin),
-                    // Si necesitas la descripción u otros campos en el futuro, añádelos aquí
-                }));
+                const mappedEncuestas = data.map((encuesta: any) => {
+                    const inicioDate = new Date(encuesta.inicio);
+                    const finDate = new Date(encuesta.fin);
+                    const creadoDate = new Date(encuesta.creado_en);
+                    
+                    console.log(`Encuesta ${encuesta.id}:`, {
+                        titulo: encuesta.titulo,
+                        inicio: encuesta.inicio,
+                        fin: encuesta.fin,
+                        creado_en: encuesta.creado_en,
+                        inicioDate,
+                        finDate,
+                        creadoDate
+                    });
+                    
+                    return {
+                        id: encuesta.id,
+                        title: encuesta.titulo,
+                        createdAt: creadoDate.toLocaleDateString(),
+                        inicio: inicioDate,
+                        fin: finDate,
+                    };
+                });
                 setEncuestas(mappedEncuestas);
                 console.log("Todas las encuestas mapeadas:", mappedEncuestas);
             }
@@ -96,6 +98,12 @@ const Home: React.FC = () => {
         encuesta.fin < now
     );
 
+    // Agregar logs para depuración
+    console.log("Fecha actual:", now);
+    console.log("Todas las encuestas:", encuestas);
+    console.log("Encuestas activas:", activeEncuestas);
+    console.log("Encuestas cerradas:", closedEncuestas);
+
    
 
     return (
@@ -105,8 +113,20 @@ const Home: React.FC = () => {
             <h2 style={{paddingLeft:"2px", fontSize:"32px"}}>Inicio</h2>
             <HomeMenu activeOption={activeOption} setActiveOption={setActiveOption} options={ ["Encuestas", "Activas", "Cerradas", "Proyectos"]} />
             {/* Mostrar EncuestaList basado en la opción activa y el tipo de usuario */}
-            {activeOption === "Encuestas" && userType === 'Administrador' && encuestas.length > 0 && <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>}
-            {activeOption === "Activas" && userType === 'Administrador' && activeEncuestas.length > 0 && <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>}
+            {activeOption === "Encuestas" && userType === 'Administrador' && (
+                encuestas.length > 0 ? (
+                    <EncuestaList title={'Todas las Encuestas'} encuestas={encuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>
+                ) : (
+                    <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas disponibles.</p>
+                )
+            )}
+            {activeOption === "Activas" && userType === 'Administrador' && (
+                activeEncuestas.length > 0 ? (
+                    <EncuestaList title={'Encuestas Activas'} encuestas={activeEncuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>
+                ) : (
+                    <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666' }}>No hay encuestas activas en este momento.</p>
+                )
+            )}
             {activeOption === "Cerradas" && userType === 'Administrador' && (
                 closedEncuestas.length > 0 ? (
                     <EncuestaList title={'Encuestas Cerradas'} encuestas={closedEncuestas} onRefreshEncuestas={fetchEncuestas} userType={userType}></EncuestaList>

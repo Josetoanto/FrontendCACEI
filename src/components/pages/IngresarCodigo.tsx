@@ -23,7 +23,7 @@ const IngresarCodigo: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-invitations/code/${codigo.trim()}`
+        `http://localhost:8000/anonymous-invitations/code/${codigo.trim()}`
       );
       if (!response.ok) {
         await Swal.fire({

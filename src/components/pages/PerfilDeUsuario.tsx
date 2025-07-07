@@ -10,6 +10,7 @@ import ListaDeCursos from "../molecule/ListaDeCursos";
 import EditarExperiencias from "../molecule/EditarExperiencias";
 import EditarHabilidades from "../molecule/EditarHabilidades";
 import EditarCursos from "../molecule/EditarCursos";
+import CambiarContrasenaModal from "../atoms/CambiarContrasenaModal";
 
 interface Experiencia {
   titulo: string;
@@ -41,6 +42,9 @@ const PerfilDeUsuario: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [showEditButton, setShowEditButton] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
+    const [showCambiarContrasena, setShowCambiarContrasena] = useState(false);
+
+    const [originalUserData, setOriginalUserData] = useState<any>(null);
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
@@ -76,7 +80,7 @@ const PerfilDeUsuario: React.FC = () => {
 
         try {
             // Fetch user basic data
-            const userResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/users/${idToFetch}`, {
+            const userResponse = await fetch(`http://localhost:8000/users/${idToFetch}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -86,13 +90,14 @@ const PerfilDeUsuario: React.FC = () => {
 
             if (userResponse.ok) {
                 tempUserData = await userResponse.json();
+                setOriginalUserData(tempUserData);
                 console.log('Datos de usuario obtenidos:', tempUserData);
             } else {
                 console.error(`Error fetching user data for ID ${idToFetch}:`, userResponse.status);
             }
 
             // Fetch professional profile data
-            const profileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToFetch}`, {
+            const profileResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToFetch}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -133,7 +138,7 @@ const PerfilDeUsuario: React.FC = () => {
                     linkedin_url: "https://www.linkedin.com/in/nombre-de-usuario"
                 };
 
-                const createProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles`, {
+                const createProfileResponse = await fetch(`http://localhost:8000/professional-profiles`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${userToken}`,
@@ -145,7 +150,7 @@ const PerfilDeUsuario: React.FC = () => {
                 if (createProfileResponse.ok) {
                     console.log(`Perfil profesional creado para el usuario ID: ${idToFetch} en PerfilDeUsuario.`);
                     // Re-fetch the newly created profile
-                    const newProfileResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToFetch}`, {
+                    const newProfileResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToFetch}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${userToken}`,
@@ -165,14 +170,19 @@ const PerfilDeUsuario: React.FC = () => {
             }
 
             // Combine and set states
-            setUserData(prevData => ({
-                ...prevData,
-                nombre: tempUserData.nombre || prevData.nombre,
-                fotoPerfil: profileIcon,
-                profesion: (Array.isArray(tempProfileData.experiencias) && tempProfileData.experiencias.length > 0) ? tempProfileData.experiencias[tempProfileData.experiencias.length - 1].puesto : tempUserData.profesion || prevData.profesion,
-                ubicacion: tempUserData.telefono || prevData.ubicacion,
-                descripcion: tempProfileData.resumen || prevData.descripcion
-            }));
+            setUserData(prevData => {
+                const urlFoto = tempUserData.profile_picture || profileIcon;
+                console.log('Valor de profile_picture recibido del backend:', tempUserData.profile_picture);
+                console.log('URL de foto que se usará:', urlFoto);
+                return {
+                    ...prevData,
+                    nombre: tempUserData.nombre || prevData.nombre,
+                    fotoPerfil: urlFoto,
+                    profesion: (Array.isArray(tempProfileData.experiencias) && tempProfileData.experiencias.length > 0) ? tempProfileData.experiencias[tempProfileData.experiencias.length - 1].puesto : tempUserData.profesion || prevData.profesion,
+                    ubicacion: tempUserData.telefono || prevData.ubicacion,
+                    descripcion: tempProfileData.resumen || prevData.descripcion
+                };
+            });
 
             // Experiences
             const fetchedExperiences = Array.isArray(tempProfileData.experiencias) ?
@@ -244,12 +254,13 @@ const PerfilDeUsuario: React.FC = () => {
       setIsEditing(false);
     };
 
-    const handleBasicInfoChange = (newData: { nombre: string; ubicacion: string; descripcion: string; }) => {
+    const handleBasicInfoChange = (newData: { nombre: string; ubicacion: string; descripcion: string; fotoPerfil: string; }) => {
         setUserData(prevData => ({
             ...prevData,
             nombre: newData.nombre,
             ubicacion: newData.ubicacion,
             descripcion: newData.descripcion,
+            fotoPerfil: newData.fotoPerfil
         }));
     };
 
@@ -262,7 +273,6 @@ const PerfilDeUsuario: React.FC = () => {
             setIsLoading(false);
             return;
         }
-
         const currentUserIdFromStorage = localStorage.getItem('userData');
         let parsedCurrentUserId = null;
         if (currentUserIdFromStorage) {
@@ -273,22 +283,44 @@ const PerfilDeUsuario: React.FC = () => {
                 console.error('Error parsing user data from localStorage:', error);
             }
         }
-
         const idToUpdate = userId || parsedCurrentUserId;
-
         if (!idToUpdate) {
             console.error('No user ID to update.');
             setIsEditing(false);
             setIsLoading(false);
             return;
         }
-
+        if (!originalUserData) {
+            console.error('No original user data available for update.');
+            setIsEditing(false);
+            setIsLoading(false);
+            return;
+        }
         // Prepare data for /users/:userId endpoint
         const userDataToUpdate = {
-            nombre: userData.nombre, // Use latest state
-            telefono: userData.ubicacion, // Use latest state, mapped from 'ubicacion' input
+            tipo: originalUserData.tipo || "Empleador",
+            nombre: userData.nombre, // editable
+            telefono: userData.ubicacion, // editable
+            fecha_nacimiento: originalUserData.fecha_nacimiento
+                ? originalUserData.fecha_nacimiento.split('T')[0]
+                : "",
+            is_active: typeof originalUserData.is_active === 'boolean' ? originalUserData.is_active : Boolean(originalUserData.is_active),
+            habilidades: originalUserData.habilidades,
+            experiencia: originalUserData.experiencia,
+            profile_picture: userData.fotoPerfil // editable
         };
-        console.log('Datos de usuario a actualizar:', userDataToUpdate);
+        console.log('Objeto FINAL a enviar en PUT:', userDataToUpdate);
+        // Update /users/:userId
+        const userUpdateResponse = await fetch(`http://localhost:8000/users/${idToUpdate}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userDataToUpdate),
+        });
+        const responseData = await userUpdateResponse.clone().json().catch(() => null);
+        console.log('Respuesta del backend al actualizar usuario:', responseData);
 
         // Prepare data for /professional-profiles/user/:userId endpoint
         const professionalProfileDataToUpdate: any = {
@@ -327,7 +359,7 @@ const PerfilDeUsuario: React.FC = () => {
 
         try {
             // Update /users/:userId
-            const userUpdateResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/users/${idToUpdate}`, {
+            const userUpdateResponse = await fetch(`http://localhost:8000/users/${idToUpdate}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -342,7 +374,7 @@ const PerfilDeUsuario: React.FC = () => {
             }
 
             // Update /professional-profiles/user/:userId
-            const profileUpdateResponse = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/professional-profiles/user/${idToUpdate}`, {
+            const profileUpdateResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToUpdate}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -359,6 +391,7 @@ const PerfilDeUsuario: React.FC = () => {
             console.log('Perfil actualizado exitosamente!');
             // Re-fetch data to update UI with latest changes from API
             fetchData(); // Call fetchData to refresh all data after save
+            console.log('Datos de usuario después de refrescar:', userData);
 
         } catch (error) {
             console.error('Error durante el guardado del perfil:', error);
@@ -395,6 +428,25 @@ const PerfilDeUsuario: React.FC = () => {
             showEditButton={showEditButton}
             onBasicInfoChange={handleBasicInfoChange}
           />
+        {showEditButton && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
+            <button
+              onClick={() => setShowCambiarContrasena(true)}
+              style={{
+                backgroundColor: '#1976d2',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Cambiar contraseña
+            </button>
+          </div>
+        )}
+        <CambiarContrasenaModal show={showCambiarContrasena} onClose={() => setShowCambiarContrasena(false)} />
         {isEditing ? null : <p style={{padding:"15px"}}>{userData.descripcion}</p>}
         
         {showEditButton && isEditing ? (

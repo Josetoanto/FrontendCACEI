@@ -16,40 +16,42 @@ interface ProyectoDetallesProps {
         mime_type: string;
     }[]>([]);
 
+    // Estado para almacenar enlaces de evidencias tipo URL
+    const [evidenceLinks, setEvidenceLinks] = useState<{ url: string; descripcion: string; filename?: string }[]>([]);
+
     // Efecto para crear y revocar URLs de Blob
     useEffect(() => {
         const urls = evidenceFiles.map(item => {
-            // Verificar si los datos binarios existen y son un array
             if (item.archivo?.data && Array.isArray(item.archivo.data)) {
                 try {
-                    // Convertir el array de números a Uint8Array
                     const byteArray = new Uint8Array(item.archivo.data);
-                    // Crear un Blob con los datos binarios y el tipo MIME
                     const blob = new Blob([byteArray], { type: item.mime_type });
-                    // Crear una URL de objeto para el Blob
                     const url = URL.createObjectURL(blob);
                     return { url, filename: item.filename, mime_type: item.mime_type };
                 } catch (error) {
                     console.error("Error creating Blob URL for evidence:", item.filename, error);
-                    return null; // Retornar null en caso de error
+                    return null;
                 }
             } else {
-                console.warn("Evidence data missing or invalid format:", item.filename);
-                return null; // Retornar null si los datos no están en el formato esperado
+                return null;
             }
-        }).filter(urlItem => urlItem !== null); // Filtrar los resultados nulos
-
-        setEvidenceUrls(urls as any); // Actualizar el estado con las URLs generadas
-
-        // Función de limpieza para revocar URLs de Blob
+        }).filter(urlItem => urlItem !== null);
+        setEvidenceUrls(urls as any);
+        // Extraer evidencias tipo URL
+        const links = evidenceFiles.filter(item => item.github_url).map(item => ({
+            url: item.github_url,
+            descripcion: item.descripcion || 'Evidencia URL',
+            filename: item.filename
+        }));
+        setEvidenceLinks(links);
         return () => {
             urls.forEach(urlItem => {
-                 if (urlItem) { // Asegurarse de que urlItem no es null
-                     URL.revokeObjectURL(urlItem.url);
-                 }
+                if (urlItem) {
+                    URL.revokeObjectURL(urlItem.url);
+                }
             });
         };
-    }, [evidenceFiles]); // Re-ejecutar cuando cambien los archivos de evidencia
+    }, [evidenceFiles]);
 
     return (
       <div style={{
@@ -74,21 +76,38 @@ interface ProyectoDetallesProps {
 
           <span style={{color:"#61788A", fontSize: "16px"}}>Evidencia:</span>
           <div>
-            {/* Renderizar evidencias binarias */}
+            {/* Evidencias tipo archivo */}
             {evidenceUrls.map((item, index) => (
-              <div key={index}>
-                 {item.mime_type.startsWith('image/') ? (
-                     // Mostrar imágenes
-                     <img src={item.url} alt={item.filename} style={{ maxWidth: '100%', height: 'auto', marginTop: '10px' }} />
-                 ) : (
-                     // Proporcionar enlace para otros tipos (ej. PDF)
-                     <a href={item.url} download={item.filename} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: "16px", color: "#007bff", textDecoration: "none", display: "block", marginTop: '10px' }}>
-                         Descargar {item.filename}
-                     </a>
-                 )}
+              <div key={index} style={{textAlign: "left"}}>
+                {item.mime_type.startsWith('image/') ? (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                    {item.filename || 'Imagen'} (ver imagen)
+                  </a>
+                ) : (
+                  <a href={item.url} download={item.filename} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                    {item.filename || 'Archivo'}
+                  </a>
+                )}
               </div>
             ))}
+            {/* Evidencias tipo URL */}
+            {evidenceLinks.map((item, idx) => {
+              let url = item.url;
+              if (url && !/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+              }
+              return (
+                <div key={"url-"+idx} style={{textAlign: "left"}}>
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "16px", color: "#007bff", textDecoration: "none" }}>
+                    {item.filename || item.descripcion || 'Evidencia URL'}
+                  </a>
+                </div>
+              );
+            })}
+            {evidenceUrls.length === 0 && evidenceLinks.length === 0 && (
+              <span style={{color:"#61788A"}}>No hay evidencias disponibles.</span>
+            )}
           </div>          
           <hr style={{ border: "1px solid #ccc", gridColumn: "span 2", margin: "10px 0" }} />
 

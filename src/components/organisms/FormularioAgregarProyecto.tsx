@@ -7,7 +7,7 @@ const FormularioAgregarProyecto: React.FC = () => {
     nombre: "",
     descripcion: "",
   });
-  const [evidencias, setEvidencias] = useState<{ titulo: string; descripcion: string; archivo: File | null }[]>([]);
+  const [evidencias, setEvidencias] = useState<{ titulo: string; descripcion: string; archivo: File | null; github_url: string; tipo: 'archivo' | 'url' }[]>([]);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -15,7 +15,7 @@ const FormularioAgregarProyecto: React.FC = () => {
   };
 
   const handleAddEvidencia = () => {
-    setEvidencias([...evidencias, { titulo: "", descripcion: "", archivo: null }]);
+    setEvidencias([...evidencias, { titulo: "", descripcion: "", archivo: null, github_url: "", tipo: 'archivo' }]);
   };
 
   const handleRemoveEvidencia = (index: number) => {
@@ -28,6 +28,18 @@ const FormularioAgregarProyecto: React.FC = () => {
   ) => {
     const newEvidencias = [...evidencias];
     newEvidencias[index] = { ...newEvidencias[index], [e.target.name]: e.target.value };
+    setEvidencias(newEvidencias);
+  };
+
+  const handleEvidenciaTipoChange = (index: number, tipo: 'archivo' | 'url') => {
+    const newEvidencias = [...evidencias];
+    newEvidencias[index].tipo = tipo;
+    // Limpiar campos no usados
+    if (tipo === 'archivo') {
+      newEvidencias[index].github_url = "";
+    } else {
+      newEvidencias[index].archivo = null;
+    }
     setEvidencias(newEvidencias);
   };
 
@@ -56,7 +68,7 @@ const FormularioAgregarProyecto: React.FC = () => {
 
     // 1. Crear Proyecto
     try {
-      const projectApiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects';
+      const projectApiUrl = 'http://localhost:8000/projects';
       const projectResponse = await fetch(projectApiUrl, {
         method: 'POST',
         headers: {
@@ -83,69 +95,106 @@ const FormularioAgregarProyecto: React.FC = () => {
       const projectId = projectData.id; // Obtener el ID del proyecto recién creado
 
       // 2. Crear Evidencias
-      const evidenceApiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/evidences';
+      const evidenceApiUrl = 'http://localhost:8000/evidences';
 
       for (const evidencia of evidencias) {
-        if (!evidencia.archivo) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Archivos requeridos',
-            text: 'Por favor, adjunta un archivo PDF para todas las evidencias.',
-          });
-          return; // Detener si falta un archivo en alguna evidencia
-        }
-
-        const formDataEvidence = new FormData();
-        formDataEvidence.append('proyecto_id', projectId.toString());
-        formDataEvidence.append('filename', evidencia.archivo.name);
-        formDataEvidence.append('mime_type', evidencia.archivo.type);
-        
-        let tipoIdForEvidence: string;
-        if (evidencia.archivo.type === 'application/pdf') {
-          tipoIdForEvidence = '1';
-        } else if (evidencia.archivo.type === 'image/jpeg' || evidencia.archivo.type === 'image/jpg') {
-          tipoIdForEvidence = '2';
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Tipo de archivo no soportado',
-            text: `El tipo de archivo para la evidencia '${evidencia.titulo || evidencia.archivo.name}' no es soportado. Solo se permiten PDF e imágenes JPG.`,
-          });
-          continue; // Saltar esta evidencia y continuar con la siguiente
-        }
-
-        formDataEvidence.append('tipo_id', tipoIdForEvidence);
-        formDataEvidence.append('archivo', evidencia.archivo); // El archivo PDF
-        formDataEvidence.append('descripcion', evidencia.descripcion); // Descripción opcional
-
-        try {
-          const evidenceResponse = await fetch(evidenceApiUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${userToken}`,
-              // 'Content-Type': 'multipart/form-data' se establece automáticamente por fetch al usar FormData
-            },
-            body: formDataEvidence,
-          });
-
-          if (!evidenceResponse.ok) {
-            const errorText = await evidenceResponse.text();
-            console.error(`Error al crear evidencia para el proyecto ${projectId}: ${evidenceResponse.status} - ${errorText}`);
+        if (evidencia.tipo === 'archivo') {
+          if (!evidencia.archivo) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Archivos requeridos',
+              text: 'Por favor, adjunta un archivo PDF o imagen para todas las evidencias tipo archivo.',
+            });
+            return;
+          }
+          const formDataEvidence = new FormData();
+          formDataEvidence.append('proyecto_id', projectId.toString());
+          formDataEvidence.append('filename', evidencia.archivo.name);
+          formDataEvidence.append('mime_type', evidencia.archivo.type);
+          let tipoIdForEvidence: string;
+          if (evidencia.archivo.type === 'application/pdf') {
+            tipoIdForEvidence = '1';
+          } else if (evidencia.archivo.type === 'image/jpeg' || evidencia.archivo.type === 'image/jpg') {
+            tipoIdForEvidence = '2';
+          } else {
             Swal.fire({
               icon: 'error',
-              title: 'Error al crear evidencia',
-              text: `Error al crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, revisa la consola para más detalles.`,
+              title: 'Tipo de archivo no soportado',
+              text: `El tipo de archivo para la evidencia '${evidencia.titulo || evidencia.archivo.name}' no es soportado. Solo se permiten PDF e imágenes JPG.`,
             });
-          } else {
-            console.log(`Evidencia '${evidencia.titulo || evidencia.archivo.name}' creada con éxito.`);
+            continue;
           }
-        } catch (error) {
-          console.error(`Error al conectar con la API para crear evidencia '${evidencia.titulo || evidencia.archivo.name}':`, error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error de conexión',
-            text: `Error al conectar con la API para crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, inténtalo de nuevo más tarde.`,
-          });
+          formDataEvidence.append('tipo_id', tipoIdForEvidence);
+          formDataEvidence.append('archivo', evidencia.archivo);
+          formDataEvidence.append('descripcion', evidencia.descripcion);
+          try {
+            const evidenceResponse = await fetch(evidenceApiUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${userToken}`,
+              },
+              body: formDataEvidence,
+            });
+            if (!evidenceResponse.ok) {
+              const errorText = await evidenceResponse.text();
+              console.error(`Error al crear evidencia para el proyecto ${projectId}: ${evidenceResponse.status} - ${errorText}`);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error al crear evidencia',
+                text: `Error al crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, revisa la consola para más detalles.`,
+              });
+            } else {
+              console.log(`Evidencia '${evidencia.titulo || evidencia.archivo.name}' creada con éxito.`);
+            }
+          } catch (error) {
+            console.error(`Error al conectar con la API para crear evidencia '${evidencia.titulo || evidencia.archivo.name}':`, error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error de conexión',
+              text: `Error al conectar con la API para crear la evidencia: ${evidencia.titulo || evidencia.archivo.name}. Por favor, inténtalo de nuevo más tarde.`,
+            });
+          }
+        } else if (evidencia.tipo === 'url') {
+          if (!evidencia.github_url) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'URL requerida',
+              text: 'Por favor, ingresa una URL para todas las evidencias tipo URL.',
+            });
+            return;
+          }
+          const formDataEvidence = new FormData();
+          formDataEvidence.append('proyecto_id', projectId.toString());
+          formDataEvidence.append('tipo_id', '4'); // Tipo 4 para URL
+          formDataEvidence.append('descripcion', evidencia.descripcion);
+          formDataEvidence.append('github_url', evidencia.github_url);
+          try {
+            const evidenceResponse = await fetch(evidenceApiUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${userToken}`,
+              },
+              body: formDataEvidence,
+            });
+            if (!evidenceResponse.ok) {
+              const errorText = await evidenceResponse.text();
+              console.error(`Error al crear evidencia URL para el proyecto ${projectId}: ${evidenceResponse.status} - ${errorText}`);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error al crear evidencia URL',
+                text: `Error al crear la evidencia URL: ${evidencia.titulo}. Por favor, revisa la consola para más detalles.`,
+              });
+            } else {
+              console.log(`Evidencia URL '${evidencia.github_url}' creada con éxito.`);
+            }
+          } catch (error) {
+            console.error(`Error al conectar con la API para crear evidencia URL '${evidencia.github_url}':`, error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error de conexión',
+              text: `Error al conectar con la API para crear la evidencia URL: ${evidencia.github_url}. Por favor, inténtalo de nuevo más tarde.`,
+            });
+          }
         }
       }
 
@@ -211,7 +260,24 @@ const FormularioAgregarProyecto: React.FC = () => {
                 <button type="button" onClick={() => handleRemoveEvidencia(index)} style={{ background: "none", border: "none", color: "red", cursor: "pointer", fontSize: "18px" }}>X</button>
               )}
             </div>
-
+            <div style={{ marginBottom: "10px" }}>
+              <label>
+                <input
+                  type="radio"
+                  name={`tipo_${index}`}
+                  checked={evidencia.tipo === 'archivo'}
+                  onChange={() => handleEvidenciaTipoChange(index, 'archivo')}
+                /> Archivo (PDF/JPG)
+              </label>
+              <label style={{ marginLeft: "20px" }}>
+                <input
+                  type="radio"
+                  name={`tipo_${index}`}
+                  checked={evidencia.tipo === 'url'}
+                  onChange={() => handleEvidenciaTipoChange(index, 'url')}
+                /> URL (GitHub u otro)
+              </label>
+            </div>
             <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Título de la Evidencia</p>
             <input 
               type="text"
@@ -221,7 +287,6 @@ const FormularioAgregarProyecto: React.FC = () => {
               placeholder="Añade un título a la evidencia"
               style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", marginBottom: "5px", boxSizing: "border-box" }}
             />
-
             <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Descripción de la Evidencia</p>
             <textarea 
               name="descripcion"
@@ -231,15 +296,31 @@ const FormularioAgregarProyecto: React.FC = () => {
               rows={4}
               style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", marginBottom: "5px", boxSizing: "border-box" }}
             />
-
-            <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Adjuntar evidencia (PDF)</p>
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={(e) => handleEvidenciaFileChange(e, index)}
-              style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", boxSizing: "border-box" }}
-            />
-            {evidencia.archivo && <p style={{ marginTop: "5px", fontSize: "12px", color: "#555" }}>Archivo seleccionado: {evidencia.archivo.name}</p>}
+            {evidencia.tipo === 'archivo' && (
+              <>
+                <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Adjuntar evidencia (PDF/JPG)</p>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg"
+                  onChange={(e) => handleEvidenciaFileChange(e, index)}
+                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", boxSizing: "border-box" }}
+                />
+                {evidencia.archivo && <p style={{ marginTop: "5px", fontSize: "12px", color: "#555" }}>Archivo seleccionado: {evidencia.archivo.name}</p>}
+              </>
+            )}
+            {evidencia.tipo === 'url' && (
+              <>
+                <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>URL de la Evidencia (GitHub u otro)</p>
+                <input
+                  type="text"
+                  name="github_url"
+                  value={evidencia.github_url}
+                  onChange={(e) => handleEvidenciaChange(e, index)}
+                  placeholder="https://github.com/usuario/repositorio"
+                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", marginBottom: "5px", boxSizing: "border-box" }}
+                />
+              </>
+            )}
           </div>
         ))}
 

@@ -54,7 +54,7 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         return;
       }
 
-      const apiUrl = `https://gcl58kpp-8000.use2.devtunnels.ms/surveys/${id}`;
+      const apiUrl = `http://localhost:8000/surveys/${id}`;
 
       try {
         const response = await fetch(apiUrl, {

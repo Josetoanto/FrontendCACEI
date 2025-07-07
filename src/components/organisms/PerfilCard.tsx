@@ -15,7 +15,7 @@ interface PerfilCardProps {
   toggleEditing?: () => void;
   onCancel?: () => void;
   showEditButton?: boolean;
-  onBasicInfoChange: (newData: { nombre: string; ubicacion: string; descripcion: string; }) => void;
+  onBasicInfoChange: (newData: { nombre: string; ubicacion: string; descripcion: string; fotoPerfil: string; }) => void;
 }
 
 const PerfilCard: React.FC<PerfilCardProps> = ({ userData, isEditing, toggleEditing, onCancel, showEditButton = true, onBasicInfoChange }) => {

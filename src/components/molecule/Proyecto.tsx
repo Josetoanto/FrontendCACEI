@@ -38,7 +38,7 @@ const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete, isOpen
     }
 
     try {
-      const apiUrl = `https://gcl58kpp-8000.use2.devtunnels.ms/projects/${id}`;
+      const apiUrl = `http://localhost:8000/projects/${id}`;
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {

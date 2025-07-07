@@ -10,6 +10,7 @@ const Proyectos: React.FC = () => {
   const [averageScore, setAverageScore] = useState<string>('--/100');
   const [evaluatedProjectsCount, setEvaluatedProjectsCount] = useState<number | string>('--');
   const [enrichedEvaluations, setEnrichedEvaluations] = useState<any[]>([]);
+  const [dailyAverages, setDailyAverages] = useState<number[]>([]);
 
   const navigate = useNavigate();
 
@@ -23,9 +24,9 @@ const Proyectos: React.FC = () => {
         return;
       }
 
-      const apiUrlEvaluations = 'https://gcl58kpp-8000.use2.devtunnels.ms/evaluations';
-      const apiUrlProjectsBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects/';
-      const apiUrlUsersBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/'; // API de usuarios
+      const apiUrlEvaluations = 'http://localhost:8000/evaluations';
+      const apiUrlProjectsBase = 'http://localhost:8000/projects/';
+      const apiUrlUsersBase = 'http://localhost:8000/users/'; // API de usuarios
 
       try {
         // 1. Fetch evaluations
@@ -70,6 +71,43 @@ const Proyectos: React.FC = () => {
 
         const avg = totalCriterionCount > 0 ? (totalCriterionScoreSum / totalCriterionCount) : 0;
         setAverageScore(`${Math.round(avg)}/100`);
+
+        // Calculate daily averages for the last 7 days
+        const today = new Date();
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(today);
+          date.setDate(date.getDate() - (6 - i));
+          return date;
+        });
+
+        const averages = last7Days.map(day => {
+          const evaluationsOnDay = evaluationsData.filter((evaluation: any) => {
+            const evaluationDate = new Date(evaluation.creado_en);
+            return evaluationDate.toDateString() === day.toDateString();
+          });
+
+          if (evaluationsOnDay.length === 0) {
+            return 0;
+          }
+
+          let totalCriterionScoreSum = 0;
+          let totalCriterionCount = 0;
+
+          evaluationsOnDay.forEach((evaluation: any) => {
+            if (evaluation.criterios && Array.isArray(evaluation.criterios)) {
+              evaluation.criterios.forEach((criterio: any) => {
+                if (typeof criterio.puntuacion === 'number') {
+                  totalCriterionScoreSum += criterio.puntuacion;
+                  totalCriterionCount++;
+                }
+              });
+            }
+          });
+
+          return totalCriterionCount > 0 ? (totalCriterionScoreSum / totalCriterionCount) : 0;
+        });
+
+        setDailyAverages(averages);
 
         // 2. Fetch details for each unique evaluated project to get egresado_id
         const projectDetailsPromises = uniqueProjectIds.map(async (projectId) => {
@@ -217,10 +255,16 @@ const Proyectos: React.FC = () => {
         ))}
       </div>
       <div style={{borderRadius:"12px",border:"2px solid #dbe0e5",height:"420px", marginTop:"20px",padding:"20px"}}>
-      <TrendChart></TrendChart>
+      <TrendChart dailyAverages={dailyAverages}></TrendChart>
       </div>
       <EvaluacionProyectosTabla evaluationsData={enrichedEvaluations}></EvaluacionProyectosTabla>
-      <DescargarCSV></DescargarCSV>
+      <DescargarCSV 
+        evaluationsData={enrichedEvaluations}
+        totalEvaluations={totalEvaluations}
+        averageScore={averageScore}
+        evaluatedProjectsCount={evaluatedProjectsCount}
+        dailyAverages={dailyAverages}
+      ></DescargarCSV>
       {/* Nuevo botón para modificar rúbrica */}
       <button
         style={{

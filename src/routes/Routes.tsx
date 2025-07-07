@@ -13,6 +13,9 @@ import ResponderEncuesta from '../components/pages/ResponderEncuesta';
 import Login from '../components/pages/Login';
 import IngresarCodigo from '../components/pages/IngresarCodigo';
 import ModificarRubrica from '../components/pages/ModificarRubrica';
+import Configuracion from '../components/pages/Configuracion';
+import GestionUsuarios from '../components/pages/GestionUsuarios';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -20,18 +23,20 @@ const AppRoutes: React.FC = () => {
             <Routes>
                 <Route path="/" element={<Navigate to="/login" />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/egresado" element={<HomeEgresado />} />
-                <Route path="/revision/proyecto/:projectId/evaluacion/:evaluationId" element={<RevisionPage />} />
-                <Route path="/agregarProyecto" element={<AgregarProyecto></AgregarProyecto>} />
-                <Route path="/evaluador" element={<HomeEvaluador></HomeEvaluador>} />
-                <Route path="/evaluar/:evaluationId" element={<EvaluacionProyecto></EvaluacionProyecto>} />
-                <Route path="/perfil/:userId" element={<PerfilDeUsuario></PerfilDeUsuario>} />
-                <Route path="/perfilEvaluador" element={<PerfilDeEvaluador />} />
-                <Route path="/crearEncuesta/:id?" element={<CrearEncuesta />} />
-                <Route path="/responderEncuesta/:id" element={<ResponderEncuesta />} />
                 <Route path="/ingresar-codigo" element={<IngresarCodigo />} />
-                <Route path="/modificar-rubrica" element={<ModificarRubrica />} />
+                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/egresado" element={<ProtectedRoute><HomeEgresado /></ProtectedRoute>} />
+                <Route path="/revision/proyecto/:projectId/evaluacion/:evaluationId" element={<ProtectedRoute><RevisionPage /></ProtectedRoute>} />
+                <Route path="/agregarProyecto" element={<ProtectedRoute><AgregarProyecto /></ProtectedRoute>} />
+                <Route path="/evaluador" element={<ProtectedRoute><HomeEvaluador /></ProtectedRoute>} />
+                <Route path="/evaluar/:evaluationId" element={<ProtectedRoute><EvaluacionProyecto /></ProtectedRoute>} />
+                <Route path="/perfil/:userId" element={<ProtectedRoute><PerfilDeUsuario /></ProtectedRoute>} />
+                <Route path="/perfilEvaluador" element={<ProtectedRoute><PerfilDeEvaluador /></ProtectedRoute>} />
+                <Route path="/crearEncuesta/:id?" element={<ProtectedRoute><CrearEncuesta /></ProtectedRoute>} />
+                <Route path="/responderEncuesta/:id" element={<ProtectedRoute><ResponderEncuesta /></ProtectedRoute>} />
+                <Route path="/modificar-rubrica" element={<ProtectedRoute><ModificarRubrica /></ProtectedRoute>} />
+                <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
+                <Route path="/gestion-usuarios" element={<ProtectedRoute><GestionUsuarios /></ProtectedRoute>} />
             </Routes>
         </Router>
     );

@@ -1,8 +1,7 @@
 
   
-  // Definir la interfaz para las props, incluyendo evaluationDetails
   interface RubricaProps {
-      evaluationDetails: any; // Usamos any por ahora, idealmente sería el tipo de la evaluación enriquecida
+      evaluationDetails: any; 
   }
   
   // Actualizar la definición del componente para aceptar evaluationDetails

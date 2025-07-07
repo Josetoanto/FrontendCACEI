@@ -49,7 +49,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     }
 
     try {
-      const response = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/responses/question/${questionId}`, {
+      const response = await fetch(`http://localhost:8000/responses/question/${questionId}`, {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
 
@@ -65,6 +65,99 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
       return [];
     }
   }, []);
+
+  // Funcion para descargar CSV
+  const downloadCSV = useCallback(() => {
+    if (!surveyId || questions.length === 0) {
+      alert('No hay datos para descargar');
+      return;
+    }
+
+    // Obtener todas las respuestas unicas (por respuesta_id)
+    const allResponses: {[respuestaId: number]: {[questionId: number]: SurveyResponseDetail}} = {};
+    
+    Object.values(responsesData).forEach(questionResponses => {
+      questionResponses.forEach(response => {
+        if (!allResponses[response.respuesta_id]) {
+          allResponses[response.respuesta_id] = {};
+        }
+        allResponses[response.respuesta_id][response.pregunta_id] = response;
+      });
+    });
+
+    // Crear encabezados del CSV
+    const headers = ['ID Respuesta', 'Fecha de Respuesta'];
+    questions.forEach(question => {
+      headers.push(`"${question.texto}"`);
+    });
+
+    // Crear filas de datos
+    const csvRows = [headers.join(',')];
+    
+    Object.entries(allResponses).forEach(([respuestaId, questionResponses]) => {
+      const row: string[] = [respuestaId];
+      
+      // Obtener la fecha de la primera respuesta (todas deberian tener la misma fecha)
+      const firstResponse = Object.values(questionResponses)[0];
+      const fecha = firstResponse ? new Date(firstResponse.creado_en).toLocaleDateString('es-ES') : '';
+      row.push(fecha);
+      
+      // Agregar respuesta para cada pregunta
+      questions.forEach(question => {
+        const response = questionResponses[question.id];
+        let valor = '';
+        
+        if (response) {
+          if (response.valor_texto !== null && response.valor_texto !== undefined) {
+            valor = response.valor_texto;
+          } else if (response.valor_numero !== null && response.valor_numero !== undefined) {
+            // Para preguntas de opcion multiple y likert, mostrar la etiqueta en lugar del numero
+            if (question.tipo === 'multiple' && Array.isArray(question.opciones)) {
+              const option = question.opciones.find(opt => opt.valor.toString() === response.valor_numero!.toString());
+              valor = option ? option.etiqueta : response.valor_numero!.toString();
+            } else if (question.tipo === 'likert' && Array.isArray(question.opciones)) {
+              const likertLabels3 = ["Mal", "Medio", "Bien"];
+              const likertLabels5 = ["Muy mal", "Mal", "Mas o menos", "Bien", "Muy Bien"];
+              const numValue = response.valor_numero;
+              if (question.opciones.length === 3 && numValue >= 1 && numValue <= 3) {
+                valor = likertLabels3[numValue - 1];
+              } else if (question.opciones.length === 5 && numValue >= 1 && numValue <= 5) {
+                valor = likertLabels5[numValue - 1];
+              } else {
+                valor = response.valor_numero.toString();
+              }
+            } else {
+              valor = response.valor_numero.toString();
+            }
+          }
+        }
+        
+        // Escapar comillas y envolver en comillas si contiene comas
+        valor = valor.replace(/"/g, '""');
+        if (valor.includes(',') || valor.includes('"') || valor.includes('\n')) {
+          valor = `"${valor}"`;
+        }
+        
+        row.push(valor);
+      });
+      
+      csvRows.push(row.join(','));
+    });
+
+    // Crear y descargar el archivo CSV
+    const csvContent = csvRows.join('\n');
+    // Agregar BOM para UTF-8 para que Excel reconozca correctamente los caracteres especiales
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `respuestas_encuesta_${surveyId}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [surveyId, questions, responsesData]);
 
   useEffect(() => {
     const loadAllResponses = async () => {
@@ -117,6 +210,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
           <h2 style={{ fontSize: "16px", fontWeight:"bold"}}>0 respuestas</h2>
           {/* Botón Descargar CSV */}
           <button 
+            onClick={downloadCSV}
             style={{
               backgroundColor: "transparent",
               borderRadius: "8px",
@@ -158,6 +252,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
       <div style={{backgroundColor:"#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px",  boxShadow: "0 2px 10px rgba(0,0,0,0.1)", padding: "20px",borderRadius: "12px"}}>
         <h2 style={{ fontSize: "16px", fontWeight:"bold"}}>{totalResponsesCount === 1 ? "1 respuesta" : `${totalResponsesCount} respuestas`}</h2>
         <button 
+          onClick={downloadCSV}
           style={{
             backgroundColor: "transparent",
             borderRadius: "8px",

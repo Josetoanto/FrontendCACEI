@@ -51,7 +51,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails', {
+      const response = await fetch('http://localhost:8000/anonymous-emails', {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -89,7 +89,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails', {
+      const response = await fetch('http://localhost:8000/anonymous-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
       console.log('Estado actual antes de actualizar:', correos);
       console.log('Enviando actualización para ID:', editingId, 'con email:', editingEmail);
 
-      const response = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails/${editingId}`, {
+      const response = await fetch(`http://localhost:8000/anonymous-emails/${editingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
           return;
         }
 
-        const response = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails/${correo.id}`, {
+        const response = await fetch(`http://localhost:8000/anonymous-emails/${correo.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${userToken}`
@@ -243,7 +243,11 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleAgregarCorreo();
+      if (isEditMode) {
+        handleAgregarCorreoYEnviar();
+      } else {
+        handleAgregarCorreo();
+      }
     }
   };
 
@@ -316,7 +320,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
 
         for (const email of correosNuevos) {
           try {
-            const response = await fetch('https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-emails', {
+            const response = await fetch('http://localhost:8000/anonymous-emails', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -356,6 +360,259 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
     }
   };
 
+  // Agregar correo individual y enviar invitación
+  const handleAgregarCorreoYEnviar = async () => {
+    if (!validarCorreo(nuevoCorreo)) {
+      setCorreoError("Correo inválido");
+      return;
+    }
+    if (correos.some(c => c.email === nuevoCorreo)) {
+      setCorreoError("El correo ya está en la lista");
+      return;
+    }
+
+    try {
+      const userToken = localStorage.getItem('userToken');
+      if (!userToken) {
+        Swal.fire('Error', 'No se encontró el token de usuario', 'error');
+        return;
+      }
+
+      // Agregar el correo a la lista de autorizados
+      const response = await fetch('http://localhost:8000/anonymous-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`
+        },
+        body: JSON.stringify({
+          email: nuevoCorreo
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Error al agregar correo: ${JSON.stringify(errorData)}`);
+      }
+
+      const nuevoEmail: EmailData = await response.json();
+      setCorreos([...correos, nuevoEmail]);
+
+      // Enviar invitación inmediatamente si estamos en modo edición
+      if (isEditMode && surveyId) {
+        try {
+          const invitationResponse = await fetch('http://localhost:8000/anonymous-invitations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            },
+            body: JSON.stringify({
+              encuesta_id: surveyId,
+              email: nuevoCorreo
+            })
+          });
+
+          if (invitationResponse.ok) {
+            // Enviar notificación después de crear la invitación exitosamente
+            try {
+              const notiBody = {
+                encuesta_id: surveyId,
+                mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
+              };
+              console.log('Enviando notificación con body:', notiBody);
+              const notiResp = await fetch('http://localhost:8000/notifications/anonymous', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${userToken}`
+                },
+                body: JSON.stringify(notiBody)
+              });
+              const notiData = await notiResp.json();
+              console.log('Respuesta de notificación:', notiData);
+            } catch (notificationError) {
+              console.error('Error al enviar la notificación:', notificationError);
+            }
+            // Recargar invitaciones para mostrar la nueva
+            await cargarInvitaciones();
+            Swal.fire('¡Éxito!', 'Correo agregado e invitación enviada correctamente', 'success');
+          } else {
+            Swal.fire('¡Éxito!', 'Correo agregado correctamente, pero no se pudo enviar la invitación', 'warning');
+          }
+        } catch (invitationError) {
+          console.error('Error al enviar invitación:', invitationError);
+          Swal.fire('¡Éxito!', 'Correo agregado correctamente, pero no se pudo enviar la invitación', 'warning');
+        }
+      } else {
+        Swal.fire('¡Éxito!', 'Correo agregado correctamente', 'success');
+      }
+
+      setNuevoCorreo("");
+      setCorreoError("");
+    } catch (error: any) {
+      console.error('Error al agregar correo:', error);
+      Swal.fire('Error', error.message || 'No se pudo agregar el correo', 'error');
+    }
+  };
+
+  // Agregar múltiples correos y enviar invitaciones
+  const handleAgregarMultiplesYEnviar = async () => {
+    if (!multipleEmails.trim()) {
+      setCorreoError("Por favor ingresa al menos un correo");
+      return;
+    }
+
+    // Separar correos por comas, espacios o saltos de línea
+    const emailsArray = multipleEmails
+      .split(/[,\s\n]+/)
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+
+    if (emailsArray.length === 0) {
+      setCorreoError("No se encontraron correos válidos");
+      return;
+    }
+
+    const userToken = localStorage.getItem('userToken');
+    if (!userToken) {
+      Swal.fire('Error', 'No se encontró el token de usuario', 'error');
+      return;
+    }
+
+    // Validar cada correo
+    const correosValidos = emailsArray.filter(validarCorreo);
+    const correosInvalidos = emailsArray.filter(email => !validarCorreo(email));
+    
+    // Verificar duplicados
+    const correosExistentes = correosValidos.filter(email => 
+      correos.some(c => c.email === email)
+    );
+    const correosNuevos = correosValidos.filter(email => 
+      !correos.some(c => c.email === email)
+    );
+
+    if (correosNuevos.length === 0) {
+      Swal.fire('Atención', 'Todos los correos ya existen en la lista', 'warning');
+      return;
+    }
+
+    // Mostrar resumen antes de agregar
+    const resumen = `Se agregarán ${correosNuevos.length} correo${correosNuevos.length !== 1 ? 's' : ''} nuevos y se enviarán invitaciones.\n\n` +
+      (correosExistentes.length > 0 ? `${correosExistentes.length} correo${correosExistentes.length !== 1 ? 's' : ''} ya existen.\n\n` : '') +
+      (correosInvalidos.length > 0 ? `${correosInvalidos.length} correo${correosInvalidos.length !== 1 ? 's' : ''} tienen formato inválido.\n\n` : '');
+
+    const result = await Swal.fire({
+      title: 'Confirmar agregar correos y enviar invitaciones',
+      text: resumen + '¿Deseas continuar?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, agregar y enviar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        let agregados = 0;
+        let errores = 0;
+        let invitacionesEnviadas = 0;
+
+        for (const email of correosNuevos) {
+          try {
+            // Agregar correo a la lista de autorizados
+            const response = await fetch('http://localhost:8000/anonymous-emails', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({ email })
+            });
+
+            if (response.ok) {
+              const nuevoEmail: EmailData = await response.json();
+              setCorreos(prev => [...prev, nuevoEmail]);
+              agregados++;
+
+              // Enviar invitación si estamos en modo edición
+              if (isEditMode && surveyId) {
+                try {
+                  const invitationResponse = await fetch('http://localhost:8000/anonymous-invitations', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${userToken}`
+                    },
+                    body: JSON.stringify({
+                      encuesta_id: surveyId,
+                      email
+                    })
+                  });
+
+                  if (invitationResponse.ok) {
+                    invitacionesEnviadas++;
+                    // Enviar notificación después de crear la invitación exitosamente
+                    try {
+                      const notiBody = {
+                        encuesta_id: surveyId,
+                        mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
+                      };
+                      console.log('Enviando notificación con body:', notiBody);
+                      const notiResp = await fetch('http://localhost:8000/notifications/anonymous', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${userToken}`
+                        },
+                        body: JSON.stringify(notiBody)
+                      });
+                      const notiData = await notiResp.json();
+                      console.log('Respuesta de notificación:', notiData);
+                    } catch (notificationError) {
+                      console.error('Error al enviar la notificación:', notificationError);
+                    }
+                  }
+                } catch (invitationError) {
+                  console.error('Error al enviar invitación para:', email, invitationError);
+                }
+              }
+            } else {
+              errores++;
+            }
+          } catch (error) {
+            errores++;
+          }
+        }
+
+        // Recargar invitaciones si estamos en modo edición
+        if (isEditMode && surveyId) {
+          await cargarInvitaciones();
+        }
+
+        // Mostrar resultado final
+        let mensaje = `Se agregaron ${agregados} correo${agregados !== 1 ? 's' : ''} exitosamente.`;
+        if (isEditMode && surveyId) {
+          mensaje += `\nSe enviaron ${invitacionesEnviadas} invitaciones.`;
+        }
+        if (errores > 0) {
+          mensaje += `\n${errores} correo${errores !== 1 ? 's' : ''} no se pudieron agregar.`;
+        }
+
+        Swal.fire('Resultado', mensaje, agregados > 0 ? 'success' : 'error');
+        
+        // Limpiar el formulario
+        setMultipleEmails("");
+        setShowMultipleInput(false);
+        setCorreoError("");
+      } catch (error: any) {
+        console.error('Error al agregar múltiples correos:', error);
+        Swal.fire('Error', 'Hubo un error al agregar los correos', 'error');
+      }
+    }
+  };
+
   // Cargar correos al montar el componente
   useEffect(() => {
     cargarCorreos();
@@ -378,7 +635,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch(`https://gcl58kpp-8000.use2.devtunnels.ms/anonymous-invitations/survey/${surveyId}`, {
+      const response = await fetch(`http://localhost:8000/anonymous-invitations/survey/${surveyId}`, {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -404,6 +661,8 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
     console.log('Estado de correos en render:', correos);
   }, [correos]);
 
+  // Función para enviar nuevas invitaciones
+  
   if (loading) {
     return (
       <div style={{
@@ -441,6 +700,139 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         <div>
           <div style={{ fontWeight: "bold", fontSize: "17px", marginBottom: "16px" }}>
             Estado de las invitaciones ({invitaciones.length})
+          </div>
+
+          {/* Sección para agregar nuevos correos */}
+          <div style={{ 
+            background: "#f8f9fa", 
+            padding: "20px", 
+            borderRadius: "8px", 
+            marginBottom: "24px",
+            border: "1px solid #e9ecef"
+          }}>
+            <div style={{ fontWeight: "bold", fontSize: "16px", marginBottom: "12px" }}>
+              Agregar nuevos correos autorizados
+            </div>
+            <div style={{ color: "#666", fontSize: "14px", marginBottom: "16px" }}>
+              Agrega nuevos correos a la lista de autorizados y envíales invitaciones inmediatamente
+            </div>
+            
+            {/* Botón para alternar entre modo individual y múltiple */}
+            <div style={{ marginBottom: "16px" }}>
+              <button
+                type="button"
+                onClick={() => setShowMultipleInput(!showMultipleInput)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  background: "#6c63ff",
+                  color: "#fff",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold"
+                }}
+              >
+                {showMultipleInput ? "Modo individual" : "Agregar múltiples"}
+              </button>
+            </div>
+            
+            {showMultipleInput ? (
+              /* Modo múltiple */
+              <div style={{ marginBottom: "8px" }}>
+                <textarea
+                  placeholder="Ingresa varios correos separados por comas, espacios o saltos de línea&#10;Ejemplo:&#10;correo1@ejemplo.com&#10;correo2@ejemplo.com, correo3@ejemplo.com"
+                  value={multipleEmails}
+                  onChange={(e) => { setMultipleEmails(e.target.value); setCorreoError(""); }}
+                  style={{
+                    width: "96%",
+                    minHeight: "120px",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    border: "1px solid #e0e0e0",
+                    fontSize: "16px",
+                    background: "#fff",
+                    resize: "vertical",
+                    fontFamily: "inherit"
+                  }}
+                />
+                <div style={{ display: "flex", gap: "12px", marginTop: "8px", justifyContent: "right" }}>
+                  <button
+                    type="button"
+                    onClick={handleAgregarMultiplesYEnviar}
+                    style={{
+                      padding: "12px 24px",
+                      borderRadius: "6px",
+                      background: "#28a745",
+                      color: "#fff",
+                      border: "none",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Agregar y enviar invitaciones
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMultipleEmails(""); setCorreoError(""); }}
+                    style={{
+                      padding: "12px 24px",
+                      borderRadius: "6px",
+                      background: "#6c757d",
+                      color: "#fff",
+                      border: "none",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Modo individual */
+              <div style={{ display: "flex", gap: "12px", marginBottom: "8px" }}>
+                <input
+                  type="email"
+                  placeholder="ejemplo@correo.com"
+                  value={nuevoCorreo}
+                  onChange={(e) => { setNuevoCorreo(e.target.value); setCorreoError(""); }}
+                  onKeyPress={handleKeyPress}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    border: "1px solid #e0e0e0",
+                    fontSize: "16px",
+                    background: "#fff"
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAgregarCorreoYEnviar}
+                  style={{
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    background: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    fontSize: "16px"
+                  }}
+                >
+                  Agregar y enviar
+                </button>
+              </div>
+            )}
+            
+            {correoError && (
+              <div style={{ color: "#ff6b6b", fontSize: "14px", marginBottom: "16px" }}>
+                {correoError}
+              </div>
+            )}
           </div>
           
           {loadingInvitaciones ? (

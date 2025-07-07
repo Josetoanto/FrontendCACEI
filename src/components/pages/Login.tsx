@@ -8,7 +8,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/login';
+    const apiUrl = 'http://localhost:8000/users/login';
 
     try {
       const response = await fetch(apiUrl, {

@@ -25,7 +25,7 @@ const HomeEgresado: React.FC = () => {
         }
 
         try {
-            const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/surveys/';
+            const apiUrl = 'http://localhost:8000/surveys/';
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -85,7 +85,7 @@ const HomeEgresado: React.FC = () => {
         }
 
         try {
-            const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects';
+            const apiUrl = 'http://localhost:8000/projects';
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {

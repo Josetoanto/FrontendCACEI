@@ -27,12 +27,12 @@ const Revision: React.FC = () => {
                 return;
             }
 
-            const apiUrlEvaluations = 'https://gcl58kpp-8000.use2.devtunnels.ms/evaluations';
-            const apiUrlEvaluationSpecific = `https://gcl58kpp-8000.use2.devtunnels.ms/evaluations/${evaluationId}`;
-            const apiUrlProjectsBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/projects/';
-            const apiUrlUsersBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/users/';
-            const apiUrlEvidencesBase = 'https://gcl58kpp-8000.use2.devtunnels.ms/evidences/project/';
-            const apiUrlCriteria = 'https://gcl58kpp-8000.use2.devtunnels.ms/criteria';
+            const apiUrlEvaluations = 'http://localhost:8000/evaluations';
+            const apiUrlEvaluationSpecific = `http://localhost:8000/evaluations/${evaluationId}`;
+            const apiUrlProjectsBase = 'http://localhost:8000/projects/';
+            const apiUrlUsersBase = 'http://localhost:8000/users/';
+            const apiUrlEvidencesBase = 'http://localhost:8000/evidences/project/';
+            const apiUrlCriteria = 'http://localhost:8000/criteria';
 
             try {
                 const specificEvaluationResponse = await fetch(apiUrlEvaluationSpecific, {

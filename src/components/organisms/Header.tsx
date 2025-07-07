@@ -1,5 +1,6 @@
 import HeaderTittle from "../atoms/HeaderTittle";
 import Notifications from "../atoms/Notifications";
+import Configuracion from "../atoms/Configuracion";
 import ProfilePicture from "../atoms/ProfilePicture";
 import { useNavigate } from "react-router-dom";
 
@@ -37,7 +38,11 @@ const Header: React.FC = () => {
       <header style={{  height: "50px" ,display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", backgroundColor: "#ffffff" }}>
         <HeaderTittle onClick={handleLogoClick} />
         <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingRight:"10px" }}>
-          <Notifications />
+          {userType === 'Administrador' ? (
+            <Configuracion />
+          ) : (
+            <Notifications />
+          )}
           {userType !== 'Administrador' && (
             <ProfilePicture src= '' onClick={handleProfileClick} />
           )}

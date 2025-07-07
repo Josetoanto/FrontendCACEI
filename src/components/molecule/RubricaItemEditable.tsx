@@ -32,7 +32,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item }) => { 
         return;
       }
 
-      const apiUrl = `https://gcl58kpp-8000.use2.devtunnels.ms/criteria/${item.id}`;
+      const apiUrl = `http://localhost:8000/criteria/${item.id}`;
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
@@ -91,7 +91,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item }) => { 
             type="text"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
-            style={{ fontSize: "1em", fontWeight: "bold" }}
+            style={{ fontSize: "1em", fontWeight: "bold", width:"550px" }}
           />
         ) : (
           <span>{titulo}</span>

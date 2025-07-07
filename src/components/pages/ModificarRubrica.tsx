@@ -19,7 +19,7 @@ const ModificarRubrica: React.FC = () => {
           return;
         }
 
-        const apiUrl = 'https://gcl58kpp-8000.use2.devtunnels.ms/criteria';
+        const apiUrl = 'http://localhost:8000/criteria';
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${token}` // Añade el token al encabezado
