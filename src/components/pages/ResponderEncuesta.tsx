@@ -266,7 +266,7 @@ const ResponderEncuesta: React.FC = () => {
         const errorData = await response.json();
         throw new Error(`Error al ${hasResponded ? 'actualizar' : 'enviar'} las respuestas: ${response.status} - ${errorData.detail || response.statusText}`);
       }
-      const data = await response.json();
+      await response.json();
       // Si es anónimo, marcar como respondido
       if (codigoAnonimo) {
         try {

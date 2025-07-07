@@ -295,7 +295,6 @@ const PerfilDeEvaluador: React.FC = () => {
             },
             body: JSON.stringify(userDataToUpdate),
         });
-        const responseData = await userUpdateResponse.clone().json().catch(() => null);
         
 
         if (!userUpdateResponse.ok) {

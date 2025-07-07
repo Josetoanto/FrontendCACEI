@@ -429,7 +429,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                 },
                 body: JSON.stringify(notiBody)
               });
-              const notiData = await notiResp.json();
+              await notiResp.json();
               
             } catch (notificationError) {
               console.error('Error al enviar la notificación:', notificationError);
@@ -560,7 +560,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                         mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
                       };
                       
-                      const notiResp = await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
+                      await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
@@ -568,7 +568,6 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                         },
                         body: JSON.stringify(notiBody)
                       });
-                      const notiData = await notiResp.json();
                       
                     } catch (notificationError) {
                       console.error('Error al enviar la notificación:', notificationError);

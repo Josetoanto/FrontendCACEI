@@ -311,7 +311,7 @@ const PerfilDeUsuario: React.FC = () => {
         };
         
         // Update /users/:userId
-        const userUpdateResponse = await fetch(`https://egresados.it2id.cc/api/users/${idToUpdate}`, {
+       fetch(`https://egresados.it2id.cc/api/users/${idToUpdate}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
@@ -319,7 +319,6 @@ const PerfilDeUsuario: React.FC = () => {
             },
             body: JSON.stringify(userDataToUpdate),
         });
-        const responseData = await userUpdateResponse.clone().json().catch(() => null);
         
 
         // Prepare data for /professional-profiles/user/:userId endpoint
