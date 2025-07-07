@@ -51,7 +51,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch('http://localhost:8000/anonymous-emails', {
+      const response = await fetch('http://188.68.59.176:8000/anonymous-emails', {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -89,7 +89,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch('http://localhost:8000/anonymous-emails', {
+      const response = await fetch('http://188.68.59.176:8000/anonymous-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
       console.log('Estado actual antes de actualizar:', correos);
       console.log('Enviando actualización para ID:', editingId, 'con email:', editingEmail);
 
-      const response = await fetch(`http://localhost:8000/anonymous-emails/${editingId}`, {
+      const response = await fetch(`http://188.68.59.176:8000/anonymous-emails/${editingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
           return;
         }
 
-        const response = await fetch(`http://localhost:8000/anonymous-emails/${correo.id}`, {
+        const response = await fetch(`http://188.68.59.176:8000/anonymous-emails/${correo.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${userToken}`
@@ -320,7 +320,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
 
         for (const email of correosNuevos) {
           try {
-            const response = await fetch('http://localhost:8000/anonymous-emails', {
+            const response = await fetch('http://188.68.59.176:8000/anonymous-emails', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -379,7 +379,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
       }
 
       // Agregar el correo a la lista de autorizados
-      const response = await fetch('http://localhost:8000/anonymous-emails', {
+      const response = await fetch('http://188.68.59.176:8000/anonymous-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -401,7 +401,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
       // Enviar invitación inmediatamente si estamos en modo edición
       if (isEditMode && surveyId) {
         try {
-          const invitationResponse = await fetch('http://localhost:8000/anonymous-invitations', {
+          const invitationResponse = await fetch('http://188.68.59.176:8000/anonymous-invitations', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -421,7 +421,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                 mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
               };
               console.log('Enviando notificación con body:', notiBody);
-              const notiResp = await fetch('http://localhost:8000/notifications/anonymous', {
+              const notiResp = await fetch('http://188.68.59.176:8000/notifications/anonymous', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -522,7 +522,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         for (const email of correosNuevos) {
           try {
             // Agregar correo a la lista de autorizados
-            const response = await fetch('http://localhost:8000/anonymous-emails', {
+            const response = await fetch('http://188.68.59.176:8000/anonymous-emails', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -539,7 +539,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
               // Enviar invitación si estamos en modo edición
               if (isEditMode && surveyId) {
                 try {
-                  const invitationResponse = await fetch('http://localhost:8000/anonymous-invitations', {
+                  const invitationResponse = await fetch('http://188.68.59.176:8000/anonymous-invitations', {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -560,7 +560,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                         mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
                       };
                       console.log('Enviando notificación con body:', notiBody);
-                      const notiResp = await fetch('http://localhost:8000/notifications/anonymous', {
+                      const notiResp = await fetch('http://188.68.59.176:8000/notifications/anonymous', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
@@ -635,7 +635,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
         return;
       }
 
-      const response = await fetch(`http://localhost:8000/anonymous-invitations/survey/${surveyId}`, {
+      const response = await fetch(`http://188.68.59.176:8000/anonymous-invitations/survey/${surveyId}`, {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }

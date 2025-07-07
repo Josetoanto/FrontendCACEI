@@ -67,7 +67,7 @@ const PerfilDeEvaluador: React.FC = () => {
 
         try {
             // Fetch user basic data
-            const userResponse = await fetch(`http://localhost:8000/users/${idToFetch}`, {
+            const userResponse = await fetch(`http://188.68.59.176:8000/users/${idToFetch}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -84,7 +84,7 @@ const PerfilDeEvaluador: React.FC = () => {
             }
 
             // Fetch professional profile data
-            const profileResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToFetch}`, {
+            const profileResponse = await fetch(`http://188.68.59.176:8000/professional-profiles/user/${idToFetch}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -124,7 +124,7 @@ const PerfilDeEvaluador: React.FC = () => {
                     linkedin_url: "https://www.linkedin.com/in/usuario"
                 };
 
-                const createProfileResponse = await fetch(`http://localhost:8000/professional-profiles`, {
+                const createProfileResponse = await fetch(`http://188.68.59.176:8000/professional-profiles`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${userToken}`,
@@ -137,7 +137,7 @@ const PerfilDeEvaluador: React.FC = () => {
                     console.log(`Perfil profesional creado para el usuario ID: ${idToFetch}`);
                     console.log('Professional profile created successfully.');
                     // Re-fetch the newly created profile
-                    const newProfileResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToFetch}`, {
+                    const newProfileResponse = await fetch(`http://188.68.59.176:8000/professional-profiles/user/${idToFetch}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${userToken}`,
@@ -287,7 +287,7 @@ const PerfilDeEvaluador: React.FC = () => {
         console.log('Objeto FINAL a enviar en PUT:', userDataToUpdate);
 
         // Update /users/:userId
-        const userUpdateResponse = await fetch(`http://localhost:8000/users/${idToUpdate}`, {
+        const userUpdateResponse = await fetch(`http://188.68.59.176:8000/users/${idToUpdate}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
@@ -326,7 +326,7 @@ const PerfilDeEvaluador: React.FC = () => {
 
         try {
             // Update /professional-profiles/user/:userId
-            const profileUpdateResponse = await fetch(`http://localhost:8000/professional-profiles/user/${idToUpdate}`, {
+            const profileUpdateResponse = await fetch(`http://188.68.59.176:8000/professional-profiles/user/${idToUpdate}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,

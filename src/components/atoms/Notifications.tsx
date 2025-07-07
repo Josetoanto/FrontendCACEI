@@ -31,7 +31,7 @@ const Notifications: React.FC = () => {
   useEffect(() => {
     if (!token || !tipoUsuario) return;
     setLoading(true);
-    fetch('http://localhost:8000/notifications/user', {
+    fetch('http://188.68.59.176:8000/notifications/user', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -43,7 +43,7 @@ const Notifications: React.FC = () => {
         const filtradas: NotificacionConEncuesta[] = [];
         for (const noti of data) {
           try {
-            const res = await fetch(`http://localhost:8000/surveys/${noti.encuesta_id}`, {
+            const res = await fetch(`http://188.68.59.176:8000/surveys/${noti.encuesta_id}`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }

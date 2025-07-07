@@ -75,7 +75,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     try {
-      const surveyResponse = await fetch(`http://localhost:8000/surveys/${surveyId}`, {
+      const surveyResponse = await fetch(`http://188.68.59.176:8000/surveys/${surveyId}`, {
         headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
@@ -106,7 +106,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     try {
-      const questionsResponse = await fetch(`http://localhost:8000/questions/survey/${surveyId}`, {
+      const questionsResponse = await fetch(`http://188.68.59.176:8000/questions/survey/${surveyId}`, {
         headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
@@ -132,7 +132,7 @@ const ResponderEncuesta: React.FC = () => {
     if (codigoAnonimo) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/responses/survey/${surveyId}`, {
+      const response = await fetch(`http://188.68.59.176:8000/responses/survey/${surveyId}`, {
         headers: { 'Authorization': `Bearer ${userToken}` },
       });
 
@@ -235,8 +235,8 @@ const ResponderEncuesta: React.FC = () => {
     // Determinar el método y la URL de la API
     let method = hasResponded ? 'PUT' : 'POST';
     let apiUrl = hasResponded 
-      ? `http://localhost:8000/responses/${userResponseId}`
-      : `http://localhost:8000/responses/`;
+      ? `http://188.68.59.176:8000/responses/${userResponseId}`
+      : `http://188.68.59.176:8000/responses/`;
     
     let bodyToSend = requestBody;
     let headers: any = {
@@ -244,7 +244,7 @@ const ResponderEncuesta: React.FC = () => {
     };
     // Si es anónimo, usar endpoint especial y sin token
     if (codigoAnonimo) {
-      apiUrl = 'http://localhost:8000/responses/anonymous/';
+      apiUrl = 'http://188.68.59.176:8000/responses/anonymous/';
       method = 'POST';
       bodyToSend = requestBody;
       headers = { 'Content-Type': 'application/json' };
@@ -270,7 +270,7 @@ const ResponderEncuesta: React.FC = () => {
       // Si es anónimo, marcar como respondido
       if (codigoAnonimo) {
         try {
-          await fetch(`http://localhost:8000/anonymous-invitations/code/${codigoAnonimo}/mark-responded`, {
+          await fetch(`http://188.68.59.176:8000/anonymous-invitations/code/${codigoAnonimo}/mark-responded`, {
             method: 'PUT',
           });
           localStorage.removeItem('codigoEncuestaAnonima');
@@ -299,14 +299,14 @@ const ResponderEncuesta: React.FC = () => {
 
       // --- MARCAR NOTIFICACIONES COMO RESPONDIDAS ---
       try {
-        const notiRes = await fetch('http://localhost:8000/notifications/user', {
+        const notiRes = await fetch('http://188.68.59.176:8000/notifications/user', {
           headers: { 'Authorization': `Bearer ${userToken}` }
         });
         if (notiRes.ok) {
           const notificaciones = await notiRes.json();
           const relacionadas = notificaciones.filter((n: any) => n.encuesta_id === surveyId);
           for (const noti of relacionadas) {
-            await fetch(`http://localhost:8000/notifications/${noti.id}/mark-responded`, {
+            await fetch(`http://188.68.59.176:8000/notifications/${noti.id}/mark-responded`, {
               method: 'PUT',
               headers: { 'Authorization': `Bearer ${userToken}` }
             });

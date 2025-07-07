@@ -57,7 +57,7 @@ const CambiarContrasenaModal: React.FC<CambiarContrasenaModalProps> = ({ show, o
         return;
       }
       // Obtener datos actuales del usuario
-      const getResponse = await fetch(`http://localhost:8000/users/${userId}`, {
+      const getResponse = await fetch(`http://188.68.59.176:8000/users/${userId}`, {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -81,7 +81,7 @@ const CambiarContrasenaModal: React.FC<CambiarContrasenaModalProps> = ({ show, o
         profile_picture: userInfo.profile_picture
       };
       // Actualizar usuario con nueva contraseña
-      const putResponse = await fetch(`http://localhost:8000/users/${userId}`, {
+      const putResponse = await fetch(`http://188.68.59.176:8000/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -18,7 +18,7 @@ interface Usuario {
   profile_picture?: string;
 }
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://188.68.59.176:8000';
 
 const GestionUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);

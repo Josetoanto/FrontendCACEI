@@ -25,7 +25,7 @@ const HomeEgresado: React.FC = () => {
         }
 
         try {
-            const apiUrl = 'http://localhost:8000/surveys/';
+            const apiUrl = 'http://188.68.59.176:8000/surveys/';
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -85,7 +85,7 @@ const HomeEgresado: React.FC = () => {
         }
 
         try {
-            const apiUrl = 'http://localhost:8000/projects';
+            const apiUrl = 'http://188.68.59.176:8000/projects';
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {

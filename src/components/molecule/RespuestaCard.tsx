@@ -49,7 +49,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/responses/question/${questionId}`, {
+      const response = await fetch(`http://188.68.59.176:8000/responses/question/${questionId}`, {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
 
