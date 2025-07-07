@@ -33,7 +33,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/perfil/:userId" element={<ProtectedRoute><PerfilDeUsuario /></ProtectedRoute>} />
                 <Route path="/perfilEvaluador" element={<ProtectedRoute><PerfilDeEvaluador /></ProtectedRoute>} />
                 <Route path="/crearEncuesta/:id?" element={<ProtectedRoute><CrearEncuesta /></ProtectedRoute>} />
-                <Route path="/responderEncuesta/:id" element={<ProtectedRoute><ResponderEncuesta /></ProtectedRoute>} />
+                <Route path="/responderEncuesta/:id" element={<ResponderEncuesta />} />
                 <Route path="/modificar-rubrica" element={<ProtectedRoute><ModificarRubrica /></ProtectedRoute>} />
                 <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
                 <Route path="/gestion-usuarios" element={<ProtectedRoute><GestionUsuarios /></ProtectedRoute>} />
