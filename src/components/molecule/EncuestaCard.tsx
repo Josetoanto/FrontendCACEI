@@ -54,7 +54,7 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         return;
       }
 
-      const apiUrl = `https://188.68.59.176:8000/surveys/${id}`;
+      const apiUrl = `https://egresados.it2id.cc/api/surveys/${id}`;
 
       try {
         const response = await fetch(apiUrl, {

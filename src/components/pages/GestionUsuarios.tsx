@@ -18,7 +18,7 @@ interface Usuario {
   profile_picture?: string;
 }
 
-const API_URL = 'https://188.68.59.176:8000';
+const API_URL = 'https://egresados.it2id.cc/api';
 
 const GestionUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);

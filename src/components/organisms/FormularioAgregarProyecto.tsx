@@ -68,7 +68,7 @@ const FormularioAgregarProyecto: React.FC = () => {
 
     // 1. Crear Proyecto
     try {
-      const projectApiUrl = 'https://188.68.59.176:8000/projects';
+      const projectApiUrl = 'https://egresados.it2id.cc/api/projects';
       const projectResponse = await fetch(projectApiUrl, {
         method: 'POST',
         headers: {
@@ -95,7 +95,7 @@ const FormularioAgregarProyecto: React.FC = () => {
       const projectId = projectData.id; // Obtener el ID del proyecto recién creado
 
       // 2. Crear Evidencias
-      const evidenceApiUrl = 'https://188.68.59.176:8000/evidences';
+      const evidenceApiUrl = 'https://egresados.it2id.cc/api/evidences';
 
       for (const evidencia of evidencias) {
         if (evidencia.tipo === 'archivo') {

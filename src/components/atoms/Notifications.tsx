@@ -31,7 +31,7 @@ const Notifications: React.FC = () => {
   useEffect(() => {
     if (!token || !tipoUsuario) return;
     setLoading(true);
-    fetch('https://188.68.59.176:8000/notifications/user', {
+    fetch('https://egresados.it2id.cc/api/notifications/user', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -43,7 +43,7 @@ const Notifications: React.FC = () => {
         const filtradas: NotificacionConEncuesta[] = [];
         for (const noti of data) {
           try {
-            const res = await fetch(`https://188.68.59.176:8000/surveys/${noti.encuesta_id}`, {
+            const res = await fetch(`https://egresados.it2id.cc/api/surveys/${noti.encuesta_id}`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }

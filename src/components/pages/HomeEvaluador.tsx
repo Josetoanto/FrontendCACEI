@@ -25,7 +25,7 @@ const HomeEvaluador: React.FC = () => {
         }
 
         try {
-            const apiUrl = 'https://188.68.59.176:8000/surveys/';
+            const apiUrl = 'https://egresados.it2id.cc/api/surveys/';
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -86,7 +86,7 @@ const HomeEvaluador: React.FC = () => {
 
         try {
             // Obtener todos los proyectos
-            const projectsApiUrl = 'https://188.68.59.176:8000/projects';
+            const projectsApiUrl = 'https://egresados.it2id.cc/api/projects';
             const projectsResponse = await fetch(projectsApiUrl, {
                 method: 'GET',
                 headers: {
@@ -103,7 +103,7 @@ const HomeEvaluador: React.FC = () => {
             const allProjects = await projectsResponse.json();
 
             // Obtener todas las evaluaciones
-            const evaluationsApiUrl = 'https://188.68.59.176:8000/evaluations';
+            const evaluationsApiUrl = 'https://egresados.it2id.cc/api/evaluations';
             const evaluationsResponse = await fetch(evaluationsApiUrl, {
                 method: 'GET',
                 headers: {
@@ -123,7 +123,7 @@ const HomeEvaluador: React.FC = () => {
             const egresadoIdsRaw = allProjects.map((p: any) => p.egresado_id);
             const uniqueEgresadoIds: number[] = [...new Set(egresadoIdsRaw as number[])];
             const userPromises = uniqueEgresadoIds.map(async (egresadoId: number) => {
-              const userResponse = await fetch(`https://188.68.59.176:8000/users/${egresadoId}`, {
+              const userResponse = await fetch(`https://egresados.it2id.cc/api/users/${egresadoId}`, {
                   method: 'GET',
                   headers: {
                       'Authorization': `Bearer ${userToken}`,

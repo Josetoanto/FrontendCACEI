@@ -32,7 +32,7 @@ const RubricaItemEditable: React.FC<RubricaItemEditableProps> = ({ item }) => { 
         return;
       }
 
-      const apiUrl = `https://188.68.59.176:8000/criteria/${item.id}`;
+      const apiUrl = `https://egresados.it2id.cc/api/criteria/${item.id}`;
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {

@@ -35,7 +35,7 @@ const EvaluacionProyecto: React.FC = () => {
                 };
 
                 // Fetch project data
-                const projectResponse = await fetch(`https://188.68.59.176:8000/projects/${evaluationId}`, {
+                const projectResponse = await fetch(`https://egresados.it2id.cc/api/projects/${evaluationId}`, {
                     headers: headers,
                 });
                 if (!projectResponse.ok) {
@@ -53,7 +53,7 @@ const EvaluacionProyecto: React.FC = () => {
                 }
 
                 // Fetch evidence data using projectData.id
-                const evidenceResponse = await fetch(`https://188.68.59.176:8000/evidences/project/${projectData.id}`, {
+                const evidenceResponse = await fetch(`https://egresados.it2id.cc/api/evidences/project/${projectData.id}`, {
                     headers: headers,
                 });
                 if (!evidenceResponse.ok) {
@@ -63,7 +63,7 @@ const EvaluacionProyecto: React.FC = () => {
                 setEvidenceFiles(evidenceData || []);
 
                 // Fetch user data using egresado_id from project data
-                const userResponse = await fetch(`https://188.68.59.176:8000/users/${projectData.egresado_id}`, {
+                const userResponse = await fetch(`https://egresados.it2id.cc/api/users/${projectData.egresado_id}`, {
                     headers: headers,
                 });
                 if (!userResponse.ok) {
@@ -154,7 +154,7 @@ const EvaluacionProyecto: React.FC = () => {
       };
 
       try {
-        const response = await fetch('https://188.68.59.176:8000/evaluations', {
+        const response = await fetch('https://egresados.it2id.cc/api/evaluations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

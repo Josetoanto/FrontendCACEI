@@ -29,7 +29,7 @@ const Home: React.FC = () => {
             
             // Verificar si el usuario es Administrador
             if (userData.tipo === 'Administrador') {
-                const apiUrl = 'https://188.68.59.176:8000/surveys/';
+                const apiUrl = 'https://egresados.it2id.cc/api/surveys/';
 
                 const response = await fetch(apiUrl, {
                     method: 'GET',

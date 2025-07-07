@@ -23,7 +23,7 @@ const IngresarCodigo: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://188.68.59.176:8000/anonymous-invitations/code/${codigo.trim()}`
+        `https://egresados.it2id.cc/api/anonymous-invitations/code/${codigo.trim()}`
       );
       if (!response.ok) {
         await Swal.fire({

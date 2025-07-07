@@ -24,9 +24,9 @@ const Proyectos: React.FC = () => {
         return;
       }
 
-      const apiUrlEvaluations = 'https://188.68.59.176:8000/evaluations';
-      const apiUrlProjectsBase = 'https://188.68.59.176:8000/projects/';
-      const apiUrlUsersBase = 'https://188.68.59.176:8000/users/'; // API de usuarios
+      const apiUrlEvaluations = 'https://egresados.it2id.cc/api/evaluations';
+      const apiUrlProjectsBase = 'https://egresados.it2id.cc/api/projects/';
+      const apiUrlUsersBase = 'https://egresados.it2id.cc/api/users/'; // API de usuarios
 
       try {
         // 1. Fetch evaluations

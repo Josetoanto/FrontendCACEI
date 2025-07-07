@@ -75,7 +75,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     try {
-      const surveyResponse = await fetch(`https://188.68.59.176:8000/surveys/${surveyId}`, {
+      const surveyResponse = await fetch(`https://egresados.it2id.cc/api/surveys/${surveyId}`, {
         headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
@@ -106,7 +106,7 @@ const ResponderEncuesta: React.FC = () => {
     }
 
     try {
-      const questionsResponse = await fetch(`https://188.68.59.176:8000/questions/survey/${surveyId}`, {
+      const questionsResponse = await fetch(`https://egresados.it2id.cc/api/questions/survey/${surveyId}`, {
         headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
       });
 
@@ -132,7 +132,7 @@ const ResponderEncuesta: React.FC = () => {
     if (codigoAnonimo) return;
 
     try {
-      const response = await fetch(`https://188.68.59.176:8000/responses/survey/${surveyId}`, {
+      const response = await fetch(`https://egresados.it2id.cc/api/responses/survey/${surveyId}`, {
         headers: { 'Authorization': `Bearer ${userToken}` },
       });
 
@@ -235,8 +235,8 @@ const ResponderEncuesta: React.FC = () => {
     // Determinar el método y la URL de la API
     let method = hasResponded ? 'PUT' : 'POST';
     let apiUrl = hasResponded 
-      ? `https://188.68.59.176:8000/responses/${userResponseId}`
-      : `https://188.68.59.176:8000/responses/`;
+      ? `https://egresados.it2id.cc/api/responses/${userResponseId}`
+      : `https://egresados.it2id.cc/api/responses/`;
     
     let bodyToSend = requestBody;
     let headers: any = {
@@ -244,7 +244,7 @@ const ResponderEncuesta: React.FC = () => {
     };
     // Si es anónimo, usar endpoint especial y sin token
     if (codigoAnonimo) {
-      apiUrl = 'https://188.68.59.176:8000/responses/anonymous/';
+      apiUrl = 'https://egresados.it2id.cc/api/responses/anonymous/';
       method = 'POST';
       bodyToSend = requestBody;
       headers = { 'Content-Type': 'application/json' };
@@ -270,7 +270,7 @@ const ResponderEncuesta: React.FC = () => {
       // Si es anónimo, marcar como respondido
       if (codigoAnonimo) {
         try {
-          await fetch(`https://188.68.59.176:8000/anonymous-invitations/code/${codigoAnonimo}/mark-responded`, {
+          await fetch(`https://egresados.it2id.cc/api/anonymous-invitations/code/${codigoAnonimo}/mark-responded`, {
             method: 'PUT',
           });
           localStorage.removeItem('codigoEncuestaAnonima');
@@ -299,14 +299,14 @@ const ResponderEncuesta: React.FC = () => {
 
       // --- MARCAR NOTIFICACIONES COMO RESPONDIDAS ---
       try {
-        const notiRes = await fetch('https://188.68.59.176:8000/notifications/user', {
+        const notiRes = await fetch('https://egresados.it2id.cc/api/notifications/user', {
           headers: { 'Authorization': `Bearer ${userToken}` }
         });
         if (notiRes.ok) {
           const notificaciones = await notiRes.json();
           const relacionadas = notificaciones.filter((n: any) => n.encuesta_id === surveyId);
           for (const noti of relacionadas) {
-            await fetch(`https://188.68.59.176:8000/notifications/${noti.id}/mark-responded`, {
+            await fetch(`https://egresados.it2id.cc/api/notifications/${noti.id}/mark-responded`, {
               method: 'PUT',
               headers: { 'Authorization': `Bearer ${userToken}` }
             });

@@ -38,7 +38,7 @@ const Proyecto: React.FC<ProyectoProps> = ({ id, nombre, fecha, onDelete, isOpen
     }
 
     try {
-      const apiUrl = `https://188.68.59.176:8000/projects/${id}`;
+      const apiUrl = `https://egresados.it2id.cc/api/projects/${id}`;
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
