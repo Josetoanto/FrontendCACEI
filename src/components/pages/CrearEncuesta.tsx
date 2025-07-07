@@ -360,7 +360,7 @@ const CrearEncuesta: React.FC = () => {
 
       // Si la encuesta es anónima o de autoevaluación, enviar invitaciones y notificaciones automáticamente
       if (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') {
-        const invitacionesRes = await enviarInvitaciones(surveyIdToUse);
+        await enviarInvitaciones(surveyIdToUse);
         
         // Enviar notificación a todos los invitados
         try {
@@ -378,7 +378,7 @@ const CrearEncuesta: React.FC = () => {
             },
             body: JSON.stringify(notiBody)
           });
-          const notiData = await notiResp.json();
+          await notiResp.json();
           
         } catch (notificationError) {
           console.error('Error al enviar la notificación automática:', notificationError);
