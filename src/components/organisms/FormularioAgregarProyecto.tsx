@@ -68,7 +68,7 @@ const FormularioAgregarProyecto: React.FC = () => {
 
     // 1. Crear Proyecto
     try {
-      const projectApiUrl = 'http://188.68.59.176:8000/projects';
+      const projectApiUrl = 'https://188.68.59.176:8000/projects';
       const projectResponse = await fetch(projectApiUrl, {
         method: 'POST',
         headers: {
@@ -95,7 +95,7 @@ const FormularioAgregarProyecto: React.FC = () => {
       const projectId = projectData.id; // Obtener el ID del proyecto recién creado
 
       // 2. Crear Evidencias
-      const evidenceApiUrl = 'http://188.68.59.176:8000/evidences';
+      const evidenceApiUrl = 'https://188.68.59.176:8000/evidences';
 
       for (const evidencia of evidencias) {
         if (evidencia.tipo === 'archivo') {

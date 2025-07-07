@@ -27,12 +27,12 @@ const Revision: React.FC = () => {
                 return;
             }
 
-            const apiUrlEvaluations = 'http://188.68.59.176:8000/evaluations';
-            const apiUrlEvaluationSpecific = `http://188.68.59.176:8000/evaluations/${evaluationId}`;
-            const apiUrlProjectsBase = 'http://188.68.59.176:8000/projects/';
-            const apiUrlUsersBase = 'http://188.68.59.176:8000/users/';
-            const apiUrlEvidencesBase = 'http://188.68.59.176:8000/evidences/project/';
-            const apiUrlCriteria = 'http://188.68.59.176:8000/criteria';
+            const apiUrlEvaluations = 'https://188.68.59.176:8000/evaluations';
+            const apiUrlEvaluationSpecific = `https://188.68.59.176:8000/evaluations/${evaluationId}`;
+            const apiUrlProjectsBase = 'https://188.68.59.176:8000/projects/';
+            const apiUrlUsersBase = 'https://188.68.59.176:8000/users/';
+            const apiUrlEvidencesBase = 'https://188.68.59.176:8000/evidences/project/';
+            const apiUrlCriteria = 'https://188.68.59.176:8000/criteria';
 
             try {
                 const specificEvaluationResponse = await fetch(apiUrlEvaluationSpecific, {

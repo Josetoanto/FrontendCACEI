@@ -8,7 +8,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const apiUrl = 'http://188.68.59.176:8000/users/login';
+    const apiUrl = 'https://188.68.59.176:8000/users/login';
 
     try {
       const response = await fetch(apiUrl, {

@@ -19,7 +19,7 @@ const ModificarRubrica: React.FC = () => {
           return;
         }
 
-        const apiUrl = 'http://188.68.59.176:8000/criteria';
+        const apiUrl = 'https://188.68.59.176:8000/criteria';
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${token}` // Añade el token al encabezado

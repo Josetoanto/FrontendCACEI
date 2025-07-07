@@ -92,7 +92,7 @@ const CrearEncuesta: React.FC = () => {
 
     try {
       // Fetch Survey Details
-      const surveyResponse = await fetch(`http://188.68.59.176:8000/surveys/${id}`, {
+      const surveyResponse = await fetch(`https://188.68.59.176:8000/surveys/${id}`, {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
       if (!surveyResponse.ok) throw new Error(`Error al cargar la encuesta: ${surveyResponse.statusText}`);
@@ -108,7 +108,7 @@ const CrearEncuesta: React.FC = () => {
       console.log('Datos de encuesta cargados/actualizados:', formattedSurvey);
 
       // Fetch Questions
-      const questionsResponse = await fetch(`http://188.68.59.176:8000/questions/survey/${id}`, {
+      const questionsResponse = await fetch(`https://188.68.59.176:8000/questions/survey/${id}`, {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
       if (!questionsResponse.ok) throw new Error(`Error al cargar las preguntas: ${questionsResponse.statusText}`);
@@ -159,7 +159,7 @@ const CrearEncuesta: React.FC = () => {
       if (!isEditMode) {
           // Creation Mode: POST survey first
           console.log('Creando nueva encuesta:', latestSurveyData.current);
-          const createSurveyResponse = await fetch('http://188.68.59.176:8000/surveys/', {
+          const createSurveyResponse = await fetch('https://188.68.59.176:8000/surveys/', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const CrearEncuesta: React.FC = () => {
           
           // Crear notificación para la nueva encuesta
           try {
-            const notificationResponse = await fetch('http://188.68.59.176:8000/notifications', {
+            const notificationResponse = await fetch('https://188.68.59.176:8000/notifications', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ const CrearEncuesta: React.FC = () => {
       } else {
           // Edit Mode: PUT survey
           console.log('Actualizando encuesta existente:', latestSurveyData.current);
-          const surveyResponse = await fetch(`http://188.68.59.176:8000/surveys/${latestSurveyData.current.id}`, {
+          const surveyResponse = await fetch(`https://188.68.59.176:8000/surveys/${latestSurveyData.current.id}`, {
               method: 'PUT',
               headers: {
                   'Content-Type': 'application/json',
@@ -310,7 +310,7 @@ const CrearEncuesta: React.FC = () => {
 
         if (question.id && question.id !== 0) { // If question has an ID, update it
           console.log(`Actualizando pregunta ${question.id}:`, question);
-          const questionResponse = await fetch(`http://188.68.59.176:8000/questions/${question.id}`, {
+          const questionResponse = await fetch(`https://188.68.59.176:8000/questions/${question.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -325,7 +325,7 @@ const CrearEncuesta: React.FC = () => {
           }
         } else { // If question doesn't have an ID, create it (new)
           console.log('Creando nueva pregunta:', question);
-          const createQuestionResponse = await fetch(`http://188.68.59.176:8000/questions/`, {
+          const createQuestionResponse = await fetch(`https://188.68.59.176:8000/questions/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -344,7 +344,7 @@ const CrearEncuesta: React.FC = () => {
       // Delete questions marked for deletion
       for (const questionId of questionsToDelete) {
         console.log(`Eliminando pregunta con ID: ${questionId}`);
-        const deleteQuestionResponse = await fetch(`http://188.68.59.176:8000/questions/${questionId}`, {
+        const deleteQuestionResponse = await fetch(`https://188.68.59.176:8000/questions/${questionId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${userToken}`
@@ -370,7 +370,7 @@ const CrearEncuesta: React.FC = () => {
             mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
           };
           console.log('Enviando notificación automática con body:', notiBody);
-          const notiResp = await fetch('http://188.68.59.176:8000/notifications/anonymous', {
+          const notiResp = await fetch('https://188.68.59.176:8000/notifications/anonymous', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -405,7 +405,7 @@ const CrearEncuesta: React.FC = () => {
       }
 
       // Obtener la lista de correos autorizados
-      const emailsResponse = await fetch('http://188.68.59.176:8000/anonymous-emails', {
+      const emailsResponse = await fetch('https://188.68.59.176:8000/anonymous-emails', {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -432,7 +432,7 @@ const CrearEncuesta: React.FC = () => {
       for (const email of uniqueEmails) {
         try {
           console.log("Enviando invitación a:", email);
-          const invitationResponse = await fetch('http://188.68.59.176:8000/anonymous-invitations', {
+          const invitationResponse = await fetch('https://188.68.59.176:8000/anonymous-invitations', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

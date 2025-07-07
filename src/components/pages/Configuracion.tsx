@@ -91,7 +91,7 @@ const Configuracion: React.FC = () => {
       }
 
       // Obtener datos actuales del usuario
-      const getResponse = await fetch(`http://188.68.59.176:8000/users/${userId}`, {
+      const getResponse = await fetch(`https://188.68.59.176:8000/users/${userId}`, {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
@@ -117,7 +117,7 @@ const Configuracion: React.FC = () => {
       };
 
       // Actualizar usuario con nueva contraseña
-      const putResponse = await fetch(`http://188.68.59.176:8000/users/${userId}`, {
+      const putResponse = await fetch(`https://188.68.59.176:8000/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

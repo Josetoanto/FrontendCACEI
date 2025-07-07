@@ -23,7 +23,7 @@ const IngresarCodigo: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://188.68.59.176:8000/anonymous-invitations/code/${codigo.trim()}`
+        `https://188.68.59.176:8000/anonymous-invitations/code/${codigo.trim()}`
       );
       if (!response.ok) {
         await Swal.fire({

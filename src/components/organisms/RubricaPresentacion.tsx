@@ -18,7 +18,7 @@ const RubricaPresentacion: React.FC<RubricaPresentacionProps> = ({ onRubricasCha
       };
 
       try {
-        const response = await fetch('http://188.68.59.176:8000/criteria', {
+        const response = await fetch('https://188.68.59.176:8000/criteria', {
           headers: headers,
         });
         if (!response.ok) {
