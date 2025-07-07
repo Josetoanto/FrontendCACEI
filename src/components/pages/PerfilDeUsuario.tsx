@@ -428,25 +428,6 @@ const PerfilDeUsuario: React.FC = () => {
             showEditButton={showEditButton}
             onBasicInfoChange={handleBasicInfoChange}
           />
-        {showEditButton && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
-            <button
-              onClick={() => setShowCambiarContrasena(true)}
-              style={{
-                backgroundColor: '#1976d2',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '8px 18px',
-                cursor: 'pointer',
-                fontWeight: 500
-              }}
-            >
-              Cambiar contraseña
-            </button>
-          </div>
-        )}
-        <CambiarContrasenaModal show={showCambiarContrasena} onClose={() => setShowCambiarContrasena(false)} />
         {isEditing ? null : <p style={{padding:"15px"}}>{userData.descripcion}</p>}
         
         {showEditButton && isEditing ? (
@@ -468,6 +449,26 @@ const PerfilDeUsuario: React.FC = () => {
         ) : (
           <ListaDeCursos cursos={cursosData} isEditing={isEditing} setCursos={setCursosData} linkedinUrl={linkedinUrl} />
         )}
+
+        {showEditButton && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
+            <button
+              onClick={() => setShowCambiarContrasena(true)}
+              style={{
+                backgroundColor: '#1976d2',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Cambiar contraseña
+            </button>
+          </div>
+        )}
+        <CambiarContrasenaModal show={showCambiarContrasena} onClose={() => setShowCambiarContrasena(false)} />
 
         {showEditButton && isEditing && (
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "20px" }}>

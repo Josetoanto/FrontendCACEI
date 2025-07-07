@@ -386,6 +386,16 @@ const PerfilDeEvaluador: React.FC = () => {
             showEditButton={showEditButton}
             onBasicInfoChange={handleBasicInfoChange}
           />
+        {isEditing ? null : <p style={{padding:"15px"}}>{userData.descripcion}</p>}
+        
+        {showEditButton && <Educacion educacion={educacionData} isEditing={isEditing} setEducacion={setEducacionData} toggleEditing={toggleEditing} />}
+        
+        {showEditButton && isEditing ? (
+          <EditarHabilidades habilidades={habilidadesData} setHabilidades={setHabilidadesData} />
+        ) : (
+          <ListaDeHabilidades habilidades={habilidadesData} isEditing={isEditing} setHabilidades={setHabilidadesData} />
+        )}
+
         {showEditButton && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
             <button
@@ -405,15 +415,6 @@ const PerfilDeEvaluador: React.FC = () => {
           </div>
         )}
         <CambiarContrasenaModal show={showCambiarContrasena} onClose={() => setShowCambiarContrasena(false)} />
-        {isEditing ? null : <p style={{padding:"15px"}}>{userData.descripcion}</p>}
-        
-        {showEditButton && <Educacion educacion={educacionData} isEditing={isEditing} setEducacion={setEducacionData} toggleEditing={toggleEditing} />}
-        
-        {showEditButton && isEditing ? (
-          <EditarHabilidades habilidades={habilidadesData} setHabilidades={setHabilidadesData} />
-        ) : (
-          <ListaDeHabilidades habilidades={habilidadesData} isEditing={isEditing} setHabilidades={setHabilidadesData} />
-        )}
 
         {showEditButton && isEditing && (
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "20px" }}>
