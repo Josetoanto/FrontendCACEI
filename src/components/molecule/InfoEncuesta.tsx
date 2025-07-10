@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
 
 interface Survey {
   id: number;
@@ -19,18 +19,31 @@ interface InfoEncuestaProps {
 const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData, setSurveyData }) => {
   const [titulo, setTitulo] = useState(surveyData?.titulo || "Encuesta sin título");
   const [descripcion, setDescripcion] = useState(surveyData?.descripcion || "Descripción de la encuesta...");
+  const [tituloError, setTituloError] = useState(false);
+  const descripcionRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (surveyData) {
       setTitulo(surveyData.titulo);
       setDescripcion(surveyData.descripcion);
-      
     }
   }, [surveyData]);
+
+  useEffect(() => {
+    if (descripcionRef.current) {
+      descripcionRef.current.style.height = 'auto';
+      descripcionRef.current.style.height = `${descripcionRef.current.scrollHeight}px`;
+    }
+  }, [descripcion]);
 
   const handleTituloChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitulo(newTitle);
+    
+    // Validar título vacío
+    const isEmpty = !newTitle || newTitle.trim() === '';
+    setTituloError(isEmpty);
+    
     if (setSurveyData) {
       setSurveyData(prev => prev ? { ...prev, titulo: newTitle } : null);
     }
@@ -67,23 +80,36 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
 
       {/* Título y descripción: modo solo lectura o editable */}
       {editable ? (
-        <input 
-          type="text"
-          value={titulo}
-          onChange={handleTituloChange}
-          style={{
-            width: "100%",
-            fontSize: "28px",
-            fontWeight: "bold",
-            padding:"20px",
-            border: "none",
-            outline: "none",
-            backgroundColor: "transparent",
-            paddingBottom:"15px",
-            paddingTop:"5px",
-            maxWidth:"600px"
-          }}
-        />
+        <div>
+          <input 
+            type="text"
+            value={titulo}
+            onChange={handleTituloChange}
+            style={{
+              width: "100%",
+              fontSize: "28px",
+              fontWeight: "bold",
+              padding:"20px",
+              border: tituloError ? "2px solid #dc3545" : "none",
+              outline: "none",
+              backgroundColor: "transparent",
+              paddingBottom:"15px",
+              paddingTop:"5px",
+              maxWidth:"600px",
+              borderRadius: tituloError ? "4px" : "0"
+            }}
+          />
+                      {tituloError && (
+              <div style={{
+                color: "#dc3545",
+                fontSize: "14px",
+                marginLeft: "20px",
+                marginTop: "4px"
+              }}>
+                El título de la encuesta es obligatorio
+              </div>
+            )}
+        </div>
       ) : (
         <div style={{
           width: "100%",
@@ -94,13 +120,21 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
           paddingTop:"5px",
           maxWidth:"600px",
           color: '#333',
+          wordBreak: 'break-word',
         }}>{titulo}</div>
       )}
 
       {editable ? (
         <textarea 
+          ref={descripcionRef}
           value={descripcion}
           onChange={handleDescripcionChange}
+          onInput={() => {
+            if (descripcionRef.current) {
+              descripcionRef.current.style.height = 'auto';
+              descripcionRef.current.style.height = `${descripcionRef.current.scrollHeight}px`;
+            }
+          }}
           style={{
             width: "90%",
             fontSize: "16px",
@@ -115,6 +149,8 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
             minHeight: "50px",
             overflowY: "hidden",
             fontFamily: "Arial, sans-serif",
+            boxSizing: 'border-box',
+            wordBreak: 'break-word',
           }}
           readOnly={false}
           rows={2}
@@ -130,6 +166,7 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
           minHeight: "50px",
           fontFamily: "Arial, sans-serif",
           whiteSpace: 'pre-line',
+          wordBreak: 'break-word',
         }}>{descripcion}</div>
       )}
     </div>

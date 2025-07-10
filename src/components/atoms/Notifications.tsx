@@ -38,10 +38,17 @@ const Notifications: React.FC = () => {
     })
       .then(res => res.json())
       .then(async (data: Notificacion[]) => {
-        
-        // Para cada notificación, obtener el tipo de encuesta
-        const filtradas: NotificacionConEncuesta[] = [];
-        for (const noti of data) {
+        // Filtrar notificaciones de los últimos 3 días
+        const tresDiasAtras = new Date();
+        tresDiasAtras.setDate(tresDiasAtras.getDate() - 3);
+
+        const recientes = data.filter(noti => {
+          const fecha = new Date(noti.enviada_en);
+          return fecha >= tresDiasAtras;
+        });
+
+        // Obtener encuestas en paralelo
+        const encuestas = await Promise.all(recientes.map(async (noti) => {
           try {
             const res = await fetch(`https://egresados.it2id.cc/api/surveys/${noti.encuesta_id}`, {
               headers: {
@@ -49,16 +56,17 @@ const Notifications: React.FC = () => {
               }
             });
             const encuesta = await res.json();
-            
             if (encuesta.tipo?.toLowerCase() === tipoUsuario) {
-              filtradas.push({ ...noti, encuestaNombre: encuesta.titulo || 'Encuesta' });
+              return { ...noti, encuestaNombre: encuesta.titulo || 'Encuesta' };
             }
           } catch (e) {
             // Si falla, no agregar
           }
-        }
-        
-        setNotificaciones(filtradas);
+          return null;
+        }));
+
+        // Filtrar nulos
+        setNotificaciones(encuestas.filter(Boolean) as NotificacionConEncuesta[]);
         setLoading(false);
       })
       .catch(() => setLoading(false));

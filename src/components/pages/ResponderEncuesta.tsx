@@ -4,6 +4,8 @@ import InfoEncuesta from "../molecule/InfoEncuesta";
 import Pregunta from "../molecule/Pregunta";
 import Swal from 'sweetalert2';
 
+console.log('Componente ResponderEncuesta montado');
+
 interface Survey {
   id: number;
   titulo: string;
@@ -17,10 +19,11 @@ interface Survey {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple' | 'likert';
+  tipo: 'abierta' | 'multiple' | 'likert' | 'checkbox';
   texto: string;
   orden: number;
   competencia_asociada: string;
+  campo_educacional_numero?: number;
   opciones: Array<{
     id: number;
     pregunta_id: number;
@@ -42,6 +45,7 @@ const ResponderEncuesta: React.FC = () => {
   const [hasResponded, setHasResponded] = useState(false); // Nuevo estado
   const [userResponseId, setUserResponseId] = useState<number | null>(null); // Nuevo estado para el ID de la respuesta
   const [isSubmitting, setIsSubmitting] = useState(false); // Estado para evitar doble envío
+  const [unansweredQuestions, setUnansweredQuestions] = useState<number[]>([]);
 
   // Obtener el ID del usuario actual del localStorage
   const currentUserId = JSON.parse(localStorage.getItem('userData') || '{}').id;
@@ -113,7 +117,19 @@ const ResponderEncuesta: React.FC = () => {
       if (!questionsResponse.ok) {
         throw new Error(`Error al cargar las preguntas: ${questionsResponse.statusText}`);
       }
-      const data = await questionsResponse.json();
+      const data: Question[] = await questionsResponse.json();
+      
+      // Log de depuración para ver qué preguntas llegan
+      console.log('Preguntas cargadas desde el backend:', data);
+      data.forEach((question, index) => {
+        console.log(`Pregunta ${index + 1}:`, {
+          id: question.id,
+          texto: question.texto,
+          tipo: question.tipo,
+          opciones: question.opciones
+        });
+      });
+      
       setQuestions(data);
     } catch (err: any) {
       setError(err.message);
@@ -156,6 +172,9 @@ const ResponderEncuesta: React.FC = () => {
                     // Si es múltiple o likert, y la API devuelve valor_numero, usarlo directamente
                     // Si la API devolviera etiqueta, necesitaríamos buscar el peso correspondiente
                     initialAnswers[detail.pregunta_id] = detail.valor_numero;
+                } else if (question.tipo === 'checkbox') {
+                    // Para checkbox, usar valor_texto ya que puede contener múltiples valores
+                    initialAnswers[detail.pregunta_id] = detail.valor_texto;
                 }
             }
           });
@@ -179,6 +198,21 @@ const ResponderEncuesta: React.FC = () => {
     }
   }, [questions, currentUserId, fetchUserResponse]);
 
+  // Log cuando se renderizan las preguntas en modo de respuesta
+  useEffect(() => {
+    if (questions.length > 0 && !hasResponded) {
+      console.log('Renderizando preguntas en modo respuesta:');
+      questions.forEach((pregunta, index) => {
+        console.log(`Pregunta ${index + 1}:`, {
+          id: pregunta.id,
+          tipo: pregunta.tipo,
+          texto: pregunta.texto,
+          opciones: pregunta.opciones
+        });
+      });
+    }
+  }, [questions, hasResponded]);
+
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return; // Evita doble envío
     setIsSubmitting(true);
@@ -186,6 +220,30 @@ const ResponderEncuesta: React.FC = () => {
       setError('ID de encuesta no proporcionado.');
       setIsSubmitting(false);
       return;
+    }
+
+    // Validar que todas las preguntas estén contestadas
+    const unanswered = questions.filter(q => {
+      const ans = answers[q.id];
+      if (q.tipo === 'abierta') {
+        return !ans || (typeof ans === 'string' && ans.trim() === '');
+      } else if (q.tipo === 'multiple' || q.tipo === 'likert' || q.tipo === 'checkbox') {
+        return ans === undefined || ans === null || ans === '';
+      }
+      return true;
+    }).map(q => q.id);
+
+    if (unanswered.length > 0) {
+      setUnansweredQuestions(unanswered);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan respuestas',
+        text: 'Por favor responde todas las preguntas antes de enviar.',
+      });
+      setIsSubmitting(false);
+      return;
+    } else {
+      setUnansweredQuestions([]);
     }
 
     const userToken = localStorage.getItem('userToken');
@@ -221,9 +279,23 @@ const ResponderEncuesta: React.FC = () => {
           pregunta_id: question.id,
           valor_numero: valorNumero,
         };
+      } else if (question.tipo === 'checkbox') {
+        // Para checkbox, enviar múltiples registros, uno por cada opción seleccionada
+        if (typeof answerValue === 'string') {
+          const selectedValues = answerValue.split(',').filter(item => item.trim() !== '');
+          return selectedValues.map(selectedValue => {
+            // Buscar la opción correspondiente para obtener el valor_numero
+            const matchingOption = question.opciones.find(opt => opt.etiqueta === selectedValue.trim());
+            return {
+              pregunta_id: question.id,
+              valor_numero: matchingOption ? matchingOption.valor : selectedValue.trim(),
+            };
+          });
+        }
+        return null;
       }
       return null; 
-    }).filter(detail => detail !== null);
+    }).filter(detail => detail !== null).flat(); // Usar flat() para aplanar el array de arrays
 
     const requestBody = {
       response: {
@@ -329,14 +401,17 @@ const ResponderEncuesta: React.FC = () => {
   }, [surveyId, answers, questions, hasResponded, userResponseId, fetchUserResponse, codigoAnonimo, navigate, isSubmitting]);
 
   if (isLoading) {
+    console.log('Render principal. Estado:', { isLoading, error, surveyData, questions });
     return <div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando encuesta...</div>;
   }
 
   if (error) {
+    console.log('Render principal. Estado:', { isLoading, error, surveyData, questions });
     return <div style={{ textAlign: 'center', marginTop: '50px', color: 'red' }}>Error: {error}</div>;
   }
 
   if (!surveyData) {
+    console.log('Render principal. Estado:', { isLoading, error, surveyData, questions });
     return <div style={{ textAlign: 'center', marginTop: '50px' }}>No se encontraron datos de la encuesta.</div>;
   }
 
@@ -362,7 +437,8 @@ const ResponderEncuesta: React.FC = () => {
               position: "relative",
               display: "flex",
               flexDirection: "column",
-              alignItems: "stretch"
+              alignItems: "stretch",
+              border: unansweredQuestions.includes(pregunta.id) ? '2px solid #e53935' : undefined
             }}
           >
             <Pregunta 

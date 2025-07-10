@@ -34,42 +34,42 @@ const GestionUsuarios: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const navigate = useNavigate();
   const token = localStorage.getItem('userToken');
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
 
-  // Cargar usuarios reales (temporal: consulta del 1 al 50)
+  // Cargar usuarios reales (ahora consulta todos de una vez)
   const fetchUsuarios = async () => {
     setLoading(true);
-    const promises = [];
-    for (let i = 1; i <= 50; i++) {
-      promises.push(
-        fetch(`${API_URL}/users/${i}`)
-          .then(async res => {
-            if (!res.ok) return null;
-            try {
-              const data = await res.json();
-              return data;
-            } catch {
-              return null;
-            }
-          })
-          .catch(() => null)
-      );
+    try {
+      const res = await fetch(`${API_URL}/users/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        setUsuarios([]);
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      // Si la API regresa un array directamente:
+      const users = (Array.isArray(data) ? data : data.users || []).map((u: any) => ({
+        id: u.id,
+        nombre: u.nombre,
+        email: u.email,
+        tipo: u.tipo,
+        estado: u.is_active === 1 || u.is_active === true ? 'Activo' : 'Inactivo',
+        fecha_creacion: u.creado_en ? u.creado_en.split('T')[0] : '',
+        telefono: u.telefono,
+        fecha_nacimiento: u.fecha_nacimiento ? u.fecha_nacimiento.split('T')[0] : '',
+        habilidades: u.habilidades,
+        experiencia: u.experiencia,
+        profile_picture: u.profile_picture
+      }));
+      setUsuarios(users);
+    } catch (e) {
+      setUsuarios([]);
     }
-    const results = await Promise.all(promises);
-    const users = results.filter(Boolean).map((u: any) => ({
-      id: u.id,
-      nombre: u.nombre,
-      email: u.email,
-      tipo: u.tipo,
-      estado: u.is_active === 1 || u.is_active === true ? 'Activo' : 'Inactivo',
-      fecha_creacion: u.creado_en ? u.creado_en.split('T')[0] : '',
-      telefono: u.telefono,
-      fecha_nacimiento: u.fecha_nacimiento ? u.fecha_nacimiento.split('T')[0] : '',
-      habilidades: u.habilidades,
-      experiencia: u.experiencia,
-      profile_picture: u.profile_picture
-    }));
-    
-    setUsuarios(users);
     setLoading(false);
   };
 
@@ -161,6 +161,12 @@ const GestionUsuarios: React.FC = () => {
     const matchesType = filterType === 'todos' || user.tipo === filterType;
     return matchesSearch && matchesType;
   });
+
+  const totalPages = Math.ceil(filteredUsuarios.length / usersPerPage);
+  const paginatedUsuarios = filteredUsuarios.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
+
+  // Reiniciar página al cambiar filtros o búsqueda
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterType]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
@@ -293,7 +299,7 @@ const GestionUsuarios: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsuarios.map((user) => (
+                  {paginatedUsuarios.map((user) => (
                     <tr key={user.id} style={{ borderBottom: '1px solid #dee2e6' }}>
                       <td style={{ padding: '12px' }}>{user.id}</td>
                       <td style={{ padding: '12px', fontWeight: '500' }}>{user.nombre}</td>
@@ -355,6 +361,14 @@ const GestionUsuarios: React.FC = () => {
                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                   <i className="fas fa-users" style={{ fontSize: '3em', marginBottom: '15px', opacity: '0.5' }}></i>
                   <p>No se encontraron usuarios que coincidan con los filtros</p>
+                </div>
+              )}
+
+              {filteredUsuarios.length > usersPerPage && (
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ marginRight: 8, padding: '6px 12px', borderRadius: 4, border: '1px solid #ccc', background: currentPage === 1 ? '#eee' : '#fff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Anterior</button>
+                  <span style={{ alignSelf: 'center', margin: '0 10px' }}>Página {currentPage} de {totalPages}</span>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ marginLeft: 8, padding: '6px 12px', borderRadius: 4, border: '1px solid #ccc', background: currentPage === totalPages ? '#eee' : '#fff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>Siguiente</button>
                 </div>
               )}
             </div>

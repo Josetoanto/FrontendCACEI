@@ -8,8 +8,16 @@ interface SurveyResponseDetail {
   creado_en: string;
   pregunta: {
     texto: string;
-    tipo: 'abierta' | 'multiple' | 'likert';
+    tipo: 'abierta' | 'multiple' | 'likert' | 'checkbox';
   };
+}
+
+interface SurveyResponse {
+  id: number;
+  encuesta_id: number;
+  usuario_id: number;
+  creado_en: string;
+  detalles: SurveyResponseDetail[];
 }
 
 interface Option {
@@ -23,10 +31,11 @@ interface Option {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple' | 'likert';
+  tipo: 'abierta' | 'multiple' | 'likert' | 'checkbox';
   texto: string;
   orden: number;
   competencia_asociada: string;
+  campo_educacional_numero?: number;
   opciones: Option[];
   tempClientId?: number;
 }
@@ -40,8 +49,29 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
   const [responsesData, setResponsesData] = useState<{[questionId: number]: SurveyResponseDetail[]}>({});
   const [loadingResponses, setLoadingResponses] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [camposEducacionales, setCamposEducacionales] = useState<Array<{numero: number, nombre: string, descripcion: string}>>([]);
 
-  const fetchResponsesForQuestion = useCallback(async (questionId: number) => {
+  // Obtener campos educativos al montar
+  useEffect(() => {
+    const fetchCamposEducacionales = async () => {
+      try {
+        const userToken = localStorage.getItem('userToken');
+        if (!userToken) return;
+        const response = await fetch('https://egresados.it2id.cc/api/educational-fields', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCamposEducacionales(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        // Silenciar error
+      }
+    };
+    fetchCamposEducacionales();
+  }, []);
+
+  const fetchAllResponsesForSurvey = useCallback(async (surveyId: number) => {
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
       setError('No se encontró el token de usuario. Por favor, inicie sesión.');
@@ -49,20 +79,33 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     }
 
     try {
-      const response = await fetch(`https://egresados.it2id.cc/api/responses/question/${questionId}`, {
+      const response = await fetch(`https://egresados.it2id.cc/api/responses/survey/${surveyId}`, {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
 
       if (!response.ok) {
-        console.error(`Error al cargar respuestas para la pregunta ${questionId}: ${response.statusText}`);
+        console.error(`Error al cargar respuestas para la encuesta ${surveyId}: ${response.statusText}`);
         return [];
       }
-      const data: SurveyResponseDetail[] = await response.json();
-      return data;
+      const data: SurveyResponse[] = await response.json();
+      
+      // Procesar las respuestas para organizarlas por pregunta
+      const responsesByQuestion: {[questionId: number]: SurveyResponseDetail[]} = {};
+      
+      data.forEach(surveyResponse => {
+        surveyResponse.detalles.forEach(detail => {
+          if (!responsesByQuestion[detail.pregunta_id]) {
+            responsesByQuestion[detail.pregunta_id] = [];
+          }
+          responsesByQuestion[detail.pregunta_id].push(detail);
+        });
+      });
+      
+      return responsesByQuestion;
     } catch (err: any) {
-      console.error(`Error al obtener respuestas para la pregunta ${questionId}:`, err);
+      console.error(`Error al obtener respuestas para la encuesta ${surveyId}:`, err);
       setError(err.message || 'Error al cargar las respuestas.');
-      return [];
+      return {};
     }
   }, []);
 
@@ -74,73 +117,101 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     }
 
     // Obtener todas las respuestas unicas (por respuesta_id)
-    const allResponses: {[respuestaId: number]: {[questionId: number]: SurveyResponseDetail}} = {};
+    const allResponses: {[respuestaId: number]: {[questionId: number]: SurveyResponseDetail[]}} = {};
     
     Object.values(responsesData).forEach(questionResponses => {
       questionResponses.forEach(response => {
         if (!allResponses[response.respuesta_id]) {
           allResponses[response.respuesta_id] = {};
         }
-        allResponses[response.respuesta_id][response.pregunta_id] = response;
+        if (!allResponses[response.respuesta_id][response.pregunta_id]) {
+          allResponses[response.respuesta_id][response.pregunta_id] = [];
+        }
+        allResponses[response.respuesta_id][response.pregunta_id].push(response);
       });
     });
 
     // Crear encabezados del CSV
-    const headers = ['ID Respuesta', 'Fecha de Respuesta'];
+    const headers = ['Fecha de Respuesta'];
     questions.forEach(question => {
-      headers.push(`"${question.texto}"`);
+      headers.push(question.texto);
+      headers.push('Campo Educativo');
     });
 
-    // Crear filas de datos
+    // Crear filas de datos: cada fila es una respuesta individual (usuario)
     const csvRows = [headers.join(',')];
     
     Object.entries(allResponses).forEach(([respuestaId, questionResponses]) => {
-      const row: string[] = [respuestaId];
-      
+      const row: string[] = [];
       // Obtener la fecha de la primera respuesta (todas deberian tener la misma fecha)
-      const firstResponse = Object.values(questionResponses)[0];
+      const firstResponse = Object.values(questionResponses)[0]?.[0];
       const fecha = firstResponse ? new Date(firstResponse.creado_en).toLocaleDateString('es-ES') : '';
       row.push(fecha);
       
-      // Agregar respuesta para cada pregunta
       questions.forEach(question => {
-        const response = questionResponses[question.id];
+        const responses = questionResponses[question.id] || [];
         let valor = '';
-        
-        if (response) {
-          if (response.valor_texto !== null && response.valor_texto !== undefined) {
-            valor = response.valor_texto;
-          } else if (response.valor_numero !== null && response.valor_numero !== undefined) {
-            // Para preguntas de opcion multiple y likert, mostrar la etiqueta en lugar del numero
-            if (question.tipo === 'multiple' && Array.isArray(question.opciones)) {
-              const option = question.opciones.find(opt => opt.valor.toString() === response.valor_numero!.toString());
-              valor = option ? option.etiqueta : response.valor_numero!.toString();
-            } else if (question.tipo === 'likert' && Array.isArray(question.opciones)) {
-              const likertLabels3 = ["Mal", "Medio", "Bien"];
-              const likertLabels5 = ["Muy mal", "Mal", "Mas o menos", "Bien", "Muy Bien"];
-              const numValue = response.valor_numero;
-              if (question.opciones.length === 3 && numValue >= 1 && numValue <= 3) {
-                valor = likertLabels3[numValue - 1];
-              } else if (question.opciones.length === 5 && numValue >= 1 && numValue <= 5) {
-                valor = likertLabels5[numValue - 1];
-              } else {
-                valor = response.valor_numero.toString();
+        let campoEducativo = '';
+        if (responses.length > 0) {
+          if (question.tipo === 'abierta') {
+            valor = responses[0].valor_texto || '';
+          } else if (question.tipo === 'checkbox') {
+            // Para checkbox, juntar todas las opciones seleccionadas
+            const selectedValues = responses.map(response => {
+              if (response.valor_numero !== null && response.valor_numero !== undefined) {
+                const valorNumero = response.valor_numero;
+                const option = question.opciones.find(opt => opt.valor.toString() === valorNumero.toString());
+                return option ? option.etiqueta : valorNumero.toString();
               }
-            } else {
-              valor = response.valor_numero.toString();
+              return '';
+            }).filter(v => v !== '');
+            valor = selectedValues.join(', ');
+          } else if (question.tipo === 'multiple' || question.tipo === 'likert') {
+            const response = responses[0];
+            if (response.valor_numero !== null && response.valor_numero !== undefined) {
+              const valorNumero = response.valor_numero;
+              if (question.tipo === 'multiple' && Array.isArray(question.opciones)) {
+                const option = question.opciones.find(opt => opt.valor.toString() === valorNumero.toString());
+                valor = option ? option.etiqueta : valorNumero.toString();
+              } else if (question.tipo === 'likert' && Array.isArray(question.opciones)) {
+                const likertLabels3 = ["Mal", "Medio", "Bien"];
+                const likertLabels5 = ["Muy mal", "Mal", "Mas o menos", "Bien", "Muy Bien"];
+                if (question.opciones.length === 3 && valorNumero >= 1 && valorNumero <= 3) {
+                  valor = likertLabels3[valorNumero - 1];
+                } else if (question.opciones.length === 5 && valorNumero >= 1 && valorNumero <= 5) {
+                  valor = likertLabels5[valorNumero - 1];
+                } else {
+                  valor = valorNumero.toString();
+                }
+              } else {
+                valor = valorNumero.toString();
+              }
             }
           }
         }
-        
+        // Campo educativo SIEMPRE
+        if (question.campo_educacional_numero !== undefined && question.campo_educacional_numero !== null) {
+          if (question.campo_educacional_numero === 0) {
+            campoEducativo = 'Ninguno';
+          } else {
+            const campo = camposEducacionales.find(c => c.numero === question.campo_educacional_numero);
+            campoEducativo = campo ? campo.nombre : `Campo ${question.campo_educacional_numero}`;
+          }
+        } else {
+          campoEducativo = 'Ninguno';
+        }
         // Escapar comillas y envolver en comillas si contiene comas
         valor = valor.replace(/"/g, '""');
         if (valor.includes(',') || valor.includes('"') || valor.includes('\n')) {
           valor = `"${valor}"`;
         }
-        
         row.push(valor);
+        campoEducativo = campoEducativo.replace(/"/g, '""');
+        if (campoEducativo.includes(',') || campoEducativo.includes('"') || campoEducativo.includes('\n')) {
+          campoEducativo = `"${campoEducativo}"`;
+        }
+        row.push(campoEducativo);
       });
-      
       csvRows.push(row.join(','));
     });
 
@@ -157,33 +228,61 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [surveyId, questions, responsesData]);
+  }, [surveyId, questions, responsesData, camposEducacionales]);
 
   useEffect(() => {
     const loadAllResponses = async () => {
-      if (!surveyId || questions.length === 0) {
+      if (!surveyId) {
         setLoadingResponses(false);
         return;
       }
 
       setLoadingResponses(true);
       setError(null);
-      const allResponses: {[questionId: number]: SurveyResponseDetail[]} = {};
-      for (const question of questions) {
-        if (question.id && question.id !== 0) { // Solo si la pregunta ya existe en la DB
-          const responses = await fetchResponsesForQuestion(question.id);
-          allResponses[question.id] = responses;
-        }
-      }
+      console.log(`Cargando respuestas para la encuesta ${surveyId}...`);
+      const allResponses = await fetchAllResponsesForSurvey(surveyId);
+      console.log(`Respuestas cargadas:`, allResponses);
       setResponsesData(allResponses);
       setLoadingResponses(false);
     };
 
     loadAllResponses();
-  }, [surveyId, questions, fetchResponsesForQuestion]);
+  }, [surveyId, fetchAllResponsesForSurvey]);
 
   if (loadingResponses) {
-    return <div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando respuestas...</div>;
+    return (
+      <div style={{ 
+        textAlign: 'center', 
+        marginTop: '50px',
+        padding: '20px',
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        maxWidth: '400px',
+        margin: '50px auto'
+      }}>
+        <div style={{ marginBottom: '15px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #1a73e8',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+        </div>
+        <p style={{ fontSize: '16px', color: '#555', margin: '0' }}>
+          Cargando respuestas de la encuesta...
+        </p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
   }
 
   if (error) {
@@ -236,7 +335,25 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
 
   // Obtener el número total de respuestas basado en la primera pregunta con respuestas
   const firstQuestionWithResponses = questions.find(q => (responsesData[q.id]?.length || 0) > 0);
-  const totalResponsesCount = firstQuestionWithResponses ? (responsesData[firstQuestionWithResponses.id]?.length || 0) : 0;
+
+  // Función para obtener el número real de respuestas únicas (agrupando checkbox)
+  const getUniqueResponsesCount = () => {
+    if (!firstQuestionWithResponses) return 0;
+    
+    const responses = responsesData[firstQuestionWithResponses.id] || [];
+    if (responses.length === 0) return 0;
+    
+    // Si es checkbox, agrupar por respuesta_id para contar respuestas únicas
+    if (firstQuestionWithResponses.tipo === 'checkbox') {
+      const uniqueResponseIds = new Set(responses.map(r => r.respuesta_id));
+      return uniqueResponseIds.size;
+    }
+    
+    // Para otros tipos, usar el conteo normal
+    return responses.length;
+  };
+
+  const actualTotalResponses = getUniqueResponsesCount();
 
   return (
     <div style={{
@@ -250,7 +367,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
       backgroundColor: "#f0ebf8"
     }}>
       <div style={{backgroundColor:"#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px",  boxShadow: "0 2px 10px rgba(0,0,0,0.1)", padding: "20px",borderRadius: "12px"}}>
-        <h2 style={{ fontSize: "16px", fontWeight:"bold"}}>{totalResponsesCount === 1 ? "1 respuesta" : `${totalResponsesCount} respuestas`}</h2>
+        <h2 style={{ fontSize: "16px", fontWeight:"bold"}}>{actualTotalResponses === 1 ? "1 respuesta" : `${actualTotalResponses} respuestas`}</h2>
         <button 
           onClick={downloadCSV}
           style={{
@@ -287,18 +404,42 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
               </div>
             )}
 
-            {(question.tipo === 'multiple' || question.tipo === 'likert') && (
+            {(question.tipo === 'multiple' || question.tipo === 'likert' || question.tipo === 'checkbox') && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
                 {(() => {
                   const valueCounts: {[key: string]: number} = {};
-                  questionResponses.forEach(response => {
-                    let value = response.valor_numero !== null && response.valor_numero !== undefined
-                      ? response.valor_numero.toString()
-                      : (response.valor_texto !== null && response.valor_texto !== undefined ? response.valor_texto : 'N/A');
-                    valueCounts[value] = (valueCounts[value] || 0) + 1;
-                  });
+                  
+                  if (question.tipo === 'checkbox') {
+                    // Para checkbox, contar cada opción seleccionada individualmente
+                    questionResponses.forEach(response => {
+                      if (response.valor_numero !== null && response.valor_numero !== undefined) {
+                        const valorNumero = response.valor_numero;
+                        const option = question.opciones.find(opt => opt.valor.toString() === valorNumero.toString());
+                        const label = option ? option.etiqueta : valorNumero.toString();
+                        valueCounts[label] = (valueCounts[label] || 0) + 1;
+                      }
+                    });
+                  } else if (question.tipo === 'multiple') {
+                    // Para opción múltiple, usar la etiqueta de la opción
+                    questionResponses.forEach(response => {
+                      if (response.valor_numero !== null && response.valor_numero !== undefined) {
+                        const valorNumero = response.valor_numero;
+                        const option = question.opciones.find(opt => opt.valor.toString() === valorNumero.toString());
+                        const label = option ? option.etiqueta : valorNumero.toString();
+                        valueCounts[label] = (valueCounts[label] || 0) + 1;
+                      }
+                    });
+                  } else {
+                    // Para otros tipos, procesar normalmente
+                    questionResponses.forEach(response => {
+                      let value = response.valor_numero !== null && response.valor_numero !== undefined
+                        ? response.valor_numero.toString()
+                        : (response.valor_texto !== null && response.valor_texto !== undefined ? response.valor_texto : 'N/A');
+                      valueCounts[value] = (valueCounts[value] || 0) + 1;
+                    });
+                  }
 
-                  const totalResponses = questionResponses.length;
+                  const totalResponses = Object.values(valueCounts).reduce((sum, count) => sum + count, 0);
                   if (!totalResponses || totalResponses === 0) return null;
 
                   let currentAngle = 0;
@@ -316,10 +457,13 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
                     const percentage = (count / totalResponses) * 100;
                     const color = `hsl(${index * 60}, 70%, 60%)`;
                     let displayLabel = value;
+                    
                     if (question.tipo === 'multiple' && Array.isArray(question.opciones)) {
-                      // Buscar opción por valor, asegurando comparación de string
-                      const option = question.opciones.find(opt => opt.valor.toString() === value.toString());
-                      if (option) displayLabel = option.etiqueta;
+                      // Buscar opción por etiqueta (ya es la etiqueta)
+                      displayLabel = value;
+                    } else if (question.tipo === 'checkbox' && Array.isArray(question.opciones)) {
+                      // Para checkbox, el valor ya viene procesado como etiquetas
+                      displayLabel = value;
                     } else if (question.tipo === 'likert' && Array.isArray(question.opciones)) {
                       const likertLabels3 = ["Mal", "Medio", "Bien"];
                       const likertLabels5 = ["Muy mal", "Mal", "Más o menos", "Bien", "Muy Bien"];

@@ -15,6 +15,7 @@ import IngresarCodigo from '../components/pages/IngresarCodigo';
 import ModificarRubrica from '../components/pages/ModificarRubrica';
 import Configuracion from '../components/pages/Configuracion';
 import GestionUsuarios from '../components/pages/GestionUsuarios';
+import GestionCamposEducacionales from '../components/pages/GestionCamposEducacionales';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes: React.FC = () => {
@@ -37,6 +38,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/modificar-rubrica" element={<ProtectedRoute><ModificarRubrica /></ProtectedRoute>} />
                 <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
                 <Route path="/gestion-usuarios" element={<ProtectedRoute><GestionUsuarios /></ProtectedRoute>} />
+                <Route path="/gestion-campos-educacionales" element={<ProtectedRoute><GestionCamposEducacionales /></ProtectedRoute>} />
             </Routes>
         </Router>
     );

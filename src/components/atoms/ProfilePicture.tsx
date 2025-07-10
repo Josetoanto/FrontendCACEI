@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import defaultProfilePicture from '../../assets/profileIcon.png';
 
 interface ProfilePictureProps {
@@ -7,9 +8,21 @@ interface ProfilePictureProps {
 }
 
 const ProfilePicture: React.FC<ProfilePictureProps> = ({ src, alt = "Perfil", onClick }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Función para manejar errores de carga de imagen
+  const handleImageError = () => {
+    setImageError(true);
+  };
+  
+  // Determinar qué imagen mostrar - mejorar la lógica para manejar valores nulos, undefined o vacíos
+  const imageToShow = imageError || !src || src === null || src === undefined || src.trim() === '' 
+    ? defaultProfilePicture 
+    : src;
+  
   return (
     <img
-      src={src || defaultProfilePicture}
+      src={imageToShow}
       alt={alt}
       style={{
         borderRadius: "50%",
@@ -18,6 +31,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({ src, alt = "Perfil", on
         cursor: onClick ? 'pointer' : 'default'
          }}
         onClick={onClick}
+        onError={handleImageError}
         onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'} 
         onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}

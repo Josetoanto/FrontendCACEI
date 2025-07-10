@@ -158,8 +158,13 @@ const PerfilDeEvaluador: React.FC = () => {
 
             // Combine and set states
             setUserData(prevData => {
-                const urlFoto = tempUserData.profile_picture || profileIcon;
-                
+                // Mejorar la lógica para manejar foto de perfil nula, undefined o vacía
+                const urlFoto = tempUserData.profile_picture && 
+                               tempUserData.profile_picture !== null && 
+                               tempUserData.profile_picture !== undefined && 
+                               tempUserData.profile_picture.trim() !== '' 
+                               ? tempUserData.profile_picture 
+                               : profileIcon;
                 
                 return {
                     ...prevData,

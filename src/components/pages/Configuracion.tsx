@@ -43,6 +43,10 @@ const Configuracion: React.FC = () => {
     navigate('/gestion-usuarios');
   };
 
+  const handleGestionCamposEducacionales = () => {
+    navigate('/gestion-campos-educacionales');
+  };
+
   const handleEditarPassword = () => {
     setShowPasswordModal(true);
     setPasswordError('');
@@ -209,6 +213,36 @@ const Configuracion: React.FC = () => {
               </h3>
               <p style={{ color: '#666', margin: '0' }}>
                 Administrar usuarios del sistema, roles y permisos.
+              </p>
+            </div>
+
+            <div 
+              onClick={handleGestionCamposEducacionales}
+              style={{ 
+                padding: '20px', 
+                border: '1px solid #e5e8eb', 
+                borderRadius: '8px',
+                backgroundColor: '#f0f8ff',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#e6f3ff';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f8ff';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <h3 style={{ margin: '0 0 15px 0', color: '#1976d2' }}>
+                <i className="fas fa-graduation-cap" style={{ marginRight: '10px' }}></i>
+                Gestión de Campos Educacionales
+              </h3>
+              <p style={{ color: '#666', margin: '0' }}>
+                Administrar campos educacionales del sistema.
               </p>
             </div>
 

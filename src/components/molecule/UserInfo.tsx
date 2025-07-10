@@ -1,3 +1,6 @@
+import React, { useState } from "react";
+import profileIcon from "../../assets/profileIcon.png";
+
 interface UserInfoProps {
     nombre: string;
     fotoPerfil: string;
@@ -6,6 +9,16 @@ interface UserInfoProps {
   }
   
   const UserInfo: React.FC<UserInfoProps> = ({ nombre, fotoPerfil, profesion, ubicacion }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    // Función para manejar errores de carga de imagen
+    const handleImageError = () => {
+      setImageError(true);
+    };
+    
+    // Determinar qué imagen mostrar
+    const imageToShow = imageError || !fotoPerfil || fotoPerfil === '' ? profileIcon : fotoPerfil;
+    
     return (
       <div style={{
         display: "flex",
@@ -13,7 +26,12 @@ interface UserInfoProps {
         padding: "16px",
       }}>
         {/* Foto de perfil */}
-        <img src={fotoPerfil} alt="Foto de perfil" style={{ width: "80px", height: "80px", borderRadius: "50%", marginRight: "16px" }} />
+        <img 
+          src={imageToShow} 
+          alt="Foto de perfil" 
+          style={{ width: "80px", height: "80px", borderRadius: "50%", marginRight: "16px" }}
+          onError={handleImageError}
+        />
         
         {/* Información básica */}
         <div>

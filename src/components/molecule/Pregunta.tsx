@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Option {
   id: number;
@@ -11,10 +11,11 @@ interface Option {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple' | 'likert';
+  tipo: 'abierta' | 'multiple' | 'likert' | 'checkbox';
   texto: string;
   orden: number;
   competencia_asociada: string;
+  campo_educacional_numero?: number;
   opciones: Option[];
   tempClientId?: number;
 }
@@ -28,49 +29,107 @@ type PreguntaProps = {
   onQuestionChange?: (updatedQuestion: Question) => void;
   onAnswerChange?: (questionId: number, value: string | number) => void;
   initialAnswer?: string | number;
+  camposEducacionales?: Array<{id: number, numero: number, nombre: string, descripcion: string}>;
 };
 
-const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange, onAnswerChange, initialAnswer }) => {
+const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true, id, initialQuestion, surveyId, onQuestionChange, onAnswerChange, initialAnswer, camposEducacionales = [] }) => {
+  // Log de depuración
+  console.log('Pregunta ID:', id, 'Tipo de pregunta:', initialQuestion?.tipo, 'Editable:', editable, 'InitialAnswer:', initialAnswer);
+  
   const [titulo, setTitulo] = useState(initialQuestion?.texto || "Pregunta sin título");
-  const [tipoPregunta, setTipoPregunta] = useState(initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : initialQuestion?.tipo === 'likert' ? "Escala Likert" : "Opción Múltiple");
+  const [tipoPregunta, setTipoPregunta] = useState(
+    initialQuestion?.tipo === 'abierta' ? "Pregunta Abierta" : 
+    initialQuestion?.tipo === 'multiple' ? "Opción Múltiple" : 
+    initialQuestion?.tipo === 'likert' ? "Escala Likert" : 
+    initialQuestion?.tipo === 'checkbox' ? "Checkbox" : "Opción Múltiple"
+  );
   const [opciones, setOpciones] = useState(initialQuestion?.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
   const [numEstrellas, setNumEstrellas] = useState(initialQuestion?.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
   const [selectedRating, setSelectedRating] = useState(0);
   const [openAnswer, setOpenAnswer] = useState("");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
+  const [campoEducacional, setCampoEducacional] = useState(initialQuestion?.campo_educacional_numero || 0);
+  const [tituloError, setTituloError] = useState(false);
+  const [opcionesErrors, setOpcionesErrors] = useState<boolean[]>([]);
+  const tituloRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (initialQuestion) {
       setTitulo(initialQuestion.texto);
-      setTipoPregunta(initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : initialQuestion.tipo === 'likert' ? "Escala Likert" : "Opción Múltiple");
+      setTipoPregunta(
+        initialQuestion.tipo === 'abierta' ? "Pregunta Abierta" : 
+        initialQuestion.tipo === 'multiple' ? "Opción Múltiple" : 
+        initialQuestion.tipo === 'likert' ? "Escala Likert" : 
+        initialQuestion.tipo === 'checkbox' ? "Checkbox" : "Opción Múltiple"
+      );
       setOpciones(initialQuestion.opciones && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.map(opt => opt.etiqueta) : ["Opción 1", "Opción 2"]);
       setNumEstrellas(initialQuestion.tipo === 'likert' && initialQuestion.opciones.length > 0 ? initialQuestion.opciones.length : 5);
+      setCampoEducacional(initialQuestion.campo_educacional_numero || 0);
       
       if (!editable && initialAnswer !== undefined) {
         if (typeof initialAnswer === 'number') {
           setSelectedRating(initialAnswer);
         } else if (typeof initialAnswer === 'string') {
-          if (tipoPregunta === "Pregunta Abierta") {
+          // Usar el tipo real de la pregunta en lugar del estado tipoPregunta
+          const questionType = initialQuestion?.tipo;
+          console.log('Procesando respuesta inicial. Tipo:', questionType, 'Respuesta:', initialAnswer);
+          if (questionType === 'abierta') {
             setOpenAnswer(initialAnswer);
-          } else if (tipoPregunta === "Opción Múltiple") {
+          } else if (questionType === 'multiple') {
             setSelectedOption(initialAnswer);
+          } else if (questionType === 'checkbox') {
+            // Para checkbox, el valor puede venir como string separado por comas
+            const checkboxValues = typeof initialAnswer === 'string' 
+              ? initialAnswer.split(',').filter(item => item.trim() !== '')
+              : [];
+            console.log('Valores de checkbox procesados:', checkboxValues);
+            setSelectedCheckboxes(checkboxValues);
           }
         }
       } else {
         setSelectedRating(0);
         setOpenAnswer("");
         setSelectedOption(null);
+        setSelectedCheckboxes([]);
       }
     }
   }, [initialQuestion, initialAnswer, editable, tipoPregunta]);
 
-  const updateQuestionState = (newTitulo: string, newTipo: string, newOpciones: string[], newNumEstrellas: number) => {
+  useEffect(() => {
+    if (tituloRef.current) {
+      tituloRef.current.style.height = 'auto';
+      tituloRef.current.style.height = `${tituloRef.current.scrollHeight}px`;
+    }
+  }, [titulo]);
+
+  // Log cuando se renderiza checkbox
+  useEffect(() => {
+    if (!editable && initialQuestion?.tipo === 'checkbox') {
+      console.log('Renderizando checkbox para pregunta ID:', id, 'Tipo real:', initialQuestion?.tipo, 'Editable:', editable);
+    }
+  }, [editable, initialQuestion?.tipo, id]);
+
+  // Validar título y opciones cuando cambien
+  useEffect(() => {
+    const isEmpty = !titulo || titulo.trim() === '';
+    setTituloError(isEmpty);
+  }, [titulo]);
+
+  useEffect(() => {
+    const errors = opciones.map(opcion => !opcion || opcion.trim() === '');
+    setOpcionesErrors(errors);
+  }, [opciones]);
+
+  const updateQuestionState = (newTitulo: string, newTipo: string, newOpciones: string[], newNumEstrellas: number, newCampoEducacional: number) => {
     if (!onQuestionChange) return;
 
-    const questionTypeApi = newTipo === 'Opción Múltiple' ? 'multiple' : newTipo === 'Escala Likert' ? 'likert' : 'abierta';
+    const questionTypeApi = newTipo === 'Opción Múltiple' ? 'multiple' : 
+                           newTipo === 'Escala Likert' ? 'likert' : 
+                           newTipo === 'Checkbox' ? 'checkbox' : 'abierta';
 
     let optionsPayload: Option[] = [];
-    if (questionTypeApi === 'multiple') {
+    if (questionTypeApi === 'multiple' || questionTypeApi === 'checkbox') {
       optionsPayload = newOpciones.map((opt, index) => ({
         pregunta_id: id,
         valor: (index + 1).toString(),
@@ -95,15 +154,16 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
       texto: newTitulo,
       orden: initialQuestion?.orden || 0,
       competencia_asociada: initialQuestion?.competencia_asociada || "",
+      campo_educacional_numero: newCampoEducacional,
       opciones: optionsPayload,
       tempClientId: initialQuestion?.tempClientId,
     });
   };
 
-  const handleTituloChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTituloChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newTitulo = e.target.value;
     setTitulo(newTitulo);
-    updateQuestionState(newTitulo, tipoPregunta, opciones, numEstrellas);
+    updateQuestionState(newTitulo, tipoPregunta, opciones, numEstrellas, campoEducacional);
   };
 
   const handleTipoPreguntaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -121,32 +181,32 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
     }
     setOpciones(newOpciones);
     setNumEstrellas(newNumEstrellas);
-    updateQuestionState(titulo, newType, newOpciones, newNumEstrellas);
+    updateQuestionState(titulo, newType, newOpciones, newNumEstrellas, campoEducacional);
   };
 
   const handleOpcionChange = (index: number, nuevoValor: string) => {
     const newOpciones = opciones.map((op, i) => i === index ? nuevoValor : op);
     setOpciones(newOpciones);
-    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas, campoEducacional);
   };
 
   const handleNumEstrellasChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newNumEstrellas = Number(e.target.value);
     setNumEstrellas(newNumEstrellas);
-    updateQuestionState(titulo, tipoPregunta, opciones, newNumEstrellas);
+    updateQuestionState(titulo, tipoPregunta, opciones, newNumEstrellas, campoEducacional);
   };
 
   const agregarOpcion = () => {
     const newOpciones = [...opciones, `Opción ${opciones.length + 1}`];
     setOpciones(newOpciones);
-    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+    updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas, campoEducacional);
   };
 
   const eliminarOpcion = (index: number) => {
     if (opciones.length > 2) {
       const newOpciones = opciones.filter((_, i) => i !== index);
       setOpciones(newOpciones);
-      updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas);
+      updateQuestionState(titulo, tipoPregunta, newOpciones, numEstrellas, campoEducacional);
     }
   };
 
@@ -160,23 +220,72 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
       
       {/* Título de la pregunta y selector de tipo en la misma línea */}
       <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "10px", width: "100%" }}>
-        <input 
-          type="text"
-          value={titulo}
-          onChange={editable ? handleTituloChange : undefined}
-          placeholder="Ponga su pregunta aquí..."
-          style={{
-            flexGrow: 1,
-            fontSize: "16px",
-            border: "none",
-            borderBottom: "2px solid #cfd8dc",
-            outline: "none",
-            backgroundColor: editable ? "#fafafa" : "#ffffff",
-            padding: "18px 16px 10px 16px",
-            borderRadius: "4px 4px 0 0"
-          }}
-          readOnly={!editable}
-        />
+        {editable ? (
+          <div style={{ flexGrow: 1 }}>
+            <textarea
+              ref={tituloRef}
+              value={titulo}
+              onChange={editable ? (e => { setTitulo(e.target.value); handleTituloChange(e); }) : undefined}
+              placeholder="Ponga su pregunta aquí..."
+              style={{
+                width: "100%",
+                fontFamily: "'Public Sans', system-ui, Avenir, Helvetica, Arial, sans-serif",
+                fontSize: "16px",
+                fontWeight: "normal",
+                color: "#222",
+                border: tituloError ? "2px solid #dc3545" : "none",
+                borderBottom: tituloError ? "2px solid #dc3545" : "2px solid #cfd8dc",
+                outline: "none",
+                background: "transparent",
+                padding: "18px 16px 10px 16px",
+                borderRadius: tituloError ? "4px" : "4px 4px 0 0",
+                resize: "none",
+                minHeight: "38px",
+                maxWidth: "100%",
+                overflow: "hidden",
+                boxSizing: "border-box",
+                wordBreak: "break-word"
+              }}
+              rows={1}
+            />
+            {tituloError && (
+              <div style={{
+                color: "#dc3545",
+                fontSize: "12px",
+                marginTop: "4px",
+                marginLeft: "4px"
+              }}>
+                El título de la pregunta es obligatorio
+              </div>
+            )}
+          </div>
+        ) : (
+          <textarea
+            ref={tituloRef}
+            value={titulo}
+            readOnly
+            style={{
+              flexGrow: 1,
+              fontFamily: "'Public Sans', system-ui, Avenir, Helvetica, Arial, sans-serif",
+              fontSize: "16px",
+              fontWeight: "normal",
+              color: "#222",
+              border: "none",
+              borderBottom: "2px solid #cfd8dc",
+              outline: "none",
+              background: "#fff",
+              padding: "18px 16px 10px 16px",
+              borderRadius: "4px 4px 0 0",
+              resize: "none",
+              minHeight: "38px",
+              maxWidth: "100%",
+              overflow: "hidden",
+              boxSizing: "border-box",
+              wordBreak: "break-word"
+            }}
+            rows={1}
+          />
+        )}
         {editable && (
           <select 
             value={tipoPregunta}
@@ -192,15 +301,19 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
             disabled={!editable}
           >
             <option value="Opción Múltiple">Opción Múltiple</option>
+            <option value="Checkbox">Checkbox</option>
             <option value="Escala Likert">Escala Likert</option>
             <option value="Pregunta Abierta">Pregunta Abierta</option>
           </select>
         )}
       </div>
 
+      
+
       {/* Renderizar dependiendo del tipo de pregunta */}
       <div style={{ marginTop: "25px" }}>
-        {tipoPregunta === "Opción Múltiple" && (
+        {/* Opción Múltiple */}
+        {(editable ? tipoPregunta === "Opción Múltiple" : initialQuestion?.tipo === "multiple") && (
           <div>
             {opciones.map((opcion, index) => (
               <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "10px", gap: "8px" }}>
@@ -218,23 +331,131 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
                   style={{ accentColor: "#4285f4" , height:"16px", width:"14px"}}
                   disabled={editable}
                 />
-                <input
-                  type="text"
+                <div style={{ flexGrow: 1 }}>
+                  <input
+                    type="text"
+                    value={opcion}
+                    onChange={e => editable && handleOpcionChange(index, e.target.value)}
+                    style={{
+                      width: "100%",
+                      margin: 0,
+                      border: opcionesErrors[index] ? "2px solid #dc3545" : "none",
+                      background: "transparent",
+                      fontSize: "16px",
+                      color: "#222",
+                      outline: "none",
+                      padding:"4px",
+                      paddingTop:"10px",
+                      borderRadius: opcionesErrors[index] ? "4px" : "0"
+                    }}
+                    readOnly={!editable}
+                  />
+                  {editable && opcionesErrors[index] && (
+                    <div style={{
+                      color: "#dc3545",
+                      fontSize: "11px",
+                      marginTop: "2px",
+                      marginLeft: "4px"
+                    }}>
+                      La opción no puede estar vacía
+                    </div>
+                  )}
+                </div>
+                {editable && opciones.length > 2 && index > 1 && (
+                  <button
+                    onClick={() => eliminarOpcion(index)}
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      padding: 0,
+                      marginLeft: "4px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                    title="Eliminar opción"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#70757a" viewBox="0 0 24 24">
+                      <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41z"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+            {/* Línea divisoria debajo de las opciones */}
+            <div style={{ borderBottom: "1px solid #e0e0e0", margin: "24px 0 0 0" }} />
+            {editable && (
+              <button 
+                onClick={agregarOpcion}
+                style={{
+                  backgroundColor: "transparent",
+                  color: "#70757a",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  marginTop: "10px",
+                  opacity: 1
+                }}
+              >
+                Agregar opción
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Checkbox */}
+        {(editable ? tipoPregunta === "Checkbox" : initialQuestion?.tipo === "checkbox") && (
+          <div>
+            {opciones.map((opcion, index) => (
+              <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "10px", gap: "8px" }}>
+                <input 
+                  type="checkbox" 
+                  name={`pregunta-${id}`} 
                   value={opcion}
-                  onChange={e => editable && handleOpcionChange(index, e.target.value)}
-                  style={{
-                    flexGrow: 1,
-                    margin: 0,
-                    border: "none",
-                    background: "transparent",
-                    fontSize: "16px",
-                    color: "#222",
-                    outline: "none",
-                    padding:"4px",
-                    paddingTop:"10px"
+                  checked={selectedCheckboxes.includes(opcion)}
+                  onChange={(e) => {
+                    if (!editable) {
+                      const newSelectedCheckboxes = e.target.checked
+                        ? [...selectedCheckboxes, opcion]
+                        : selectedCheckboxes.filter(item => item !== opcion);
+                      setSelectedCheckboxes(newSelectedCheckboxes);
+                      onAnswerChange?.(id, newSelectedCheckboxes.join(','));
+                    }
                   }}
-                  readOnly={!editable}
+                  style={{ accentColor: "#4285f4" , height:"16px", width:"14px"}}
+                  disabled={editable}
                 />
+                <div style={{ flexGrow: 1 }}>
+                  <input
+                    type="text"
+                    value={opcion}
+                    onChange={e => editable && handleOpcionChange(index, e.target.value)}
+                    style={{
+                      width: "100%",
+                      margin: 0,
+                      border: opcionesErrors[index] ? "2px solid #dc3545" : "none",
+                      background: "transparent",
+                      fontSize: "16px",
+                      color: "#222",
+                      outline: "none",
+                      padding:"4px",
+                      paddingTop:"10px",
+                      borderRadius: opcionesErrors[index] ? "4px" : "0"
+                    }}
+                    readOnly={!editable}
+                  />
+                  {editable && opcionesErrors[index] && (
+                    <div style={{
+                      color: "#dc3545",
+                      fontSize: "11px",
+                      marginTop: "2px",
+                      marginLeft: "4px"
+                    }}>
+                      La opción no puede estar vacía
+                    </div>
+                  )}
+                </div>
                 {editable && opciones.length > 2 && index > 1 && (
                   <button
                     onClick={() => eliminarOpcion(index)}
@@ -278,7 +499,8 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
           </div>
         )}
         
-        {tipoPregunta === "Escala Likert" && (
+        {/* Escala Likert */}
+        {(editable ? tipoPregunta === "Escala Likert" : initialQuestion?.tipo === "likert") && (
           <div style={{ marginTop: "24px" }}>
             {/* Selector de número de estrellas */}
             {editable && (
@@ -338,7 +560,8 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
           </div>
         )}
 
-        {tipoPregunta === "Pregunta Abierta" && (
+        {/* Pregunta Abierta */}
+        {(editable ? tipoPregunta === "Pregunta Abierta" : initialQuestion?.tipo === "abierta") && (
           <div style={{ marginTop: "32px" }}>
             
             <div>
@@ -368,6 +591,37 @@ const Pregunta: React.FC<PreguntaProps> = ({ onEliminarPregunta, editable = true
           </div>
         )}
       </div>
+
+      {/* Mostrar selector de campo educativo abajo a la izquierda en vez del texto */}
+      {editable && (
+        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginTop: '12px', marginLeft: '4px' }}>
+          <select
+            value={campoEducacional}
+            onChange={(e) => {
+              const newCampoEducacional = Number(e.target.value);
+              setCampoEducacional(newCampoEducacional);
+              updateQuestionState(titulo, tipoPregunta, opciones, numEstrellas, newCampoEducacional);
+            }}
+            style={{
+              width: "220px",
+              padding: "8px",
+              borderRadius: "8px",
+              border: "1px solid #ddd",
+              height: "36px",
+              fontSize: '14px',
+              color: '#444',
+              background: '#f9f9f9',
+              marginRight: '12px'
+            }}
+          >
+            {camposEducacionales.map((campo) => (
+              <option key={campo.id} value={campo.numero}>
+                {campo.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Controles adicionales */}
       {editable && onEliminarPregunta && (

@@ -17,18 +17,15 @@ interface ConfiguracionEncuestaProps {
 
 const ConfiguracionEncuesta: React.FC<ConfiguracionEncuestaProps> = ({ surveyData, setSurveyData }) => {
   const [tipoUsuario, setTipoUsuario] = useState<Survey['tipo'] | "Anonima">(surveyData?.anonima === 1 ? "Anonima" : (surveyData?.tipo || "egresado"));
-  const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? new Date(surveyData.inicio).toISOString().split('T')[0] : "");
-  const [fechaFin, setFechaFin] = useState(surveyData?.fin ? new Date(surveyData.fin).toISOString().split('T')[0] : "");
+  const [fechaInicio, setFechaInicio] = useState(surveyData?.inicio ? surveyData.inicio.split(' ')[0] : "");
+  const [fechaFin, setFechaFin] = useState(surveyData?.fin ? surveyData.fin.split(' ')[0] : "");
 
   useEffect(() => {
     if (surveyData) {
       setTipoUsuario(surveyData.anonima === 1 ? "Anonima" : surveyData.tipo);
-      // Ensure dates are valid before trying to format
-      const newFechaInicio = surveyData.inicio ? new Date(surveyData.inicio) : null;
-      const newFechaFin = surveyData.fin ? new Date(surveyData.fin) : null;
-      setFechaInicio(newFechaInicio && !isNaN(newFechaInicio.getTime()) ? newFechaInicio.toISOString().split('T')[0] : "");
-      setFechaFin(newFechaFin && !isNaN(newFechaFin.getTime()) ? newFechaFin.toISOString().split('T')[0] : "");
-      
+      // Tomar solo la parte de la fecha (YYYY-MM-DD) para los inputs
+      setFechaInicio(surveyData.inicio ? surveyData.inicio.split(' ')[0] : "");
+      setFechaFin(surveyData.fin ? surveyData.fin.split(' ')[0] : "");
     }
   }, [surveyData]);
 

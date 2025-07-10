@@ -28,10 +28,11 @@ interface Option {
 interface Question {
   id: number;
   encuesta_id: number;
-  tipo: 'abierta' | 'multiple' | 'likert';
+  tipo: 'abierta' | 'multiple' | 'likert' | 'checkbox';
   texto: string;
   orden: number;
   competencia_asociada: string;
+  campo_educacional_numero?: number;
   opciones: Option[];
   tempClientId?: number;
 }
@@ -47,6 +48,27 @@ const CrearEncuesta: React.FC = () => {
   const [questionsToDelete, setQuestionsToDelete] = useState<number[]>([]); // Nuevo estado para IDs de preguntas a eliminar
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+  const [camposEducacionales, setCamposEducacionales] = useState<Array<{id: number, numero: number, nombre: string, descripcion: string}>>([]);
+
+  // Obtener campos educativos solo una vez aquí
+  useEffect(() => {
+    const fetchCamposEducacionales = async () => {
+      try {
+        const userToken = localStorage.getItem('userToken');
+        if (!userToken) return;
+        const response = await fetch('https://egresados.it2id.cc/api/educational-fields', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCamposEducacionales(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        // Silenciar error
+      }
+    };
+    fetchCamposEducacionales();
+  }, []);
 
   // Ref para almacenar el surveyData más reciente
   const latestSurveyData = useRef(surveyData);
@@ -140,6 +162,49 @@ const CrearEncuesta: React.FC = () => {
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
       Swal.fire('¡Atención!', 'No se encontró el token de usuario. Por favor, inicie sesión.', 'warning');
+      setIsSaving(false);
+      return;
+    }
+
+    // Validar título de la encuesta
+    if (!latestSurveyData.current.titulo || latestSurveyData.current.titulo.trim() === '') {
+      Swal.fire('¡Atención!', 'El título de la encuesta es obligatorio.', 'warning');
+      setIsSaving(false);
+      return;
+    }
+
+    // Validar preguntas
+    const validationErrors: string[] = [];
+    
+    // Validar título de la encuesta
+    if (!latestSurveyData.current.titulo || latestSurveyData.current.titulo.trim() === '') {
+      validationErrors.push('El título de la encuesta es obligatorio');
+    }
+    
+    // Validar cada pregunta
+    questionsData.forEach((pregunta, index) => {
+      // Validar título de la pregunta
+      if (!pregunta.texto || pregunta.texto.trim() === '') {
+        validationErrors.push(`Pregunta ${index + 1}: El título es obligatorio`);
+      }
+      
+      // Validar opciones para preguntas de opción múltiple y checkbox
+      if (pregunta.tipo === 'multiple' || pregunta.tipo === 'checkbox') {
+        pregunta.opciones.forEach((opcion, opcionIndex) => {
+          if (!opcion.etiqueta || opcion.etiqueta.trim() === '') {
+            validationErrors.push(`Pregunta ${index + 1}, Opción ${opcionIndex + 1}: La opción no puede estar vacía`);
+          }
+        });
+      }
+    });
+    
+    if (validationErrors.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Hay errores en la encuesta',
+        html: validationErrors.map(error => `<div style="text-align: left; margin-bottom: 8px;">• ${error}</div>`).join(''),
+        confirmButtonText: 'Entendido'
+      });
       setIsSaving(false);
       return;
     }
@@ -274,10 +339,10 @@ const CrearEncuesta: React.FC = () => {
 
       // Process questions (both for creation and edit)
       for (const question of questionsData) {
-        const questionTypeApi: 'abierta' | 'multiple' | 'likert' = question.tipo;
+        const questionTypeApi: 'abierta' | 'multiple' | 'likert' | 'checkbox' = question.tipo;
 
         let optionsPayload: Option[] = [];
-        if (questionTypeApi === 'multiple') {
+        if (questionTypeApi === 'multiple' || questionTypeApi === 'checkbox') {
           optionsPayload = question.opciones.map((opt, index) => ({
             pregunta_id: question.id || 0, // Will be updated by API if it's a new question
             valor: (index + 1).toString(),
@@ -301,6 +366,7 @@ const CrearEncuesta: React.FC = () => {
           texto: question.texto,
           orden: question.orden,
           competencia_asociada: question.competencia_asociada,
+          campo_educacional_numero: question.campo_educacional_numero || 0,
         };
 
         const requestBody = {
@@ -488,7 +554,7 @@ const CrearEncuesta: React.FC = () => {
         isAnonima={surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion'}
         isSaving={isSaving}
       />
-      {activo === "Preguntas" && <CreacionDeEncuesta questions={questionsData} surveyData={surveyData} setSurveyData={setSurveyData} onQuestionsChange={handleQuestionsChange} questionsToDelete={questionsToDelete} setQuestionsToDelete={setQuestionsToDelete} />}
+      {activo === "Preguntas" && <CreacionDeEncuesta questions={questionsData} surveyData={surveyData} setSurveyData={setSurveyData} onQuestionsChange={handleQuestionsChange} questionsToDelete={questionsToDelete} setQuestionsToDelete={setQuestionsToDelete} camposEducacionales={camposEducacionales} />}
       {activo === "Respuestas" && <RespuestaDisplay surveyId={surveyData?.id || null} questions={questionsData} />}
       {activo === "Configuración" && <ConfiguracionEncuesta surveyData={surveyData} setSurveyData={setSurveyData} />}
       {activo === "Correos" && (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') && 

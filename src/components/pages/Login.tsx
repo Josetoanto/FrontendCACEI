@@ -1,13 +1,51 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    if (value && !value.includes('@')) {
+      setEmailError('Por favor, ingresa un correo electrónico válido');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    
+    if (value === '') {
+      setPasswordError('Por favor, ingresa tu contraseña');
+    } else {
+      setPasswordError('');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar email antes de enviar
+    if (!email.includes('@')) {
+      setEmailError('Por favor, ingresa un correo electrónico válido');
+      return;
+    }
+
+    // Validar contraseña antes de enviar
+    if (!password.trim()) {
+      setPasswordError('Por favor, ingresa tu contraseña');
+      return;
+    }
+    
     const apiUrl = 'https://egresados.it2id.cc/api/users/login';
 
     try {
@@ -21,8 +59,12 @@ const Login: React.FC = () => {
 
       if (!response.ok) {
         // Handle non-200 responses
-        const errorText = await response.text();
-        alert(`Error en el inicio de sesión: ${response.status} - ${errorText}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en el inicio de sesión',
+          text: 'Credenciales incorrectas. Por favor, verifica tu correo y contraseña.',
+          confirmButtonText: 'Aceptar'
+        });
         return;
       }
 
@@ -46,17 +88,32 @@ const Login: React.FC = () => {
             navigate('/evaluador');
             break;
           default:
-            alert('Tipo de usuario desconocido. Redirigiendo a la página principal.');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Tipo de usuario desconocido',
+              text: 'Redirigiendo a la página principal.',
+              confirmButtonText: 'Aceptar'
+            });
             navigate('/'); // Fallback to home or a default page
         }
 
-      } else {
-        alert('Respuesta de API inesperada.');
-      }
+              } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el inicio de sesión',
+            text: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
 
     } catch (error) {
       console.error('Error al conectar con la API:', error);
-      alert('Error al intentar iniciar sesión. Por favor, inténtalo de nuevo más tarde.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el inicio de sesión',
+        text: 'No se pudo conectar con el servidor. Por favor, verifica tu conexión e inténtalo de nuevo.',
+        confirmButtonText: 'Aceptar'
+      });
     }
   };
 
@@ -98,13 +155,23 @@ const Login: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '10px',
-                border: '1px solid #ccc',
+                border: emailError ? '1px solid #dc3545' : '1px solid #ccc',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
               }}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
             />
+            {emailError && (
+              <div style={{
+                color: '#dc3545',
+                fontSize: '0.8em',
+                marginTop: '5px',
+                textAlign: 'left'
+              }}>
+                {emailError}
+              </div>
+            )}
           </div>
           <div style={{
             marginBottom: '20px',
@@ -123,23 +190,24 @@ const Login: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '10px',
-                border: '1px solid #ccc',
+                border: passwordError ? '1px solid #dc3545' : '1px solid #ccc',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
               }}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
             />
+            {passwordError && (
+              <div style={{
+                color: '#dc3545',
+                fontSize: '0.8em',
+                marginTop: '5px',
+                textAlign: 'left'
+              }}>
+                {passwordError}
+              </div>
+            )}
           </div>
-          <a href="#" style={{
-            display: 'block',
-            textAlign: 'right',
-            marginTop: '-10px',
-            marginBottom: '20px',
-            fontSize: '0.8em',
-            color: '#007bff',
-            textDecoration: 'none',
-          }}>Olvidaste tu contraseña?</a>
           <button
             type="submit"
             style={{

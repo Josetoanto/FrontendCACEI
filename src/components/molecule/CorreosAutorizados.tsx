@@ -36,6 +36,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
   const [showMultipleInput, setShowMultipleInput] = useState(false);
   const [invitaciones, setInvitaciones] = useState<InvitationData[]>([]);
   const [loadingInvitaciones, setLoadingInvitaciones] = useState(false);
+  const [mensajeNotificacion, setMensajeNotificacion] = useState("¡Tienes una nueva notificación sobre la encuesta!");
 
   // Validar formato de correo
   const validarCorreo = (correo: string) => {
@@ -418,7 +419,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
             try {
               const notiBody = {
                 encuesta_id: surveyId,
-                mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
+                mensaje: mensajeNotificacion
               };
               
               const notiResp = await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
@@ -557,7 +558,7 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
                     try {
                       const notiBody = {
                         encuesta_id: surveyId,
-                        mensaje: '¡Tienes una nueva notificación sobre la encuesta!'
+                        mensaje: mensajeNotificacion
                       };
                       
                       await fetch('https://egresados.it2id.cc/api/notifications/anonymous', {
@@ -714,6 +715,28 @@ const CorreosAutorizados: React.FC<CorreosAutorizadosProps> = ({ surveyId, isEdi
             </div>
             <div style={{ color: "#666", fontSize: "14px", marginBottom: "16px" }}>
               Agrega nuevos correos a la lista de autorizados y envíales invitaciones inmediatamente
+            </div>
+            
+            {/* Input para mensaje de notificación personalizado */}
+            <div style={{ marginBottom: "12px" }}>
+              <label style={{ fontWeight: "bold", fontSize: "15px" }}>
+                Mensaje de notificación:
+              </label>
+              <input
+                type="text"
+                value={mensajeNotificacion}
+                onChange={e => setMensajeNotificacion(e.target.value)}
+                style={{
+                  width: "96%",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  border: "1px solid #e0e0e0",
+                  fontSize: "15px",
+                  marginTop: "6px"
+                }}
+                maxLength={200}
+                placeholder="Escribe el mensaje que recibirán los invitados"
+              />
             </div>
             
             {/* Botón para alternar entre modo individual y múltiple */}
