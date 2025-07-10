@@ -141,7 +141,7 @@ const RespuestaDisplay: React.FC<RespuestaDisplayProps> = ({ surveyId, questions
     // Crear filas de datos: cada fila es una respuesta individual (usuario)
     const csvRows = [headers.join(',')];
     
-    Object.entries(allResponses).forEach(([respuestaId, questionResponses]) => {
+    Object.entries(allResponses).forEach(([, questionResponses]) => {
       const row: string[] = [];
       // Obtener la fecha de la primera respuesta (todas deberian tener la misma fecha)
       const firstResponse = Object.values(questionResponses)[0]?.[0];
