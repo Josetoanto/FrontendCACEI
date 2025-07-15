@@ -81,46 +81,58 @@ const InfoEncuesta: React.FC<InfoEncuestaProps> = ({ editable = true, surveyData
       {/* Título y descripción: modo solo lectura o editable */}
       {editable ? (
         <div>
-          <input 
-            type="text"
+          <textarea
             value={titulo}
-            onChange={handleTituloChange}
+            onChange={handleTituloChange as any}
+            onInput={e => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = `${target.scrollHeight}px`;
+            }}
             style={{
               width: "100%",
-              fontSize: "28px",
+              fontSize: "27px",
               fontWeight: "bold",
-              padding:"20px",
+              padding: "20px",
               border: tituloError ? "2px solid #dc3545" : "none",
               outline: "none",
               backgroundColor: "transparent",
-              paddingBottom:"15px",
-              paddingTop:"5px",
-              maxWidth:"600px",
-              borderRadius: tituloError ? "4px" : "0"
+              paddingBottom: "15px",
+              paddingTop: "5px",
+              maxWidth: "600px",
+              borderRadius: tituloError ? "4px" : "0",
+              resize: "none",
+              overflow: "hidden",
+              minHeight: "40px",
+              boxSizing: 'border-box',
+              wordBreak: 'break-word',
+              fontFamily: "Arial, sans-serif",
             }}
+            rows={1}
           />
-                      {tituloError && (
-              <div style={{
-                color: "#dc3545",
-                fontSize: "14px",
-                marginLeft: "20px",
-                marginTop: "4px"
-              }}>
-                El título de la encuesta es obligatorio
-              </div>
-            )}
+          {tituloError && (
+            <div style={{
+              color: "#dc3545",
+              fontSize: "14px",
+              marginLeft: "20px",
+              marginTop: "4px"
+            }}>
+              El título de la encuesta es obligatorio
+            </div>
+          )}
         </div>
       ) : (
         <div style={{
           width: "100%",
-          fontSize: "28px",
+          fontSize: "27px",
           fontWeight: "bold",
-          padding:"20px",
-          paddingBottom:"15px",
-          paddingTop:"5px",
-          maxWidth:"600px",
+          padding: "20px",
+          paddingBottom: "15px",
+          paddingTop: "5px",
+          maxWidth: "600px",
           color: '#333',
           wordBreak: 'break-word',
+          whiteSpace: 'pre-line',
         }}>{titulo}</div>
       )}
 

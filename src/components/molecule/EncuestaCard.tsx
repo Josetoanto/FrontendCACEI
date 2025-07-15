@@ -79,6 +79,136 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
     }
   };
 
+  const handleClone = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    const { value: newTitle } = await Swal.fire({
+      title: 'Clonar encuesta',
+      input: 'text',
+      inputLabel: 'Nuevo nombre para la encuesta clonada',
+      inputPlaceholder: 'Ingresa el nuevo nombre',
+      showCancelButton: true,
+      confirmButtonText: 'Clonar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes ingresar un nombre';
+        }
+        return null;
+      }
+    });
+
+    if (!newTitle) return;
+
+    const userToken = localStorage.getItem('userToken');
+    if (!userToken) {
+      Swal.fire('Error', 'No estás autenticado para realizar esta acción.', 'error');
+      return;
+    }
+
+    // Mostrar spinner de carga
+    Swal.fire({
+      title: 'Clonando encuesta...',
+      text: 'Por favor espera mientras se clona la encuesta y sus preguntas.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      // 1. Obtener datos de la encuesta original
+      const surveyRes = await fetch(`https://egresados.it2id.cc/api/surveys/${id}`, {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (!surveyRes.ok) throw new Error('No se pudo obtener la encuesta original');
+      const originalSurvey = await surveyRes.json();
+
+      // 2. Obtener preguntas de la encuesta original
+      const questionsRes = await fetch(`https://egresados.it2id.cc/api/questions/survey/${id}`, {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (!questionsRes.ok) throw new Error('No se pudieron obtener las preguntas');
+      const originalQuestions = await questionsRes.json();
+
+      // 3. Crear nueva encuesta con el nuevo nombre y mismas fechas/configuración
+      // Formatear fechas a 'YYYY-MM-DD HH:MM:SS'
+      function formatToApiDate(dateString: string) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      }
+      const newSurveyBody = {
+        titulo: newTitle,
+        descripcion: originalSurvey.descripcion,
+        tipo: originalSurvey.tipo,
+        anonima: originalSurvey.anonima === 1 || originalSurvey.anonima === true,
+        inicio: formatToApiDate(originalSurvey.inicio),
+        fin: formatToApiDate(originalSurvey.fin)
+      };
+      const createSurveyRes = await fetch('https://egresados.it2id.cc/api/surveys', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSurveyBody),
+      });
+      if (!createSurveyRes.ok) throw new Error('No se pudo crear la encuesta clonada');
+      const newSurvey = await createSurveyRes.json();
+
+      // 4. Clonar preguntas
+      for (const q of originalQuestions) {
+        const questionPayload = {
+          encuesta_id: newSurvey.id,
+          tipo: q.tipo,
+          texto: q.texto,
+          orden: q.orden,
+          competencia_asociada: q.competencia_asociada,
+          campo_educacional_numero: q.campo_educacional_numero || 0,
+        };
+        let optionsPayload = [];
+        if (q.tipo === 'multiple' || q.tipo === 'checkbox') {
+          optionsPayload = q.opciones.map((opt: any, idx: number) => ({
+            valor: (idx + 1).toString(),
+            etiqueta: opt.etiqueta,
+            peso: idx + 1
+          }));
+        } else if (q.tipo === 'likert') {
+          optionsPayload = Array.from({ length: q.opciones.length > 0 ? q.opciones.length : 5 }, (_, i) => ({
+            valor: (i + 1).toString(),
+            etiqueta: (i + 1).toString(),
+            peso: i + 1
+          }));
+        }
+        const requestBody = {
+          question: questionPayload,
+          options: optionsPayload
+        };
+        await fetch(`https://egresados.it2id.cc/api/questions/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${userToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+      }
+
+      Swal.fire('¡Clonada!', 'La encuesta ha sido clonada exitosamente.', 'success');
+      onDeleteSuccess(); // Refrescar lista
+    } catch (error: any) {
+      console.error('Error al clonar la encuesta:', error);
+      Swal.fire('Error', error.message || 'Error al clonar la encuesta.', 'error');
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -146,6 +276,20 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
                 transformOrigin: "top right",
               }}
             >
+              <div 
+                style={{
+                  padding: "8px 15px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  color: "#333",
+                  borderBottom: "1px solid #eee"
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#fff")}
+                onClick={handleClone}
+              >
+                Clonar
+              </div>
               <div 
                 style={{
                   padding: "8px 15px",

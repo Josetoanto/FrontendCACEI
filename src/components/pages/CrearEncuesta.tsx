@@ -166,6 +166,16 @@ const CrearEncuesta: React.FC = () => {
       return;
     }
 
+    // Mostrar SweetAlert2 de carga
+    Swal.fire({
+      title: isEditMode ? 'Actualizando encuesta...' : 'Creando encuesta...',
+      text: 'Por favor espera',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     // Validar título de la encuesta
     if (!latestSurveyData.current.titulo || latestSurveyData.current.titulo.trim() === '') {
       Swal.fire('¡Atención!', 'El título de la encuesta es obligatorio.', 'warning');
@@ -424,8 +434,8 @@ const CrearEncuesta: React.FC = () => {
 
       Swal.fire('¡Éxito!', `Encuesta ${isEditMode ? 'actualizada' : 'creada'} exitosamente!`, 'success');
 
-      // Si la encuesta es anónima o de autoevaluación, enviar invitaciones y notificaciones automáticamente
-      if (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion') {
+      // Solo enviar invitaciones y notificaciones al crear la encuesta anónima o de autoevaluación
+      if (!isEditMode && (surveyData?.anonima === 1 || surveyData?.tipo === 'autoevaluacion')) {
         await enviarInvitaciones(surveyIdToUse);
         
         // Enviar notificación a todos los invitados
@@ -455,9 +465,11 @@ const CrearEncuesta: React.FC = () => {
 
     } catch (err: any) {
       console.error('Error al guardar la encuesta:', err);
+      Swal.close(); // Cierra el loader antes de mostrar el error
       Swal.fire('Error', err.message || 'Hubo un error al guardar la encuesta.', 'error');
     } finally {
       setIsSaving(false);
+      // Swal.close() eliminado de aquí
     }
   };
 
