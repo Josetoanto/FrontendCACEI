@@ -5,12 +5,13 @@ import profileIcon from "../../assets/profileIcon.png";
 import Educacion from "../molecule/Educacion";
 import ListaDeHabilidades from "../molecule/ListaDeHabilidades";
 import EditarHabilidades from "../molecule/EditarHabilidades";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import CambiarContrasenaModal from "../atoms/CambiarContrasenaModal";
 
 
 const PerfilDeEvaluador: React.FC = () => {
     const { userId } = useParams<{ userId?: string }>();
+    const navigate = useNavigate();
     const [userData, setUserData] = useState({
       nombre: "Cargando...",
       fotoPerfil: profileIcon,
@@ -362,6 +363,15 @@ const PerfilDeEvaluador: React.FC = () => {
       setIsEditing(false);
     };
 
+    const handleLogout = () => {
+      // Limpiar localStorage
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('userData');
+      
+      // Redirigir al login
+      navigate('/login');
+    };
+
     if (isLoading) {
         return (
             <div>
@@ -401,7 +411,7 @@ const PerfilDeEvaluador: React.FC = () => {
         )}
 
         {showEditButton && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', gap: '10px' }}>
             <button
               onClick={() => setShowCambiarContrasena(true)}
               style={{
@@ -415,6 +425,20 @@ const PerfilDeEvaluador: React.FC = () => {
               }}
             >
               Cambiar contraseña
+            </button>
+            <button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: '#dc3545',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Cerrar sesión
             </button>
           </div>
         )}

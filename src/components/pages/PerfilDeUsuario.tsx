@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "../organisms/Header";
 import PerfilCard from "../organisms/PerfilCard";
 import profileIcon from "../../assets/profileIcon.png";
@@ -20,6 +20,7 @@ interface Experiencia {
 
 const PerfilDeUsuario: React.FC = () => {
     const { userId } = useParams<{ userId?: string }>();
+    const navigate = useNavigate();
     const [userData, setUserData] = useState({
       nombre: "Cargando...",
       fotoPerfil: profileIcon,
@@ -259,6 +260,15 @@ const PerfilDeUsuario: React.FC = () => {
       setIsEditing(false);
     };
 
+    const handleLogout = () => {
+      // Limpiar localStorage
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('userData');
+      
+      // Redirigir al login
+      navigate('/login');
+    };
+
     const handleBasicInfoChange = (newData: { nombre: string; ubicacion: string; descripcion: string; fotoPerfil: string; }) => {
         setUserData(prevData => ({
             ...prevData,
@@ -455,7 +465,7 @@ const PerfilDeUsuario: React.FC = () => {
         )}
 
         {showEditButton && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', gap: '10px' }}>
             <button
               onClick={() => setShowCambiarContrasena(true)}
               style={{
@@ -469,6 +479,20 @@ const PerfilDeUsuario: React.FC = () => {
               }}
             >
               Cambiar contraseña
+            </button>
+            <button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: '#dc3545',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Cerrar sesión
             </button>
           </div>
         )}

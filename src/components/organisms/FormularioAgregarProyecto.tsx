@@ -8,6 +8,7 @@ const FormularioAgregarProyecto: React.FC = () => {
     descripcion: "",
   });
   const [evidencias, setEvidencias] = useState<{ titulo: string; descripcion: string; archivo: File | null; github_url: string; tipo: 'archivo' | 'url' }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -56,6 +57,13 @@ const FormularioAgregarProyecto: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevenir múltiples envíos
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
         Swal.fire({
@@ -63,6 +71,7 @@ const FormularioAgregarProyecto: React.FC = () => {
           title: 'No autenticado',
           text: 'Por favor, inicia sesión para continuar.',
         });
+        setIsSubmitting(false);
         return;
     }
 
@@ -88,6 +97,7 @@ const FormularioAgregarProyecto: React.FC = () => {
           title: 'Error al crear el proyecto',
           text: `Error: ${projectResponse.status} - ${errorText}`,
         });
+        setIsSubmitting(false);
         return;
       }
 
@@ -105,6 +115,7 @@ const FormularioAgregarProyecto: React.FC = () => {
               title: 'Archivos requeridos',
               text: 'Por favor, adjunta un archivo PDF o imagen para todas las evidencias tipo archivo.',
             });
+            setIsSubmitting(false);
             return;
           }
           const formDataEvidence = new FormData();
@@ -114,15 +125,19 @@ const FormularioAgregarProyecto: React.FC = () => {
           let tipoIdForEvidence: string;
           if (evidencia.archivo.type === 'application/pdf') {
             tipoIdForEvidence = '1';
-          } else if (evidencia.archivo.type === 'image/jpeg' || evidencia.archivo.type === 'image/jpg') {
+          } else if (evidencia.archivo.type === 'image/jpeg' || evidencia.archivo.type === 'image/jpg' || 
+                     evidencia.archivo.type === 'image/png' || evidencia.archivo.type === 'image/gif' || 
+                     evidencia.archivo.type === 'image/webp' || evidencia.archivo.type === 'image/bmp' ||
+                     evidencia.archivo.type === 'image/svg+xml' || evidencia.archivo.type === 'image/tiff') {
             tipoIdForEvidence = '2';
           } else {
             Swal.fire({
               icon: 'error',
               title: 'Tipo de archivo no soportado',
-              text: `El tipo de archivo para la evidencia '${evidencia.titulo || evidencia.archivo.name}' no es soportado. Solo se permiten PDF e imágenes JPG.`,
+              text: `El tipo de archivo para la evidencia '${evidencia.titulo || evidencia.archivo.name}' no es soportado. Solo se permiten PDF e imágenes (JPG, PNG, GIF, WebP, BMP, SVG, TIFF).`,
             });
-            continue;
+            setIsSubmitting(false);
+            return;
           }
           formDataEvidence.append('tipo_id', tipoIdForEvidence);
           formDataEvidence.append('archivo', evidencia.archivo);
@@ -161,6 +176,7 @@ const FormularioAgregarProyecto: React.FC = () => {
               title: 'URL requerida',
               text: 'Por favor, ingresa una URL para todas las evidencias tipo URL.',
             });
+            setIsSubmitting(false);
             return;
           }
           const formDataEvidence = new FormData();
@@ -206,6 +222,7 @@ const FormularioAgregarProyecto: React.FC = () => {
       // Opcional: limpiar el formulario
       setFormData({ nombre: "", descripcion: "" });
       setEvidencias([]); // Limpiar evidencias
+      setIsSubmitting(false);
       navigate('/egresado'); // Redirigir al usuario
 
     } catch (error) {
@@ -215,6 +232,7 @@ const FormularioAgregarProyecto: React.FC = () => {
         title: 'Error general',
         text: 'Error al crear el proyecto o las evidencias. Por favor, inténtalo de nuevo más tarde.',
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -267,7 +285,7 @@ const FormularioAgregarProyecto: React.FC = () => {
                   name={`tipo_${index}`}
                   checked={evidencia.tipo === 'archivo'}
                   onChange={() => handleEvidenciaTipoChange(index, 'archivo')}
-                /> Archivo (PDF/JPG)
+                /> Archivo (PDF/Imágenes)
               </label>
               <label style={{ marginLeft: "20px" }}>
                 <input
@@ -298,10 +316,10 @@ const FormularioAgregarProyecto: React.FC = () => {
             />
             {evidencia.tipo === 'archivo' && (
               <>
-                <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Adjuntar evidencia (PDF/JPG)</p>
+                <p style={{textAlign:"left", fontWeight: "bold", marginBottom: "10px" }}>Adjuntar evidencia (PDF/Imágenes)</p>
                 <input
                   type="file"
-                  accept=".pdf,.jpg,.jpeg"
+                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.tiff,.tif"
                   onChange={(e) => handleEvidenciaFileChange(e, index)}
                   style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", width: "100%", boxSizing: "border-box" }}
                 />
@@ -343,17 +361,18 @@ const FormularioAgregarProyecto: React.FC = () => {
         {/* Botón de agregar */}
         <button 
           type="submit"
+          disabled={isSubmitting}
           style={{
-            backgroundColor: "#f0f2f5",
+            backgroundColor: isSubmitting ? "#ccc" : "#f0f2f5",
             borderRadius: "12px",
             border: "none",
             padding: "12px",
             fontSize: "16px",
-            cursor: "pointer",
+            cursor: isSubmitting ? "not-allowed" : "pointer",
             width: "100%",
           }}
         >
-          Agregar Proyecto
+          {isSubmitting ? "Enviando..." : "Agregar Proyecto"}
         </button>
       </form>
     </div>

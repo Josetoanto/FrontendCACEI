@@ -82,23 +82,34 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
   const handleClone = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    const { value: newTitle } = await Swal.fire({
+
+    // Nuevo formulario para clonar encuesta con selección de tipo y anonimato
+    const { value: formValues } = await Swal.fire({
       title: 'Clonar encuesta',
-      input: 'text',
-      inputLabel: 'Nuevo nombre para la encuesta clonada',
-      inputPlaceholder: 'Ingresa el nuevo nombre',
+      html:
+        '<input id="swal-input-title" class="swal2-input" placeholder="Nuevo nombre para la encuesta" style="width:80%">' +
+        '<select id="swal-input-type" class="swal2-select" style="margin-top:10px;width:80%">' +
+        '<option value="egresado">Egresado</option>' +
+        '<option value="evaluador">Evaluador</option>' +
+        '<option value="anonima">Anónima</option>' +
+        '</select>',
+      focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Clonar',
       cancelButtonText: 'Cancelar',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Debes ingresar un nombre';
+      preConfirm: () => {
+        const title = (document.getElementById('swal-input-title') as HTMLInputElement).value;
+        const tipo = (document.getElementById('swal-input-type') as HTMLSelectElement).value;
+        if (!title) {
+          Swal.showValidationMessage('Debes ingresar un nombre');
+          return null;
         }
-        return null;
+        return { title, tipo };
       }
     });
 
-    if (!newTitle) return;
+    if (!formValues) return;
+    const { title: newTitle, tipo: newTipo } = formValues;
 
     const userToken = localStorage.getItem('userToken');
     if (!userToken) {
@@ -106,7 +117,6 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
       return;
     }
 
-    // Mostrar spinner de carga
     Swal.fire({
       title: 'Clonando encuesta...',
       text: 'Por favor espera mientras se clona la encuesta y sus preguntas.',
@@ -131,8 +141,7 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
       if (!questionsRes.ok) throw new Error('No se pudieron obtener las preguntas');
       const originalQuestions = await questionsRes.json();
 
-      // 3. Crear nueva encuesta con el nuevo nombre y mismas fechas/configuración
-      // Formatear fechas a 'YYYY-MM-DD HH:MM:SS'
+      // 3. Crear nueva encuesta con el nuevo nombre, tipo y anonimato
       function formatToApiDate(dateString: string) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -144,11 +153,17 @@ const EncuestaCard: React.FC<EncuestaCardProps> = ({ title, createdAt, imageSrc,
         const seconds = date.getSeconds().toString().padStart(2, '0');
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
+      let tipoFinal = newTipo;
+      let anonimaFinal = 0;
+      if (newTipo === 'anonima') {
+        tipoFinal = 'autoevaluacion';
+        anonimaFinal = 1;
+      }
       const newSurveyBody = {
         titulo: newTitle,
         descripcion: originalSurvey.descripcion,
-        tipo: originalSurvey.tipo,
-        anonima: originalSurvey.anonima === 1 || originalSurvey.anonima === true,
+        tipo: tipoFinal,
+        anonima: anonimaFinal,
         inicio: formatToApiDate(originalSurvey.inicio),
         fin: formatToApiDate(originalSurvey.fin)
       };

@@ -239,10 +239,10 @@ const Configuracion: React.FC = () => {
             >
               <h3 style={{ margin: '0 0 15px 0', color: '#1976d2' }}>
                 <i className="fas fa-graduation-cap" style={{ marginRight: '10px' }}></i>
-                Gestión de Campos Educacionales
+                Gestión de Secciones de la Encuesta
               </h3>
               <p style={{ color: '#666', margin: '0' }}>
-                Administrar campos educacionales del sistema.
+                Administrar secciones de la encuesta.
               </p>
             </div>
 

@@ -34,7 +34,7 @@ const GestionCamposEducacionales: React.FC = () => {
   const fetchCamposEducacionales = async () => {
     setLoading(true);
     try {
-      console.log('Intentando obtener campos educacionales...');
+      console.log('Intentando obtener secciones de la encuesta...');
       console.log('Token:', token ? 'Presente' : 'Ausente');
       
       // Intentar primero con autenticación
@@ -91,7 +91,7 @@ const GestionCamposEducacionales: React.FC = () => {
       setCamposEducacionales(campos);
       setFetchError(''); // Limpiar error si la carga fue exitosa
     } catch (e) {
-      console.error('Error al obtener campos educacionales:', e);
+      console.error('Error al obtener secciones de la encuesta:', e);
       setFetchError(`Error de conexión: ${e instanceof Error ? e.message : 'Error desconocido'}`);
       setCamposEducacionales([]);
     }
@@ -172,9 +172,9 @@ const GestionCamposEducacionales: React.FC = () => {
 
       closeAddModal();
       fetchCamposEducacionales();
-      Swal.fire('Éxito', 'Campo educativo agregado correctamente', 'success');
+      Swal.fire('Éxito', 'Sección de la encuesta agregada correctamente', 'success');
     } catch (e) {
-      setFormError('Error al agregar campo educativo');
+      setFormError('Error al agregar la sección de la encuesta');
     }
   };
 
@@ -182,7 +182,7 @@ const GestionCamposEducacionales: React.FC = () => {
   const openEditModal = (campo: CampoEducacional) => {
     // Prevenir edición del campo con número 0
     if (campo.numero === 0) {
-      Swal.fire('Error', 'No se puede editar el campo educativo por defecto.', 'error');
+      Swal.fire('Error', 'No se puede editar la sección de la encuesta por defecto.', 'error');
       return;
     }
     
@@ -235,9 +235,9 @@ const GestionCamposEducacionales: React.FC = () => {
 
       closeEditModal();
       fetchCamposEducacionales();
-      Swal.fire('Éxito', 'Campo educativo actualizado correctamente', 'success');
+      Swal.fire('Éxito', 'Sección de la encuesta actualizada correctamente', 'success');
     } catch (e) {
-      setFormError('Error al actualizar campo educativo');
+      setFormError('Error al actualizar la sección de la encuesta');
     }
   };
 
@@ -248,13 +248,13 @@ const GestionCamposEducacionales: React.FC = () => {
     
     // Prevenir eliminación del campo con número 0
     if (campoAEliminar && campoAEliminar.numero === 0) {
-      Swal.fire('Error', 'No se puede eliminar el campo educativo por defecto.', 'error');
+      Swal.fire('Error', 'No se puede eliminar la sección de la encuesta por defecto.', 'error');
       return;
     }
 
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: 'Esta acción eliminará el campo educativo permanentemente.',
+      text: 'Esta acción eliminará la sección de la encuesta permanentemente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -272,14 +272,14 @@ const GestionCamposEducacionales: React.FC = () => {
       });
 
       if (!res.ok) {
-        Swal.fire('Error', 'Error al eliminar campo educativo', 'error');
+        Swal.fire('Error', 'Error al eliminar la sección de la encuesta', 'error');
         return;
       }
 
       fetchCamposEducacionales();
-      Swal.fire('Eliminado', 'El campo educativo ha sido eliminado.', 'success');
+      Swal.fire('Eliminado', 'La sección de la encuesta ha sido eliminado.', 'success');
     } catch (e) {
-      Swal.fire('Error', 'Error al eliminar campo educativo', 'error');
+      Swal.fire('Error', 'Error al eliminar la sección de la encuesta', 'error');
     }
   };
 
@@ -331,7 +331,7 @@ const GestionCamposEducacionales: React.FC = () => {
                 color: '#333',
                 display: 'inline-block'
               }}>
-                Gestión de Campos Educacionales
+                Gestión de Secciones de la Encuesta
               </h1>
             </div>
             <button
@@ -351,7 +351,7 @@ const GestionCamposEducacionales: React.FC = () => {
               }}
             >
               <i className="fas fa-plus"></i>
-              Agregar Campo
+              Agregar Secciones de la Encuesta
             </button>
           </div>
 
@@ -365,11 +365,11 @@ const GestionCamposEducacionales: React.FC = () => {
             <div style={{ flex: '1', minWidth: '300px' }}>
               <input
                 type="text"
-                placeholder="Buscar campos educacionales..."
+                placeholder="Buscar secciones de la encuesta..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  width: '100%',
+                  width: '98%',
                   padding: '12px',
                   border: '1px solid #ddd',
                   borderRadius: '8px',
@@ -390,7 +390,7 @@ const GestionCamposEducacionales: React.FC = () => {
               fontSize: '14px',
               border: '1px solid #ffcdd2'
             }}>
-              <strong>Error al cargar campos educacionales:</strong> {fetchError}
+              <strong>Error al cargar secciones de la encuesta:</strong> {fetchError}
               <button
                 onClick={() => {
                   setFetchError('');
@@ -416,7 +416,7 @@ const GestionCamposEducacionales: React.FC = () => {
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px' }}>
               <i className="fas fa-spinner fa-spin" style={{ fontSize: '2em', color: '#666' }}></i>
-              <p style={{ marginTop: '10px', color: '#666' }}>Cargando campos educacionales...</p>
+              <p style={{ marginTop: '10px', color: '#666' }}>Cargando secciones de la encuesta...</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -505,7 +505,7 @@ const GestionCamposEducacionales: React.FC = () => {
               {paginatedCampos.length === 0 && !loading && (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                   <i className="fas fa-inbox" style={{ fontSize: '3em', marginBottom: '10px' }}></i>
-                  <p>No se encontraron campos educacionales</p>
+                  <p>No se encontraron secciones de la encuesta</p>
                 </div>
               )}
             </div>
@@ -588,7 +588,7 @@ const GestionCamposEducacionales: React.FC = () => {
             }}>
               <h2 style={{ margin: 0, color: '#333' }}>
                 <i className="fas fa-plus" style={{ marginRight: '10px', color: '#1976d2' }}></i>
-                Agregar Campo Educativo
+                Agregar Secciones de la Encuesta
               </h2>
               <button
                 onClick={closeAddModal}
@@ -622,7 +622,7 @@ const GestionCamposEducacionales: React.FC = () => {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Ej: Ciencias Sociales y Humanidades"
+                  placeholder="Ej: Seccion 1"
                 />
               </div>
 
@@ -643,7 +643,7 @@ const GestionCamposEducacionales: React.FC = () => {
                     fontSize: '14px',
                     resize: 'vertical'
                   }}
-                  placeholder="Describe el campo educativo..."
+                  placeholder="Describe la sección de la encuesta..."
                 />
               </div>
 
@@ -731,7 +731,7 @@ const GestionCamposEducacionales: React.FC = () => {
             }}>
               <h2 style={{ margin: 0, color: '#333' }}>
                 <i className="fas fa-edit" style={{ marginRight: '10px', color: '#ff9800' }}></i>
-                Editar Campo Educativo
+                Editar Secciones de la Encuesta
               </h2>
               <button
                 onClick={closeEditModal}
@@ -765,7 +765,7 @@ const GestionCamposEducacionales: React.FC = () => {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Ej: Ciencias Sociales y Humanidades"
+                  placeholder="Ej: Seccion 1"
                 />
               </div>
 
@@ -786,7 +786,7 @@ const GestionCamposEducacionales: React.FC = () => {
                     fontSize: '14px',
                     resize: 'vertical'
                   }}
-                  placeholder="Describe el campo educativo..."
+                  placeholder="Describe la sección de la encuesta..."
                 />
               </div>
 
@@ -836,7 +836,7 @@ const GestionCamposEducacionales: React.FC = () => {
                     fontWeight: '500'
                   }}
                 >
-                  Actualizar Campo
+                  Actualizar Secciones de la Encuesta
                 </button>
               </div>
             </form>
